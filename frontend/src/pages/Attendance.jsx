@@ -98,7 +98,10 @@ export default function AttendancePage() {
         setCourses(data)
         if (data.length > 0) setSelectedCourse(data[0].courseId)
       })
-      .catch(() => setCoursesError(true))
+      .catch((err) => {
+        console.error("Courses error:", err)
+        setCoursesError(true)
+      })
   }, [])
 
   useEffect(() => {
@@ -121,8 +124,10 @@ export default function AttendancePage() {
         setLoading(false)
         setLoaded(true)
       })
-      .catch(() => {
-        // No saved record for this date — load fresh roster with default "present"
+      .catch((err) => {
+        console.log("Attendance fetch failed:", err)
+      
+        // No saved record for this date — load fresh roster
         getAttendanceRoster(courseId)
           .then((data) => {
             setStudents(data.students || [])
@@ -130,7 +135,8 @@ export default function AttendancePage() {
             setLoading(false)
             setLoaded(true)
           })
-          .catch(() => {
+          .catch((err) => {
+            console.error("Roster error:", err)
             setStudentsError(true)
             setLoading(false)
           })

@@ -44,7 +44,10 @@ export const deleteCourse        = (id)       => del(`/api/courses/${id}`)
 export const enrollStudents      = (id, b)    => post(`/api/courses/${id}/enroll`, b)
 export const unenrollStudent     = (id, sid)  => del(`/api/courses/${id}/enroll/${sid}`)
 export const getCourseAnalytics  = (id)       => req(`/api/courses/${id}/analytics`)
-export const getAttendanceRoster = (cid)      => req(`/api/courses/${cid}/students`)
+export const getAttendanceRoster = (cid) => {
+  console.log("Fetching roster for:", cid)
+  return req(`/api/attendance/roster/${cid}`)
+}
 
 // Assignments
 export const getAssignments          = (p={})    => req(`/api/assignments?${new URLSearchParams(p)}`)
