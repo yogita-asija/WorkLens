@@ -234,15 +234,15 @@ export default function AttendancePage() {
 
   return (
     <div
-      className="min-h-screen px-4 sm:px-8 py-8 max-w-[1400px] mx-auto space-y-6"
+      className="min-h-screen px-4  max-w-[1400px] mx-auto space-y-6"
       style={{ background: "#0A0A0A" }}
     >
       {/* Header */}
       <div>
-        <h1 className="font-semibold text-white" style={{ fontSize: "24px" }}>
+        <h1 className="font-semibold text-white  " style={{ fontSize: "24px",  margin: 0 }}>
           Attendance Management
         </h1>
-        <p className="mt-1" style={{ fontSize: "15px", color: "#9CA3AF" }}>
+        <p className="mt-1" style={{ fontSize: "13px", color: "#9CA3AF" }}>
           Track and manage student attendance for your courses
         </p>
       </div>

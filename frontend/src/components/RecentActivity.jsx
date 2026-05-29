@@ -12,7 +12,7 @@ export default function RecentActivity() {
   const [items, setItems] = useState(fallback);
 
   useEffect(() => {
-    fetch("http://localhost:9000/api/dashboard/recent-activity")
+    fetch("http://localhost:8000/api/dashboard/recent-activity")
       .then(res => res.json())
       .then(d => { if (d?.length) setItems(d) })
       .catch(() => {});

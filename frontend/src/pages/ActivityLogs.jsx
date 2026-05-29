@@ -284,13 +284,17 @@ export default function ActivityLogs() {
 
   
   return (
-    <div style={{ minHeight: "100vh", background: "#0A0A0A", padding: "32px 32px", fontFamily: "Inter, sans-serif" }}>
-
+    <div style={{ minHeight: "100vh",
+    background: "#0A0A0A",
+    padding: "2px 10px 10px",
+    fontFamily: "Inter, sans-serif",
+  }}
+>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
         <div>
           <h1 style={{ fontSize: "24px", fontWeight: 600, color: "#FFFFFF", margin: 0 }}>Activity Logs</h1>
-          <p style={{ fontSize: "14px", color: "#9CA3AF", margin: "4px 0 0" }}>
+          <p style={{ fontSize: "13px", color: "#9CA3AF", margin: "4px 0 0" }}>
             Track and review all your teaching activities.
           </p>
         </div>

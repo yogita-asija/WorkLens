@@ -132,7 +132,7 @@ export default function CoursesPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: T.txt, margin: 0 }}>Course Management</h1>
+          <h1 style={{ fontSize: "24px", fontWeight: 700, color: T.txt, margin: 0 }}>Course Management</h1>
           <p style={{ fontSize: 13, color: T.muted, marginTop: 4, margin: 0 }}>Manage courses, enrollment & analytics</p>
         </div>
         <button

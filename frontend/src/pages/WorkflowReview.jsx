@@ -30,7 +30,7 @@ export default function WorkflowReview() {
   const handleSubmit = async () => {
     // POST to backend
     try {
-      await fetch("http://localhost:5000/api/workflow/feedback", {
+      await fetch("http://localhost:8000/api/workflow/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ category: selected, message }),
@@ -43,7 +43,7 @@ export default function WorkflowReview() {
   };
 
   return (
-    <div className="text-white space-y-6">
+    <div className="text-white space-y-4 pt-1">
 
       {/* Heading */}
       <div>
@@ -81,8 +81,8 @@ export default function WorkflowReview() {
                   onClick={() => setSelected(item.label)}
                   className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition ${
                     selected === item.label
-                      ? "bg-[#262626] border-[#333333]"
-                      : "bg-[#1c1c1c] border-[#333333] hover:bg-[#262626]"
+                      ? "bg-green-600 border-[#333333]"
+                      : "bg-[#1c1c1c] border-[#333333] hover:bg-green-600"
                   }`}
                 >
                   <Icon size={18} className="text-white" />
@@ -104,7 +104,7 @@ export default function WorkflowReview() {
           {/* Submit Button */}
           <button
             onClick={handleSubmit}
-            className="w-full py-3 rounded-xl bg-[#262626] hover:bg-[#2f2f2f] border border-[#333333] transition"
+            className="w-full py-3 rounded-xl bg-[#262626] hover:bg-green-600 border border-[#333333] transition"
           >
             Submit Feedback
           </button>

@@ -39,7 +39,7 @@ export default function DashboardHeader() {
 
   useEffect(() => {
     // Fetch dashboard stats from backend
-    fetch("http://localhost:9000/api/dashboard/stats")
+    fetch("http://localhost:8000/api/dashboard/stats")
       .then(res => res.json())
       .then(data => setStats(data))
       .catch(() => {
@@ -52,7 +52,7 @@ export default function DashboardHeader() {
         });
       });
 
-    fetch("http://localhost:9000/api/dashboard/today")
+    fetch("http://localhost:8000/api/dashboard/today")
       .then(res => res.json())
       .then(data => setGlance(data))
       .catch(() => {
@@ -80,7 +80,7 @@ export default function DashboardHeader() {
 
       {/* Heading */}
       <div>
-        <h1 className="text-2xl font-semibold">Dashboard Overview</h1>
+        <h1 className="text-2xl  font-semibold">Dashboard Overview</h1>
         <p className="text-sm text-neutral-400 mt-1">
           Welcome back! Here's what's happening with your courses.
         </p>
