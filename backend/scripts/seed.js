@@ -1,6 +1,7 @@
 require("dotenv").config({ path: require("path").join(__dirname, "../.env") })
 const mongoose = require("mongoose")
 const Course   = require("../models/course")
+const ExtraDuty = require("../models/ExtraDuty");
 
 const students = (prefix, count) =>
   Array.from({ length: count }, (_, i) => {
@@ -57,13 +58,46 @@ const data = [
   },
 ]
 
+
+
+
 async function seed() {
   try {
     await mongoose.connect(process.env.MONGO_URI)
     console.log("✅ Connected to MongoDB")
     await Course.deleteMany({})
-    await Course.insertMany(data)
-    console.log("✅ Courses seeded — 5 courses × 20 students")
+await Course.insertMany(data)
+
+console.log("✅ Courses seeded — 5 courses × 20 students")
+
+await ExtraDuty.deleteMany({})
+
+await ExtraDuty.insertMany([
+  {
+    date: new Date("2026-02-20"),
+    type: "Substitution Class",
+    course: "CS201 - Programming II",
+    reason: "Dr. Rahul on medical leave",
+    hours: "2h"
+  },
+  {
+    date: new Date("2026-02-18"),
+    type: "Extra Class",
+    course: "CS401 - Advanced Algorithms",
+    reason: "Makeup class for mid-term preparation",
+    hours: "1.5h"
+  },
+  {
+    date: new Date("2026-02-15"),
+    type: "Invigilation",
+    course: "CS301 - Data Structures",
+    reason: "Mid-semester examination",
+    hours: "3h"
+  }
+  // add remaining records here
+])
+
+console.log("✅ Extra Duties seeded")
     await mongoose.disconnect()
   } catch (err) {
     console.error("❌ Seed failed:", err.message)

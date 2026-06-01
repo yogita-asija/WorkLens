@@ -19,11 +19,7 @@ const extraDutySchema = new mongoose.Schema({
   hours: {
     type: String,
   },
- status: {
-  type: String,
-  enum: ["Pending", "Completed"],
-  default: "Pending"
-},
+
 });
 
 module.exports = mongoose.model("ExtraDuty", extraDutySchema);

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react"
-import { Search, Plus, Edit2, Trash2, Users, Eye, BarChart2, X, ChevronDown, BookOpen } from "lucide-react"
+import { Search, Users, Eye, X, ChevronDown, BookOpen, Archive, ArchiveRestore } from "lucide-react"
 import { Card, Badge, ProgressBar, Icons, T } from "../components/UI"
 import useAppStore from "../store/useAppStore"
 import { useCourses } from "../hooks/useData"
@@ -11,23 +11,15 @@ const TYPE_COLORS = {
   archived: { color: "#6B7280", bg: "rgba(107,114,128,0.1)" },
 }
 
-const EMPTY_FORM = {
-  courseId: "", courseName: "", description: "", sem: "",
-  credits: 3, capacity: 60, status: "active",
-  schedule: { days: "", time: "", room: "" },
-}
-
 export default function CoursesPage() {
-  const { upsertCourse, removeCourse, showToast, assignments } = useAppStore()
+  const {  showToast, assignments } = useAppStore()
   const { courses, reload } = useCourses()
 
   const [search,   setSearch]   = useState("")
   const [filter,   setFilter]   = useState("all")
-  const [modal,    setModal]    = useState(null) // null | "create" | "edit" | "view" | "analytics" | "enroll"
+  const [modal,    setModal]    = useState(null) // null | "view" | "enroll"
   const [target,   setTarget]   = useState(null)
-  const [form,     setForm]     = useState(EMPTY_FORM)
-  const [saving,   setSaving]   = useState(false)
-  const [analytics, setAnalytics] = useState(null)
+
   const [enrollInput, setEnrollInput] = useState("")
 
   const filtered = useMemo(() => {
@@ -47,61 +39,27 @@ export default function CoursesPage() {
   const totalStudents = courses.reduce((s, c) => s + (c.students || 0), 0)
   const avgProgress   = courses.length ? Math.round(courses.reduce((s, c) => s + (c.progress || 0), 0) / courses.length) : 0
 
-  const openCreate = () => { setForm(EMPTY_FORM); setModal("create") }
-  const openEdit   = (c) => {
-    setTarget(c)
-    setForm({
-      courseId:    c.courseId || c.courseCode || "",
-      courseName:  c.courseName || "",
-      description: c.description || "",
-      sem:         c.sem || "",
-      credits:     c.credits || 3,
-      capacity:    c.capacity || 60,
-      status:      c.status || "active",
-      schedule:    c.schedule || { days: "", time: "", room: "" },
-    })
-    setModal("edit")
-  }
+ 
   const openView     = (c) => { setTarget(c); setModal("view") }
   const openEnroll   = (c) => { setTarget(c); setEnrollInput(""); setModal("enroll") }
-  const openAnalytics = async (c) => {
-    setTarget(c); setModal("analytics"); setAnalytics(null)
+  const handleArchive = async (c) => {
     try {
-      const data = await api.getCourseAnalytics(c._id)
-      setAnalytics(data)
-    } catch { showToast("Failed to load analytics", "error") }
+      await api.updateCourse(c._id, { status: "archived" })
+      showToast(`"${c.courseName}" archived`)
+      reload()
+    } catch (err) { showToast(err.message || "Archive failed", "error") }
   }
+  const handleUnarchive = async (c) => {
+    try {
+      await api.updateCourse(c._id, { status: "active" })
+      showToast(`"${c.courseName}" restored to active`)
+      reload()
+    } catch (err) { showToast(err.message || "Unarchive failed", "error") }
+  }
+
   const closeModal = () => { setModal(null); setTarget(null); setAnalytics(null) }
 
-  const handleSave = async () => {
-    if (!form.courseId.trim()) return showToast("Course ID is required", "error")
-    if (!form.courseName.trim()) return showToast("Course name is required", "error")
-    setSaving(true)
-    try {
-      if (modal === "create") {
-        const saved = await api.createCourse({ ...form, courseCode: form.courseId })
-        upsertCourse({ ...saved, students: 0 })
-        showToast(`"${saved.courseName}" created`)
-      } else {
-        const saved = await api.updateCourse(target._id, form)
-        upsertCourse({ ...saved, students: target.students })
-        showToast(`"${saved.courseName}" updated`)
-      }
-      closeModal()
-      reload()
-    } catch (err) {
-      showToast(err.message || "Save failed", "error")
-    } finally { setSaving(false) }
-  }
 
-  const handleDelete = async (c) => {
-    if (!window.confirm(`Delete "${c.courseName}"?`)) return
-    try {
-      await api.deleteCourse(c._id)
-      removeCourse(c._id)
-      showToast("Course deleted")
-    } catch (err) { showToast(err.message || "Delete failed", "error") }
-  }
 
   const handleEnroll = async () => {
     const lines = enrollInput.split("\n").map(l => l.trim()).filter(Boolean)
@@ -135,12 +93,7 @@ export default function CoursesPage() {
           <h1 style={{ fontSize: "24px", fontWeight: 700, color: T.txt, margin: 0 }}>Course Management</h1>
           <p style={{ fontSize: 13, color: T.muted, marginTop: 4, margin: 0 }}>Manage courses, enrollment & analytics</p>
         </div>
-        <button
-          onClick={openCreate}
-          style={{ display: "flex", alignItems: "center", gap: 7, background: "#fff", color: "#000", border: "none", borderRadius: 10, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-        >
-          <Plus size={15} /> New Course
-        </button>
+       
       </div>
 
       {/* Stats */}
@@ -149,7 +102,7 @@ export default function CoursesPage() {
           { label: "Total Courses",   value: courses.length,    color: T.txt },
           { label: "Active",          value: courses.filter(c=>c.status==="active").length, color: "#22C55E" },
           { label: "Total Students",  value: totalStudents,     color: "#EAB308" },
-          { label: "Avg Progress",    value: `${avgProgress}%`, color: "#3B82F6" },
+          { label: "Avg Progress",    value: `${avgProgress}%`, color: "#4ade80" },
         ].map(s => (
           <div key={s.label} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px" }}>
             <p style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 6px" }}>{s.label}</p>
@@ -179,8 +132,10 @@ export default function CoursesPage() {
         {filtered.map(c => (
           <CourseCard key={c._id} course={c}
             onView={() => openView(c)} onEdit={() => openEdit(c)}
-            onDelete={() => handleDelete(c)} onEnroll={() => openEnroll(c)}
-            onAnalytics={() => openAnalytics(c)}
+            
+             onEnroll={() => openEnroll(c)}
+             onArchive={() => handleArchive(c)}
+             onUnarchive={() => handleUnarchive(c)}
           />
         ))}
         {filtered.length === 0 && (
@@ -192,50 +147,7 @@ export default function CoursesPage() {
       </div>
 
       {/* ── Modals ── */}
-      {(modal === "create" || modal === "edit") && (
-        <ModalWrap title={modal === "create" ? "New Course" : "Edit Course"} onClose={closeModal}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px" }}>
-            <F label="Course ID" required>
-              <input value={form.courseId} onChange={e => setForm(f => ({...f, courseId: e.target.value}))}
-                disabled={modal === "edit"} style={{ ...inp, opacity: modal === "edit" ? 0.5 : 1 }} placeholder="e.g. CS401" />
-            </F>
-            <F label="Semester">
-              <input value={form.sem} onChange={e => setForm(f => ({...f, sem: e.target.value}))} style={inp} placeholder="e.g. Semester 7" />
-            </F>
-          </div>
-          <F label="Course Name" required>
-            <input value={form.courseName} onChange={e => setForm(f => ({...f, courseName: e.target.value}))} style={inp} placeholder="e.g. Advanced Algorithms" />
-          </F>
-          <F label="Description">
-            <textarea value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))}
-              style={{ ...inp, height: 70, resize: "vertical" }} placeholder="Short description..." />
-          </F>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0 14px" }}>
-            <F label="Credits">
-              <input type="number" value={form.credits} onChange={e => setForm(f => ({...f, credits: Number(e.target.value)}))} style={inp} />
-            </F>
-            <F label="Capacity">
-              <input type="number" value={form.capacity} onChange={e => setForm(f => ({...f, capacity: Number(e.target.value)}))} style={inp} />
-            </F>
-            <F label="Status">
-              <select value={form.status} onChange={e => setForm(f => ({...f, status: e.target.value}))}
-                style={{ ...inp, appearance: "none" }}>
-                {["active","inactive","archived"].map(s => <option key={s}>{s}</option>)}
-              </select>
-            </F>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0 14px" }}>
-            <F label="Days"><input value={form.schedule.days} onChange={e => setForm(f => ({...f, schedule: {...f.schedule, days: e.target.value}}))} style={inp} placeholder="Mon, Wed" /></F>
-            <F label="Time"><input value={form.schedule.time} onChange={e => setForm(f => ({...f, schedule: {...f.schedule, time: e.target.value}}))} style={inp} placeholder="10:00 AM" /></F>
-            <F label="Room"><input value={form.schedule.room} onChange={e => setForm(f => ({...f, schedule: {...f.schedule, room: e.target.value}}))} style={inp} placeholder="Room 301" /></F>
-          </div>
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
-            <Btn label="Cancel" ghost onClick={closeModal} />
-            <Btn label={saving ? "Saving…" : modal === "create" ? "Create Course" : "Save Changes"} onClick={handleSave} disabled={saving} />
-          </div>
-        </ModalWrap>
-      )}
-
+      
       {modal === "view" && target && <CourseViewModal course={target} assignments={useAppStore.getState().assignments} onClose={closeModal} />}
 
       {modal === "enroll" && target && (
@@ -256,50 +168,12 @@ export default function CoursesPage() {
         </ModalWrap>
       )}
 
-      {modal === "analytics" && target && (
-        <ModalWrap title={`Analytics — ${target.courseName}`} onClose={closeModal}>
-          {!analytics ? (
-            <p style={{ textAlign: "center", color: T.muted, padding: "32px 0" }}>Loading…</p>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              {[
-                { label: "Enrolled", value: analytics.totalStudents, color: T.txt },
-                { label: "Capacity", value: analytics.capacity, color: T.sub },
-                { label: "Assignments", value: analytics.totalAssignments, color: "#3B82F6" },
-                { label: "Submissions", value: analytics.submitted, color: "#22C55E" },
-                { label: "Graded", value: analytics.graded, color: "#A855F7" },
-                { label: "Avg Grade", value: analytics.avgGrade !== null ? `${analytics.avgGrade}%` : "N/A", color: "#EAB308" },
-                { label: "Submission Rate", value: `${analytics.submissionRate}%`, color: "#06B6D4" },
-              ].map(s => (
-                <div key={s.label} style={{ background: T.inner, borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
-                  <p style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 5px" }}>{s.label}</p>
-                  <p style={{ fontSize: 22, fontWeight: 700, color: s.color, margin: 0 }}>{s.value}</p>
-                </div>
-              ))}
-              {analytics.assignmentsByType && Object.keys(analytics.assignmentsByType).length > 0 && (
-                <div style={{ gridColumn: "1/-1", background: T.inner, borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
-                  <p style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 10px" }}>By Type</p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {Object.entries(analytics.assignmentsByType).map(([k,v]) => (
-                      <span key={k} style={{ fontSize: 11, background: T.card, border: `1px solid ${T.border}`, padding: "4px 10px", borderRadius: 6, color: T.sub }}>
-                        {k}: <strong style={{ color: T.txt }}>{v}</strong>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-          <div style={{ marginTop: 16, textAlign: "right" }}>
-            <Btn label="Close" ghost onClick={closeModal} />
-          </div>
-        </ModalWrap>
-      )}
+     
     </div>
   )
 }
 
-function CourseCard({ course, onView, onEdit, onDelete, onEnroll, onAnalytics }) {
+function CourseCard({ course, onView, onEnroll, onArchive, onUnarchive }) {
   const [hov, setHov] = useState(false)
   const tc = TYPE_COLORS[course.status] || TYPE_COLORS.active
   const enrollPct = course.capacity ? Math.min(100, Math.round((course.students / course.capacity) * 100)) : 0
@@ -310,15 +184,18 @@ function CourseCard({ course, onView, onEdit, onDelete, onEnroll, onAnalytics })
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           <span style={{ fontSize: 10, fontWeight: 700, color: T.sub, background: "rgba(156,163,175,0.1)", border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 5 }}>{course.courseCode || course.courseId}</span>
-          {course.sem && course.sem !== "N/A" && <span style={{ fontSize: 10, color: "#3B82F6", background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.2)", padding: "2px 8px", borderRadius: 5 }}>{course.sem}</span>}
+          {course.sem && course.sem !== "N/A" && <span style={{ fontSize: 10, color: "#4ade80", background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.2)", padding: "2px 8px", borderRadius: 5 }}>{course.sem}</span>}
           <span style={{ fontSize: 10, color: tc.color, background: tc.bg, padding: "2px 8px", borderRadius: 5 }}>{course.status || "active"}</span>
         </div>
         <div style={{ display: "flex", gap: 4 }}>
-          <IBtn icon={<BarChart2 size={13} />} onClick={onAnalytics} title="Analytics" />
+         
           <IBtn icon={<Users size={13} />} onClick={onEnroll} title="Enroll" />
+          {course.status === "archived"
+            ? <IBtn icon={<ArchiveRestore size={13} />} onClick={onUnarchive} title="Unarchive" />
+            : <IBtn icon={<Archive size={13} />} onClick={onArchive} title="Archive" />
+          }
           <IBtn icon={<Eye size={13} />} onClick={onView} title="View" />
-          <IBtn icon={<Edit2 size={13} />} onClick={onEdit} title="Edit" />
-          <IBtn icon={<Trash2 size={13} />} onClick={onDelete} title="Delete" danger />
+          
         </div>
       </div>
 
@@ -326,23 +203,22 @@ function CourseCard({ course, onView, onEdit, onDelete, onEnroll, onAnalytics })
       {course.description && <p style={{ fontSize: 11, color: T.muted, margin: "0 0 10px", lineHeight: 1.4 }}>{course.description}</p>}
 
       <div style={{ display: "flex", gap: 14, marginBottom: 12, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 11, color: T.muted }}>👥 {course.students}/{course.capacity} students</span>
-        {course.schedule?.days && <span style={{ fontSize: 11, color: T.muted }}>📅 {course.schedule.days}{course.schedule.time ? ` · ${course.schedule.time}` : ""}</span>}
-        {course.schedule?.room && <span style={{ fontSize: 11, color: T.muted }}>🏫 {course.schedule.room}</span>}
-        {course.credits && <span style={{ fontSize: 11, color: T.muted }}>⭐ {course.credits} cr</span>}
+        <span style={{ fontSize: 11, color: T.muted }}> {course.students}/{course.capacity} students</span>
+        {course.schedule?.days && <span style={{ fontSize: 11, color: T.muted }}> {course.schedule.days}{course.schedule.time ? ` · ${course.schedule.time}` : ""}</span>}
+       
       </div>
 
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
           <span style={{ fontSize: 10, color: T.muted }}>Enrollment</span>
-          <span style={{ fontSize: 10, fontWeight: 600, color: "#3B82F6" }}>{enrollPct}%</span>
+          <span style={{ fontSize: 10, fontWeight: 600, color: "#4ade80" }}>{enrollPct}%</span>
         </div>
         <div style={{ background: T.inner, borderRadius: 4, height: 4, overflow: "hidden" }}>
-          <div style={{ width: `${enrollPct}%`, height: "100%", background: "#3B82F6", borderRadius: 4 }} />
+          <div style={{ width: `${enrollPct}%`, height: "100%", background: "#4ade80", borderRadius: 4 }} />
         </div>
       </div>
       {course.assignmentCount !== undefined && (
-        <p style={{ fontSize: 10, color: T.muted, marginTop: 8 }}>📝 {course.assignmentCount} assignment{course.assignmentCount !== 1 ? "s" : ""}</p>
+        <p style={{ fontSize: 10, color: T.muted, marginTop: 8 }}>{course.assignmentCount} assignment{course.assignmentCount !== 1 ? "s" : ""}</p>
       )}
     </div>
   )
@@ -357,7 +233,7 @@ function CourseViewModal({ course, assignments, onClose }) {
           { label: "Code",     value: course.courseId || course.courseCode },
           { label: "Semester", value: course.sem || "N/A" },
           { label: "Students", value: `${course.students}/${course.capacity}` },
-          { label: "Credits",  value: course.credits || "N/A" },
+         
           { label: "Schedule", value: [course.schedule?.days, course.schedule?.time, course.schedule?.room].filter(Boolean).join(" · ") || "Not set" },
           { label: "Status",   value: course.status || "active" },
         ].map(({ label, value }) => (

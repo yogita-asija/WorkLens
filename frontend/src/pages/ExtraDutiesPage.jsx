@@ -1,14 +1,15 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Badge, Icons, T } from '../components/UI'
+import * as api from '../services/api'
 
 /* ── Sample data ── */
-const DUTIES = [
-  { date: '2026-02-20', type: 'Substitution Class', course: 'CS201 – Programming II',        reason: 'Dr. rahul on medical leave',               hours: '2h',   status: 'Approved' },
-  { date: '2026-02-18', type: 'Extra Class',         course: 'CS401 – Advanced Algorithms',  reason: 'Makeup class for mid-term preparation',        hours: '1.5h', status: 'Logged'   },
-  { date: '2026-02-15', type: 'Invigilation',        course: 'CS301 – Data Structures',      reason: 'Mid-term examination',                         hours: '3h',   status: 'Approved' },
-  { date: '2026-02-12', type: 'Substitution Class',  course: 'CS101 – Introduction to CS',   reason: 'Dr. sonia at conference',                   hours: '2h',   status: 'Approved' },
-  { date: '2026-02-10', type: 'Extra Class',         course: 'CS450 – Machine Learning',     reason: 'Additional tutorial session requested by students', hours: '2h', status: 'Logged' },
-]
+// const DUTIES = [
+//   { date: '2026-02-20', type: 'Substitution Class', course: 'CS201 – Programming II',        reason: 'Dr. rahul on medical leave',               hours: '2h',   status: 'Approved' },
+//   { date: '2026-02-18', type: 'Extra Class',         course: 'CS401 – Advanced Algorithms',  reason: 'Makeup class for mid-term preparation',        hours: '1.5h', status: 'Logged'   },
+//   { date: '2026-02-15', type: 'Invigilation',        course: 'CS301 – Data Structures',      reason: 'Mid-term examination',                         hours: '3h',   status: 'Approved' },
+//   { date: '2026-02-12', type: 'Substitution Class',  course: 'CS101 – Introduction to CS',   reason: 'Dr. sonia at conference',                   hours: '2h',   status: 'Approved' },
+//   { date: '2026-02-10', type: 'Extra Class',         course: 'CS450 – Machine Learning',     reason: 'Additional tutorial session requested by students', hours: '2h', status: 'Logged' },
+// ]
 
 const DUTY_TYPE_COLORS = {
   'Substitution Class': { color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' },
@@ -16,11 +17,11 @@ const DUTY_TYPE_COLORS = {
   'Invigilation':       { color: '#CA8A04', bg: 'rgba(202,138,4,0.12)'  },
 }
 
-const STATUS_COLORS = {
-  Approved: { color: '#22C55E', bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.3)'  },
-  Logged:   { color: '#CA8A04', bg: 'rgba(202,138,4,0.12)',  border: 'rgba(202,138,4,0.3)'  },
-  Pending:  { color: '#EF4444', bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.3)'  },
-}
+// const STATUS_COLORS = {
+//   Approved: { color: '#22C55E', bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.3)'  },
+//   Logged:   { color: '#CA8A04', bg: 'rgba(202,138,4,0.12)',  border: 'rgba(202,138,4,0.3)'  },
+//   Pending:  { color: '#EF4444', bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.3)'  },
+// }
 
 const ALL_MONTHS = ['All Months','January','February','March','April','May','June','July','August','September','October','November','December']
 const ALL_TYPES  = ['All Duty Types','Substitution Class','Extra Class','Invigilation']
@@ -28,17 +29,37 @@ const ALL_TYPES  = ['All Duty Types','Substitution Class','Extra Class','Invigil
 export default function ExtraDutiesPage() {
   const [monthFilter, setMonthFilter] = useState('All Months')
   const [typeFilter,  setTypeFilter]  = useState('All Duty Types')
+  const [duties, setDuties] = useState([])
+   useEffect(() => {
+    loadDuties()
+  }, [])
 
-  const filtered = DUTIES.filter(d => {
+  const loadDuties = async () => {
+    try {
+      const data = await api.getExtraDuties()
+      setDuties(data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const filtered = duties.filter(d => {
     const matchMonth = monthFilter === 'All Months' || d.date.includes('-02-') /* demo */
     const matchType  = typeFilter  === 'All Duty Types' || d.type === typeFilter
     return matchMonth && matchType
   })
 
-  const totalHrs  = DUTIES.reduce((s, d) => s + parseFloat(d.hours), 0)
-  const subs      = DUTIES.filter(d => d.type === 'Substitution Class').length
-  const invigs    = DUTIES.filter(d => d.type === 'Invigilation').length
-  const lastDate  = DUTIES.reduce((latest, d) => d.date > latest ? d.date : latest, '')
+  const totalHrs  = duties.reduce((s, d) => s + parseFloat(d.hours), 0)
+  const subs      = duties.filter(d => d.type === 'Substitution Class').length
+  const invigs    = duties.filter(d => d.type === 'Invigilation').length
+  const lastDate = duties.length
+  ? new Date(
+      duties.reduce(
+        (latest, d) => d.date > latest ? d.date : latest,
+        duties[0].date
+      )
+    ).toISOString().split("T")[0]
+  : "-"
 
   return (
     <div style={{ background: T.bg, minHeight: '100vh', padding: '28px 28px' }}>
@@ -53,7 +74,7 @@ export default function ExtraDutiesPage() {
 
       {/* ── Stat cards row ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
-        <StatCard label="Total Extra Duties" value={DUTIES.length} sub="This month" icon={Icons.layers}   iconBg="#0e3a1f" iconColor={T.accent} />
+        <StatCard label="Total Extra Duties" value={duties.length} sub="This month" icon={Icons.layers}   iconBg="#0e3a1f" iconColor={T.accent} />
         <StatCard label="Substitutions Taken" value={subs}          sub="Classes covered" icon={Icons.users}  iconBg="#1e3a5f" iconColor="#3B82F6" />
         <StatCard label="Invigilation Duties" value={invigs}         sub="Exam monitoring" icon={Icons.file}  iconBg="#3d2a00" iconColor="#CA8A04" />
         <StatCard label="Last Activity"       value={lastDate}       sub="Most recent entry" icon={Icons.clock} iconBg="#1a1a3a" iconColor="#A855F7" />
@@ -83,7 +104,7 @@ export default function ExtraDutiesPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${T.border}` }}>
-                {['Date', 'Duty Type', 'Course / Subject', 'Reason', 'Hours', 'Status'].map((h, i) => (
+                {['Date', 'Duty Type', 'Course / Subject', 'Reason', 'Hours'].map((h, i) => (
                   <th key={h} style={{
                     padding: '11px 16px', textAlign: 'left',
                     fontSize: 10, fontWeight: 700, color: T.sub,
@@ -96,7 +117,7 @@ export default function ExtraDutiesPage() {
             <tbody>
               {filtered.map((d, i) => {
                 const tc = DUTY_TYPE_COLORS[d.type] ?? { color: T.sub, bg: 'rgba(156,163,175,0.1)' }
-                const sc = STATUS_COLORS[d.status]  ?? STATUS_COLORS.Pending
+                // const sc = STATUS_COLORS[d.status]  ?? STATUS_COLORS.Pending
                 return (
                   <tr
                     key={i}
@@ -106,7 +127,7 @@ export default function ExtraDutiesPage() {
                   >
                     {/* Date */}
                     <td style={{ padding: '13px 16px', fontSize: 13, color: T.sub, fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
-                      {d.date}
+                     {new Date(d.date).toISOString().split("T")[0]}
                     </td>
                     {/* Duty type badge */}
                     <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
@@ -125,7 +146,7 @@ export default function ExtraDutiesPage() {
                       {d.hours}
                     </td>
                     {/* Status badge */}
-                    <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
+                    {/* <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
                       <span style={{
                         fontSize: 11, fontWeight: 600,
                         padding: '3px 10px', borderRadius: 6,
@@ -136,13 +157,13 @@ export default function ExtraDutiesPage() {
                         {d.status === 'Approved' && <span style={{ fontSize: 9 }}></span>}
                         {d.status}
                       </span>
-                    </td>
+                    </td> */}
                   </tr>
                 )
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: T.muted }}>
+                  <td colSpan={5} style={{ padding: '32px', textAlign: 'center', color: T.muted }}>
                     No duties match the selected filters
                   </td>
                 </tr>
