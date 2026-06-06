@@ -1,0 +1,182 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+@layer base {
+  * { box-sizing: border-box; }
+
+  body {
+    background-color: #0A0A0A;
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0A0A0A; }
+  ::-webkit-scrollbar-thumb { background: #2D2D2D; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #393939; }
+
+  select option { background-color: #1c1c1c; color: #FFFFFF; }
+}
+
+@layer components {
+  /* ── Cards ── */
+  .glass-card {
+    background-color: #1c1c1c;
+    border: 1px solid #2D2D2D;
+  }
+
+  .glass-card-2 {
+    background-color: #1c1c1c;
+    border: 1px solid #2D2D2D;
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* ── Stat Card ── */
+  .stat-card {
+    background-color: #1c1c1c;
+    border: 1px solid #2D2D2D;
+    @apply rounded-xl p-6 transition-all duration-300 cursor-default;
+  }
+
+  .stat-card:hover {
+    border-color: #4a4a4a;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  /* ── Table row ── */
+  .table-row-hover { @apply transition-all duration-200; }
+  .table-row-hover:hover { background: rgba(255,255,255,0.04); }
+
+  /* ── Primary Button ── */
+  .btn-primary {
+    @apply relative overflow-hidden font-semibold text-sm px-6 py-2.5 rounded-xl transition-all duration-200;
+    background: linear-gradient(135deg, #227e44 0%, #227e44 100%);
+    box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 24px rgba(14, 165, 233, 0.5); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 100%); opacity: 0; transition: opacity 0.2s; }
+  .btn-primary:hover::after { opacity: 1; }
+
+  /* ── Mark All Present toggle button ── */
+  .btn-mark-all-present {
+    @apply relative overflow-hidden font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 border;
+    background-color: rgba(22, 163, 74, 0.12);
+    border-color: rgba(22, 163, 74, 0.4);
+    color: #4ade80;
+  }
+  .btn-mark-all-present:hover {
+    background-color: rgba(22, 163, 74, 0.22);
+    border-color: rgba(22, 163, 74, 0.7);
+    box-shadow: 0 0 18px rgba(22, 163, 74, 0.2);
+    transform: translateY(-1px);
+  }
+  .btn-mark-all-present.is-absent {
+    background-color: rgba(220, 38, 38, 0.12);
+    border-color: rgba(220, 38, 38, 0.4);
+    color: #f87171;
+  }
+  .btn-mark-all-present.is-absent:hover {
+    background-color: rgba(220, 38, 38, 0.22);
+    border-color: rgba(220, 38, 38, 0.7);
+    box-shadow: 0 0 18px rgba(220, 38, 38, 0.2);
+  }
+
+  /* ── Input ── */
+  .input-dark {
+    @apply w-full border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none transition-colors duration-200;
+    background-color: #1c1c1c;
+    border-color: #2D2D2D;
+    color: #FFFFFF;
+  }
+  .input-dark::placeholder { color: #9CA3AF; }
+  .input-dark:hover { border-color: #4a4a4a; }
+  .input-dark:focus { border-color: #0ea5e9; }
+
+  /* ── Status Action Select ── */
+  .status-select {
+    @apply text-xs font-medium px-3 py-1.5 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all duration-200;
+     -webkit-appearance: none;
+     appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+  }
+
+  .status-present .status-select {
+    background-color: rgba(22, 163, 74, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(22, 163, 74, 0.35);
+  }
+  .status-absent .status-select {
+    background-color: rgba(220, 38, 38, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(220, 38, 38, 0.35);
+  }
+  .status-late .status-select {
+    background-color: rgba(202, 138, 4, 0.15);
+    color: #facc15;
+    border: 1px solid rgba(202, 138, 4, 0.35);
+  }
+
+  /* ── Subtext color from spec ── */
+  .text-subtext { color: #9CA3AF; }
+}
+
+/* ── Toggle switch ── */
+.toggle {
+  position: relative;
+  display: inline-flex;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #374151;
+  border-radius: 999px;
+  transition: background 0.2s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.toggle input:checked + .toggle-slider {
+  background: #22C55E;
+}
+.toggle input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
