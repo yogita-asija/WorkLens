@@ -12,11 +12,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 
 app.use("/api/auth",           require("./routes/authRoutes"))
 app.use("/api/settings",       require("./routes/settingsRoutes"))
-<<<<<<< HEAD
 // app.use("/api/analytics",      require("./routes/analyticsRoutes"))
-=======
-app.use("/api/analytics",      require("./routes/analyticsRoutes"))
->>>>>>> 09f24e068a6d5e720349f39069d3dab7860edc3b
 app.use("/api/dashboard",      require("./routes/dashboardRoutes"))
 app.use("/api/workflow",       require("./routes/workflowRoutes"))
 app.use("/api/leaves",         require("./routes/leaveRoutes"))
@@ -26,10 +22,7 @@ app.use("/api/courses",        require("./routes/courseRoutes"))
 app.use("/api/assignments",    require("./routes/assignmentRoutes"))
 app.use("/api/duties",         require("./routes/extraDutyRoutes"))
 app.use("/api/notifications",  require("./routes/notificationRoutes"))
-<<<<<<< HEAD
 app.use("/api/internal-marks", require("./routes/internalMarkRoutes"))
-=======
->>>>>>> 09f24e068a6d5e720349f39069d3dab7860edc3b
 
 app.get("/", (req, res) => res.json({ status: "WorkLens API running ✅" }))
 
