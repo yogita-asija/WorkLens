@@ -1,6 +1,10 @@
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
+<<<<<<< HEAD
 import { LayoutDashboard, BookOpen, CheckSquare, CalendarDays, FileText, Users, Workflow, Activity, BarChart3, Settings, LogOut, ClipboardList } from "lucide-react"
+=======
+import { LayoutDashboard, BookOpen, CheckSquare, CalendarDays, FileText, Users, Workflow, Activity, BarChart3, Settings, LogOut } from "lucide-react"
+>>>>>>> 09f24e068a6d5e720349f39069d3dab7860edc3b
 
 const menuItems = [
   { name: "Dashboard",        icon: LayoutDashboard, path: "/" },
@@ -11,8 +15,12 @@ const menuItems = [
   { name: "Extra Duties",     icon: Users,           path: "/extra-duties" },
   { name: "Workflow Review",  icon: Workflow,        path: "/workflow" },
   { name: "Activity Logs",    icon: Activity,        path: "/activity-logs" },
+<<<<<<< HEAD
   // { name: "Analytics",        icon: BarChart3,       path: "/analytics" },
   { name: "Internal Marks",   icon: ClipboardList,   path: "/internal-marks" },
+=======
+  { name: "Analytics",        icon: BarChart3,       path: "/analytics" },
+>>>>>>> 09f24e068a6d5e720349f39069d3dab7860edc3b
   { name: "Settings",         icon: Settings,        path: "/settings" },
 ]
 

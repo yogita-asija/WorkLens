@@ -15,7 +15,11 @@ export default function WeeklyBarChart() {
   const [data, setData] = useState(fallback);
 
   useEffect(() => {
+<<<<<<< HEAD
     fetch("http://localhost:8000/api/dashboard/weekly-activity")
+=======
+    fetch("http://localhost:9000/api/dashboard/weekly-activity")
+>>>>>>> 09f24e068a6d5e720349f39069d3dab7860edc3b
       .then(res => res.json())
       .then(d => { if (d?.length) setData(d) })
       .catch(() => {});

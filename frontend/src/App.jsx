@@ -19,8 +19,12 @@ import CoursesPage     from "./pages/CoursesPage"
 import AssignmentsPage from "./pages/AssignmentsPage"
 import ExtraDutiesPage from "./pages/ExtraDutiesPage"
 import StudentProfile  from "./pages/StudentProfile"
+<<<<<<< HEAD
 // import AnalyticsPage   from "./pages/AnalyticsPage"
 import InternalMarksPage from "./pages/InternalMarksPage"
+=======
+import AnalyticsPage   from "./pages/AnalyticsPage"
+>>>>>>> 09f24e068a6d5e720349f39069d3dab7860edc3b
 import SettingsPage    from "./pages/SettingsPage"
 import { useNotifications } from "./hooks/useData"
 
@@ -63,8 +67,12 @@ function AppLayout() {
               <Route path="/courses"           element={<CoursesPage />} />
               <Route path="/assignments"       element={<AssignmentsPage />} />
               <Route path="/extra-duties"      element={<ExtraDutiesPage />} />
+<<<<<<< HEAD
               {/* <Route path="/analytics"         element={<AnalyticsPage user={user} />} /> */}
               <Route path="/internal-marks"    element={<InternalMarksPage />} />
+=======
+              <Route path="/analytics"         element={<AnalyticsPage user={user} />} />
+>>>>>>> 09f24e068a6d5e720349f39069d3dab7860edc3b
               <Route path="/settings"          element={<SettingsPage user={user} />} />
               <Route path="*"                  element={<Navigate to="/" replace />} />
             </Routes>
