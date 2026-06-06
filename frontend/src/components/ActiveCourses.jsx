@@ -33,11 +33,7 @@ export default function ActiveCourses() {
   const [courses, setCourses] = useState(fallback);
 
   useEffect(() => {
-<<<<<<< HEAD
     fetch("http://localhost:8000/api/dashboard/courses")
-=======
-    fetch("http://localhost:9000/api/dashboard/courses")
->>>>>>> 09f24e068a6d5e720349f39069d3dab7860edc3b
       .then(res => res.json())
       .then(d => { if (d?.length) setCourses(d) })
       .catch(() => {});

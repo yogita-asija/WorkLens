@@ -25,11 +25,7 @@ export const getSettings       = (uid)        => req(`/api/settings/${uid}`)
 export const updateSettings    = (uid, b)     => put(`/api/settings/${uid}`, b)
 
 // Analytics
-<<<<<<< HEAD
 // export const getAnalytics      = (role)       => req(`/api/analytics?role=${role}`)
-=======
-export const getAnalytics      = (role)       => req(`/api/analytics?role=${role}`)
->>>>>>> 09f24e068a6d5e720349f39069d3dab7860edc3b
 
 // Dashboard
 export const getDashboardStats   = ()         => req("/api/dashboard/stats")
@@ -109,7 +105,6 @@ export const createNotification   = (b)    => post("/api/notifications", b)
 export const markNotifRead        = (id)   => patch(`/api/notifications/${id}/read`, {})
 export const markAllNotifRead     = (b)    => patch("/api/notifications/read-all", b)
 export const deleteNotification   = (id)   => del(`/api/notifications/${id}`)
-<<<<<<< HEAD
 
 // Internal Marks
 export const getTeacherStudents  = (teacherId) => req(`/api/internal-marks/students?teacherId=${teacherId}`)
@@ -117,5 +112,3 @@ export const getStudentMarks     = (sid, tid)  => req(`/api/internal-marks/${sid
 export const addInternalMark     = (b)         => post("/api/internal-marks", b)
 export const updateInternalMark  = (id, b)     => put(`/api/internal-marks/${id}`, b)
 export const deleteInternalMark  = (id)        => del(`/api/internal-marks/${id}`)
-=======
->>>>>>> 09f24e068a6d5e720349f39069d3dab7860edc3b
