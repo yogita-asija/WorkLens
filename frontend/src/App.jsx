@@ -1,29 +1,38 @@
+// ─── UPDATED App.jsx — drop-in replacement ───────────────────────────────────
+// Adds /admin/* routes while keeping all existing faculty routes untouched.
+// Place this file at: frontend/src/App.jsx
+
 import React, { useEffect } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { ThemeProvider } from "./ThemeContext"
 import useAppStore from "./store/useAppStore"
 
+// ── Existing components (unchanged) ──────────────────────────────────────────
 import Sidebar        from "./components/Sidebar"
 import Topbar         from "./components/Topbar"
 import ProfileSidebar from "./components/ProfileSidebar"
 import NotifPanel     from "./components/NotifPanel"
 import GlobalToast    from "./components/GlobalToast"
 
-import LoginPage      from "./pages/LoginPage"
-import Dashboard      from "./pages/Dashboard"
-import LeaveManagement from "./pages/LeaveManagement"
-import WorkflowReview  from "./pages/WorkflowReview"
-import AttendancePage  from "./pages/Attendance"
-import ActivityLogs    from "./pages/ActivityLogs"
-import CoursesPage     from "./pages/CoursesPage"
-import AssignmentsPage from "./pages/AssignmentsPage"
-import ExtraDutiesPage from "./pages/ExtraDutiesPage"
-import StudentProfile  from "./pages/StudentProfile"
-// import AnalyticsPage   from "./pages/AnalyticsPage"
+// ── Existing pages (unchanged) ────────────────────────────────────────────────
+import LoginPage        from "./pages/LoginPage"
+import Dashboard        from "./pages/Dashboard"
+import LeaveManagement  from "./pages/LeaveManagement"
+import WorkflowReview   from "./pages/WorkflowReview"
+import AttendancePage   from "./pages/Attendance"
+import ActivityLogs     from "./pages/ActivityLogs"
+import CoursesPage      from "./pages/CoursesPage"
+import AssignmentsPage  from "./pages/AssignmentsPage"
+import ExtraDutiesPage  from "./pages/ExtraDutiesPage"
+import StudentProfile   from "./pages/StudentProfile"
 import InternalMarksPage from "./pages/InternalMarksPage"
-import SettingsPage    from "./pages/SettingsPage"
+import SettingsPage     from "./pages/SettingsPage"
 import { useNotifications } from "./hooks/useData"
 
+// ── NEW: Admin Module ─────────────────────────────────────────────────────────
+import AdminLayout from "./pages/admin/AdminLayout"
+
+// ── Hash-based student profile overlay (unchanged) ───────────────────────────
 function HashStudentProfile() {
   const [studentId, setStudentId] = React.useState(null)
   useEffect(() => {
@@ -42,6 +51,7 @@ function HashStudentProfile() {
   }} />
 }
 
+// ── Faculty layout (unchanged) ────────────────────────────────────────────────
 function AppLayout() {
   const { user, logout, profileOpen, closeProfile, notifOpen, closeNotif } = useAppStore()
   useNotifications(user?._id)
@@ -55,18 +65,17 @@ function AppLayout() {
         <main className="flex-1 overflow-y-auto bg-[#0A0A0A]">
           <div className="p-6">
             <Routes>
-              <Route path="/"                  element={<Dashboard />} />
-              <Route path="/leave-management"  element={<LeaveManagement />} />
-              <Route path="/workflow"          element={<WorkflowReview />} />
-              <Route path="/attendance"        element={<AttendancePage />} />
-              <Route path="/activity-logs"     element={<ActivityLogs />} />
-              <Route path="/courses"           element={<CoursesPage />} />
-              <Route path="/assignments"       element={<AssignmentsPage />} />
-              <Route path="/extra-duties"      element={<ExtraDutiesPage />} />
-              {/* <Route path="/analytics"         element={<AnalyticsPage user={user} />} /> */}
-              <Route path="/internal-marks"    element={<InternalMarksPage />} />
-              <Route path="/settings"          element={<SettingsPage user={user} />} />
-              <Route path="*"                  element={<Navigate to="/" replace />} />
+              <Route path="/"                 element={<Dashboard />} />
+              <Route path="/leave-management" element={<LeaveManagement />} />
+              <Route path="/workflow"         element={<WorkflowReview />} />
+              <Route path="/attendance"       element={<AttendancePage />} />
+              <Route path="/activity-logs"    element={<ActivityLogs />} />
+              <Route path="/courses"          element={<CoursesPage />} />
+              <Route path="/assignments"      element={<AssignmentsPage />} />
+              <Route path="/extra-duties"     element={<ExtraDutiesPage />} />
+              <Route path="/internal-marks"   element={<InternalMarksPage />} />
+              <Route path="/settings"         element={<SettingsPage user={user} />} />
+              <Route path="*"                 element={<Navigate to="/" replace />} />
             </Routes>
           </div>
           <HashStudentProfile />
@@ -84,8 +93,18 @@ function AppLayout() {
   )
 }
 
+// ── Route guard: admin-only ───────────────────────────────────────────────────
+function AdminGuard({ children }) {
+  const { user } = useAppStore()
+  if (!user || user.role !== "admin") {
+    return <Navigate to="/" replace />
+  }
+  return children
+}
+
+// ── Root component ────────────────────────────────────────────────────────────
 export default function App() {
-  const { user, setUser, logout } = useAppStore()
+  const { user, setUser } = useAppStore()
 
   if (!user) {
     return (
@@ -98,7 +117,20 @@ export default function App() {
   return (
     <ThemeProvider>
       <Router>
-        <AppLayout />
+        <Routes>
+          {/* ── Admin routes ── */}
+          <Route
+            path="/admin/*"
+            element={
+              <AdminGuard>
+                <AdminLayout />
+              </AdminGuard>
+            }
+          />
+
+          {/* ── Faculty routes (unchanged) ── */}
+          <Route path="/*" element={<AppLayout />} />
+        </Routes>
       </Router>
     </ThemeProvider>
   )

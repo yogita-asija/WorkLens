@@ -23,6 +23,7 @@ app.use("/api/assignments",    require("./routes/assignmentRoutes"))
 app.use("/api/duties",         require("./routes/extraDutyRoutes"))
 app.use("/api/notifications",  require("./routes/notificationRoutes"))
 app.use("/api/internal-marks", require("./routes/internalMarkRoutes"))
+app.use("/api/admin",          require("./routes/adminRoutes")) 
 
 app.get("/", (req, res) => res.json({ status: "WorkLens API running ✅" }))
 

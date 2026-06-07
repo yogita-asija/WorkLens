@@ -1,33 +1,37 @@
-// frontend/src/components/Sidebar.jsx  — updated to show "Admin Panel" link for admin users
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
-import { LayoutDashboard, BookOpen, CheckSquare, CalendarDays, FileText, Users, Workflow, Activity, Settings, LogOut, ClipboardList, Shield } from "lucide-react"
-import useAppStore from "../store/useAppStore"
+import {
+  LayoutDashboard, Users, BookOpen, Building2,
+  CalendarDays, Send, BarChart3, Settings,
+  Shield, LogOut, ChevronLeft,
+} from "lucide-react"
 
 const menuItems = [
-  { name: "Dashboard",        icon: LayoutDashboard, path: "/" },
-  { name: "Courses",          icon: BookOpen,        path: "/courses" },
-  { name: "Attendance",       icon: CheckSquare,     path: "/attendance" },
-  { name: "Leave Management", icon: CalendarDays,    path: "/leave-management" },
-  { name: "Assignments",      icon: FileText,        path: "/assignments" },
-  { name: "Extra Duties",     icon: Users,           path: "/extra-duties" },
-  { name: "Workflow Review",  icon: Workflow,        path: "/workflow" },
-  { name: "Activity Logs",    icon: Activity,        path: "/activity-logs" },
-  { name: "Internal Marks",   icon: ClipboardList,   path: "/internal-marks" },
-  { name: "Settings",         icon: Settings,        path: "/settings" },
+  { name: "Dashboard",       icon: LayoutDashboard, path: "/admin" },
+  { name: "Teachers",        icon: Users,           path: "/admin/teachers" },
+  { name: "Courses",         icon: BookOpen,        path: "/admin/courses" },
+  { name: "Departments",     icon: Building2,       path: "/admin/departments" },
+  { name: "Leave Requests",  icon: CalendarDays,    path: "/admin/leaves" },
+  { name: "Communication",   icon: Send,            path: "/admin/communication" },
+  { name: "Reports",         icon: BarChart3,       path: "/admin/reports" },
+  { name: "Audit Logs",      icon: Shield,          path: "/admin/audit-logs" },
+  { name: "Settings",        icon: Settings,        path: "/admin/settings" },
 ]
 
-export default function Sidebar({ onLogout }) {
+export default function AdminSidebar({ onLogout }) {
   const [showLogout, setShowLogout] = useState(false)
-  const { user } = useAppStore()
-  const isAdmin = user?.role === "admin"
 
   return (
     <>
       <aside className="w-64 h-screen bg-black border-r border-neutral-800 flex flex-col flex-shrink-0">
         <div className="px-5 py-5 border-b border-neutral-800">
-          <h1 className="text-xl font-bold tracking-tight">WorkLens Edu</h1>
-          <p className="text-xs text-neutral-500 mt-0.5">Faculty Management</p>
+          <div className="flex items-center gap-2 mb-0.5">
+            <div className="w-6 h-6 rounded-md bg-green-500 flex items-center justify-center flex-shrink-0">
+              <Shield size={12} className="text-black" />
+            </div>
+            <h1 className="text-xl font-bold tracking-tight">WorkLens Edu</h1>
+          </div>
+          <p className="text-xs text-neutral-500 mt-0.5 pl-8">Admin Control Panel</p>
         </div>
 
         <nav className="px-3 flex-1 overflow-y-auto py-3">
@@ -36,7 +40,7 @@ export default function Sidebar({ onLogout }) {
               <li key={name}>
                 <NavLink
                   to={path}
-                  end={path === "/"}
+                  end={path === "/admin"}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm cursor-pointer
                     ${isActive ? "bg-white text-black font-semibold" : "text-neutral-400 hover:bg-neutral-900 hover:text-white"}`
@@ -48,24 +52,18 @@ export default function Sidebar({ onLogout }) {
               </li>
             ))}
           </ul>
-
-          {/* Admin Panel link — only shown to admin users */}
-          {isAdmin && (
-            <div className="mt-4 pt-4 border-t border-neutral-800">
-              <p className="text-[10px] text-neutral-600 uppercase tracking-widest px-3 mb-2">Administration</p>
-              <NavLink
-                to="/admin"
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm cursor-pointer
-                  ${isActive ? "bg-green-500/20 text-green-400 font-semibold" : "text-neutral-400 hover:bg-neutral-900 hover:text-white"}`
-                }
-              >
-                <Shield size={16} />
-                <span>Admin Panel</span>
-              </NavLink>
-            </div>
-          )}
         </nav>
+
+        {/* Back to Faculty Panel link */}
+        <div className="px-3 py-2 border-t border-neutral-800">
+          <NavLink
+            to="/"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-neutral-500 hover:bg-neutral-900 hover:text-white transition text-sm"
+          >
+            <ChevronLeft size={16} />
+            <span>Faculty Panel</span>
+          </NavLink>
+        </div>
 
         <div className="p-3 border-t border-neutral-800">
           <button
