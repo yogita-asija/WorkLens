@@ -1,20 +1,16 @@
-// ─── UPDATED App.jsx — drop-in replacement ───────────────────────────────────
-// Adds /admin/* routes while keeping all existing faculty routes untouched.
-// Place this file at: frontend/src/App.jsx
-
 import React, { useEffect } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { ThemeProvider } from "./ThemeContext"
 import useAppStore from "./store/useAppStore"
 
-// ── Existing components (unchanged) ──────────────────────────────────────────
+// ── Components ────────────────────────────────────────────────────────────────
 import Sidebar        from "./components/Sidebar"
 import Topbar         from "./components/Topbar"
 import ProfileSidebar from "./components/ProfileSidebar"
 import NotifPanel     from "./components/NotifPanel"
 import GlobalToast    from "./components/GlobalToast"
 
-// ── Existing pages (unchanged) ────────────────────────────────────────────────
+// ── Faculty pages ─────────────────────────────────────────────────────────────
 import LoginPage        from "./pages/LoginPage"
 import Dashboard        from "./pages/Dashboard"
 import LeaveManagement  from "./pages/LeaveManagement"
@@ -29,10 +25,10 @@ import InternalMarksPage from "./pages/InternalMarksPage"
 import SettingsPage     from "./pages/SettingsPage"
 import { useNotifications } from "./hooks/useData"
 
-// ── NEW: Admin Module ─────────────────────────────────────────────────────────
+// ── Admin module ──────────────────────────────────────────────────────────────
 import AdminLayout from "./pages/admin/AdminLayout"
 
-// ── Hash-based student profile overlay (unchanged) ───────────────────────────
+// ── Hash-based student profile overlay ───────────────────────────────────────
 function HashStudentProfile() {
   const [studentId, setStudentId] = React.useState(null)
   useEffect(() => {
@@ -51,8 +47,8 @@ function HashStudentProfile() {
   }} />
 }
 
-// ── Faculty layout (unchanged) ────────────────────────────────────────────────
-function AppLayout() {
+// ── Faculty layout (only accessible to non-admin users) ───────────────────────
+function FacultyLayout() {
   const { user, logout, profileOpen, closeProfile, notifOpen, closeNotif } = useAppStore()
   useNotifications(user?._id)
 
@@ -93,19 +89,11 @@ function AppLayout() {
   )
 }
 
-// ── Route guard: admin-only ───────────────────────────────────────────────────
-function AdminGuard({ children }) {
-  const { user } = useAppStore()
-  if (!user || user.role !== "admin") {
-    return <Navigate to="/" replace />
-  }
-  return children
-}
-
-// ── Root component ────────────────────────────────────────────────────────────
+// ── Root component with strict role-based routing ─────────────────────────────
 export default function App() {
   const { user, setUser } = useAppStore()
 
+  // Not logged in → show login
   if (!user) {
     return (
       <ThemeProvider>
@@ -114,22 +102,25 @@ export default function App() {
     )
   }
 
+  const isAdmin = user.role === "admin"
+
   return (
     <ThemeProvider>
       <Router>
         <Routes>
-          {/* ── Admin routes ── */}
-          <Route
-            path="/admin/*"
-            element={
-              <AdminGuard>
-                <AdminLayout />
-              </AdminGuard>
-            }
-          />
-
-          {/* ── Faculty routes (unchanged) ── */}
-          <Route path="/*" element={<AppLayout />} />
+          {isAdmin ? (
+            // Admin users: ONLY admin routes; any other path redirects to /admin
+            <>
+              <Route path="/admin/*" element={<AdminLayout />} />
+              <Route path="*"        element={<Navigate to="/admin" replace />} />
+            </>
+          ) : (
+            // Faculty/staff users: ONLY faculty routes; /admin is blocked
+            <>
+              <Route path="/admin/*" element={<Navigate to="/" replace />} />
+              <Route path="/*"       element={<FacultyLayout />} />
+            </>
+          )}
         </Routes>
       </Router>
     </ThemeProvider>

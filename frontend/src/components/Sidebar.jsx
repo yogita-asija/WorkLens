@@ -1,8 +1,10 @@
-// frontend/src/components/Sidebar.jsx  — updated to show "Admin Panel" link for admin users
+// Sidebar.jsx — Faculty/Staff sidebar only (no admin panel link)
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
-import { LayoutDashboard, BookOpen, CheckSquare, CalendarDays, FileText, Users, Workflow, Activity, Settings, LogOut, ClipboardList, Shield } from "lucide-react"
-import useAppStore from "../store/useAppStore"
+import {
+  LayoutDashboard, BookOpen, CheckSquare, CalendarDays,
+  FileText, Users, Workflow, Activity, Settings, LogOut, ClipboardList
+} from "lucide-react"
 
 const menuItems = [
   { name: "Dashboard",        icon: LayoutDashboard, path: "/" },
@@ -19,15 +21,13 @@ const menuItems = [
 
 export default function Sidebar({ onLogout }) {
   const [showLogout, setShowLogout] = useState(false)
-  const { user } = useAppStore()
-  const isAdmin = user?.role === "admin"
 
   return (
     <>
       <aside className="w-64 h-screen bg-black border-r border-neutral-800 flex flex-col flex-shrink-0">
         <div className="px-5 py-5 border-b border-neutral-800">
           <h1 className="text-xl font-bold tracking-tight">WorkLens Edu</h1>
-          <p className="text-xs text-neutral-500 mt-0.5">Faculty Management</p>
+          <p className="text-xs text-neutral-500 mt-0.5">Faculty Portal</p>
         </div>
 
         <nav className="px-3 flex-1 overflow-y-auto py-3">
@@ -48,23 +48,6 @@ export default function Sidebar({ onLogout }) {
               </li>
             ))}
           </ul>
-
-          {/* Admin Panel link — only shown to admin users */}
-          {isAdmin && (
-            <div className="mt-4 pt-4 border-t border-neutral-800">
-              <p className="text-[10px] text-neutral-600 uppercase tracking-widest px-3 mb-2">Administration</p>
-              <NavLink
-                to="/admin"
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm cursor-pointer
-                  ${isActive ? "bg-green-500/20 text-green-400 font-semibold" : "text-neutral-400 hover:bg-neutral-900 hover:text-white"}`
-                }
-              >
-                <Shield size={16} />
-                <span>Admin Panel</span>
-              </NavLink>
-            </div>
-          )}
         </nav>
 
         <div className="p-3 border-t border-neutral-800">

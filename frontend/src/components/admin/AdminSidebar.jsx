@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom"
 import {
   LayoutDashboard, Users, BookOpen, Building2,
   CalendarDays, Send, BarChart3, Settings,
-  Shield, LogOut, ChevronLeft,
+  Shield, LogOut,
 } from "lucide-react"
 
 const menuItems = [
@@ -54,17 +54,7 @@ export default function AdminSidebar({ onLogout }) {
           </ul>
         </nav>
 
-        {/* Back to Faculty Panel link */}
-        <div className="px-3 py-2 border-t border-neutral-800">
-          <NavLink
-            to="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-neutral-500 hover:bg-neutral-900 hover:text-white transition text-sm"
-          >
-            <ChevronLeft size={16} />
-            <span>Faculty Panel</span>
-          </NavLink>
-        </div>
-
+        {/* Logout only — no Faculty Panel link */}
         <div className="p-3 border-t border-neutral-800">
           <button
             onClick={() => setShowLogout(true)}
