@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
-import { MessageSquare, Clock, Users, BarChart, FileText } from "lucide-react";
+import { MessageSquare, Clock, Users, BarChart, FileText,Edit3 } from "lucide-react";
 
 export default function WorkflowReview() {
   const [view, setView] = useState("faculty");
   const [selected, setSelected] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [message, setMessage] = useState("");
+  const [otherIssue, setOtherIssue] = useState("");
 
   const options = [
     { label: "Approval Delays",                    icon: Clock },
     { label: "Resource Availability Issues",        icon: Users },
     { label: "Communication Gaps",                  icon: MessageSquare },
-    { label: "Workload Distribution Issues",         icon: BarChart },
+    // { label: "Workload Distribution Issues",         icon: BarChart },
     { label: "Policy or Procedure Clarity Issues",  icon: FileText },
+     { label: "Other", icon: Edit3 },
   ];
 
   // Auto reset after submit
@@ -22,18 +24,29 @@ export default function WorkflowReview() {
         setSubmitted(false);
         setSelected("");
         setMessage("");
+        setOtherIssue("");
       }, 2500);
       return () => clearTimeout(timer);
     }
   }, [submitted]);
 
   const handleSubmit = async () => {
+
+    if (!selected) {
+  alert("Please select a category");
+  return;
+}
+
+if (selected === "Other" && !otherIssue.trim()) {
+  alert("Please enter your issue");
+  return;
+}
     // POST to backend
     try {
       await fetch("http://localhost:8000/api/workflow/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category: selected, message }),
+        body: JSON.stringify({ category: selected,customIssue: selected === "Other" ? otherIssue : "", message }),
       });
     } catch (err) {
       // If backend is down, still show success to user
@@ -73,23 +86,35 @@ export default function WorkflowReview() {
 
           {/* Options */}
           <div className="space-y-3 mb-6">
-            {options.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.label}
-                  onClick={() => setSelected(item.label)}
-                  className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition ${
-                    selected === item.label
-                      ? "bg-green-600 border-[#333333]"
-                      : "bg-[#1c1c1c] border-[#333333] hover:bg-green-600"
-                  }`}
-                >
-                  <Icon size={18} className="text-white" />
-                  <span className="text-sm">{item.label}</span>
-                </div>
-              );
-            })}
+           {options.map((item) => {
+  const Icon = item.icon;
+
+  return (
+    <div key={item.label}>
+      <div
+        onClick={() => setSelected(item.label)}
+        className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition ${
+          selected === item.label
+            ? "bg-green-600 border-[#333333]"
+            : "bg-[#1c1c1c] border-[#333333] hover:bg-green-600"
+        }`}
+      >
+        <Icon size={18} className="text-white" />
+        <span className="text-sm">{item.label}</span>
+      </div>
+
+      {selected === "Other" && item.label === "Other" && (
+        <input
+          type="text"
+          value={otherIssue}
+          onChange={(e) => setOtherIssue(e.target.value)}
+          placeholder="Enter your issue..."
+          className="w-full mt-2 p-3 rounded-lg bg-[#262626] border border-[#333333] text-white placeholder-neutral-500 focus:outline-none"
+        />
+      )}
+    </div>
+  );
+})}
           </div>
 
           {/* Textarea */}

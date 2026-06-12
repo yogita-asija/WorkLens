@@ -1,5 +1,6 @@
-const Course     = require("../models/course")
-const Assignment = require("../models/Assignment")
+const Course      = require("../models/course")
+const Assignment  = require("../models/Assignment")
+const Attendance  = require("../models/Attendance")
 const Notification = require("../models/Notification")
 
 // GET /api/courses
@@ -32,6 +33,7 @@ exports.getCourses = async (req, res) => {
         description: c.description || "",
         label:       c.label || `${c.courseCode} — ${c.courseName}`,
         sem:         c.sem || "N/A",
+        batch:       c.batch || "",
         credits:     c.credits || 3,
         status:      c.status || "active",
         teacher:     c.teacher || {},
@@ -162,6 +164,57 @@ exports.unenrollStudent = async (req, res) => {
     course.students = course.students.filter(s => s.id !== req.params.studentId)
     await course.save()
     res.json({ message: "Student unenrolled", total: course.students.length })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// GET /api/courses/:id/enrolled-students  — list enrolled students with attendance & assignment sync
+exports.getEnrolledStudents = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id).lean()
+    if (!course) return res.status(404).json({ message: "Course not found" })
+
+    const courseIdStr = course.courseId || course.courseCode
+
+    // Fetch all attendance records for this course
+    const attendanceRecords = await Attendance.find({ courseId: courseIdStr }).lean()
+
+    // Fetch all assignments for this course
+    const assignments = await Assignment.find({ courseId: course._id }, "submissions total title").lean()
+
+    const students = (course.students || []).map(s => {
+      // Count attendance: how many records this student appears in and their present count
+      let attendedCount = 0
+      let totalAttendanceDays = attendanceRecords.length
+      attendanceRecords.forEach(record => {
+        const entry = record.students.find(st => st.id === s.id)
+        if (entry && entry.status === "present") attendedCount++
+      })
+
+      // Count assignment submissions for this student
+      let submittedAssignments = 0
+      assignments.forEach(a => {
+        if (a.submissions.find(sub => sub.studentId === s.id)) submittedAssignments++
+      })
+
+      return {
+        id: s.id,
+        name: s.name,
+        enrolledAt: s.enrolledAt,
+        attendance: {
+          attended: attendedCount,
+          total: totalAttendanceDays,
+          pct: totalAttendanceDays > 0 ? Math.round((attendedCount / totalAttendanceDays) * 100) : null,
+        },
+        assignments: {
+          submitted: submittedAssignments,
+          total: assignments.length,
+        },
+      }
+    })
+
+    res.json({ courseId: courseIdStr, courseName: course.courseName, students })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }

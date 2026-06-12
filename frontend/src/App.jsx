@@ -3,32 +3,54 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { ThemeProvider } from "./ThemeContext"
 import useAppStore from "./store/useAppStore"
 
-// ── Components ────────────────────────────────────────────────────────────────
+// ── Layout components ──────────────────────────────────────────────────────
 import Sidebar        from "./components/Sidebar"
 import Topbar         from "./components/Topbar"
 import ProfileSidebar from "./components/ProfileSidebar"
 import NotifPanel     from "./components/NotifPanel"
 import GlobalToast    from "./components/GlobalToast"
 
-// ── Faculty pages ─────────────────────────────────────────────────────────────
-import LoginPage        from "./pages/LoginPage"
-import Dashboard        from "./pages/Dashboard"
-import LeaveManagement  from "./pages/LeaveManagement"
-import WorkflowReview   from "./pages/WorkflowReview"
-import AttendancePage   from "./pages/Attendance"
-import ActivityLogs     from "./pages/ActivityLogs"
-import CoursesPage      from "./pages/CoursesPage"
-import AssignmentsPage  from "./pages/AssignmentsPage"
-import ExtraDutiesPage  from "./pages/ExtraDutiesPage"
-import StudentProfile   from "./pages/StudentProfile"
+// ── Existing faculty pages ─────────────────────────────────────────────────
+import LoginPage         from "./pages/LoginPage"
+import Dashboard         from "./pages/Dashboard"
+import LeaveManagement   from "./pages/LeaveManagement"
+import WorkflowReview    from "./pages/WorkflowReview"
+import AttendancePage    from "./pages/Attendance"
+import ActivityLogs      from "./pages/ActivityLogs"
+import CoursesPage       from "./pages/CoursesPage"
+import AssignmentsPage   from "./pages/AssignmentsPage"
+import ExtraDutiesPage   from "./pages/ExtraDutiesPage"
+import StudentProfile    from "./pages/StudentProfile"
 import InternalMarksPage from "./pages/InternalMarksPage"
-import SettingsPage     from "./pages/SettingsPage"
+import SettingsPage      from "./pages/SettingsPage"
 import { useNotifications } from "./hooks/useData"
 
-// ── Admin module ──────────────────────────────────────────────────────────────
+// ── Admin module ───────────────────────────────────────────────────────────
 import AdminLayout from "./pages/admin/AdminLayout"
 
-// ── Hash-based student profile overlay ───────────────────────────────────────
+// ── Coming soon placeholder ────────────────────────────────────────────────
+function ComingSoon({ title, desc }) {
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center",
+      justifyContent: "center", height: 360, gap: 14,
+    }}>
+      <div style={{
+        width: 52, height: 52, borderRadius: 16,
+        background: "rgba(34,197,94,0.1)",
+        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24,
+      }}>🚧</div>
+      <div style={{ textAlign: "center" }}>
+        <p style={{ fontSize: 17, fontWeight: 600, color: "#fff", marginBottom: 6 }}>{title}</p>
+        <p style={{ fontSize: 13, color: "#6b7280", maxWidth: 320, lineHeight: 1.6 }}>
+          {desc || "This page is under construction and will be available soon."}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ── Hash-based student profile overlay ────────────────────────────────────
 function HashStudentProfile() {
   const [studentId, setStudentId] = React.useState(null)
   useEffect(() => {
@@ -41,13 +63,18 @@ function HashStudentProfile() {
     return () => window.removeEventListener("hashchange", check)
   }, [])
   if (!studentId) return null
-  return <StudentProfile studentId={studentId} onClose={() => {
-    window.history.pushState(null, "", window.location.pathname)
-    window.dispatchEvent(new HashChangeEvent("hashchange"))
-  }} />
+  return (
+    <StudentProfile
+      studentId={studentId}
+      onClose={() => {
+        window.history.pushState(null, "", window.location.pathname)
+        window.dispatchEvent(new HashChangeEvent("hashchange"))
+      }}
+    />
+  )
 }
 
-// ── Faculty layout (only accessible to non-admin users) ───────────────────────
+// ── Faculty layout ─────────────────────────────────────────────────────────
 function FacultyLayout() {
   const { user, logout, profileOpen, closeProfile, notifOpen, closeNotif } = useAppStore()
   useNotifications(user?._id)
@@ -61,17 +88,44 @@ function FacultyLayout() {
         <main className="flex-1 overflow-y-auto bg-[#0A0A0A]">
           <div className="p-6">
             <Routes>
-              <Route path="/"                 element={<Dashboard />} />
-              <Route path="/leave-management" element={<LeaveManagement />} />
-              <Route path="/workflow"         element={<WorkflowReview />} />
-              <Route path="/attendance"       element={<AttendancePage />} />
-              <Route path="/activity-logs"    element={<ActivityLogs />} />
-              <Route path="/courses"          element={<CoursesPage />} />
-              <Route path="/assignments"      element={<AssignmentsPage />} />
-              <Route path="/extra-duties"     element={<ExtraDutiesPage />} />
+              {/* ── Dashboard ── */}
+              <Route path="/"               element={<Dashboard />} />
+
+              {/* ── Teaching group ── */}
+              <Route path="/attendance"     element={<AttendancePage />} />
+              <Route path="/courses"        element={<CoursesPage />} />
+              <Route path="/assignments"    element={<AssignmentsPage />} />
+              <Route path="/materials"      element={<ComingSoon title="Study Materials" desc="Upload and manage lecture notes, slides, and reference material for your courses." />} />
+              <Route path="/lesson-plans"   element={<ComingSoon title="Lesson Plans" desc="Plan and track lesson delivery across your courses for the semester." />} />
+              <Route path="/syllabus"       element={<ComingSoon title="Syllabus Progress" desc="Monitor how much of the syllabus has been covered per course." />} />
+              <Route path="/online-classes" element={<ComingSoon title="Online Classes" desc="Schedule and conduct live online classes and track student participation." />} />
+              {/* <Route path="/obe-mapping"    element={<ComingSoon title="OBE Mapping" desc="Map course outcomes to program outcomes for outcome-based education compliance." />} /> */}
+
+              {/* ── Assessment group ── */}
               <Route path="/internal-marks"   element={<InternalMarksPage />} />
-              <Route path="/settings"         element={<SettingsPage user={user} />} />
-              <Route path="*"                 element={<Navigate to="/" replace />} />
+              <Route path="/question-papers"  element={<ComingSoon title="Question Papers" desc="Create and manage question papers for internal and external exams." />} />
+              <Route path="/grades"           element={<ComingSoon title="Grades & Rubrics" desc="Submit final grades and use rubric-based evaluation for assignments." />} />
+              {/* <Route path="/performance"      element={<ComingSoon title="Performance Analytics" desc="View student performance trends across tests and assignments." />} /> */}
+
+              {/* ── Students group ── */}
+              {/* <Route path="/student-attendance"  element={<ComingSoon title="Attendance Reports" desc="Per-student attendance summary across all your courses." />} /> */}
+              <Route path="/student-performance" element={<ComingSoon title="Performance Reports" desc="Detailed performance breakdown per student." />} />
+              <Route path="/at-risk"             element={<ComingSoon title="At-Risk Students" desc="Students flagged for low attendance or poor performance — act before it's too late." />} />
+              <Route path="/student-messages"    element={<ComingSoon title="Student Messages" desc="Send and receive messages directly with your students." />} />
+
+              {/* ── Self-Service group ── */}
+              <Route path="/leave-management" element={<LeaveManagement />} />
+              <Route path="/timetable"        element={<ComingSoon title="My Timetable" desc="View your weekly class schedule for the current semester." />} />
+              {/* <Route path="/workload"         element={<ComingSoon title="Workload" desc="Your current workload score based on courses, duties, and assignments." />} /> */}
+              {/* <Route path="/kpi"              element={<ComingSoon title="KPI Dashboard" desc="Your personal KPIs — attendance %, assignment completion, student scores." />} /> */}
+              <Route path="/extra-duties"     element={<ExtraDutiesPage />} />
+              <Route path="/workflow"         element={<WorkflowReview />} />
+              <Route path="/activity-logs"    element={<ActivityLogs />} />
+
+              {/* ── Settings ── */}
+              <Route path="/settings" element={<SettingsPage user={user} />} />
+
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
           <HashStudentProfile />
@@ -89,11 +143,10 @@ function FacultyLayout() {
   )
 }
 
-// ── Root component with strict role-based routing ─────────────────────────────
+// ── Root ───────────────────────────────────────────────────────────────────
 export default function App() {
   const { user, setUser } = useAppStore()
 
-  // Not logged in → show login
   if (!user) {
     return (
       <ThemeProvider>
@@ -109,13 +162,11 @@ export default function App() {
       <Router>
         <Routes>
           {isAdmin ? (
-            // Admin users: ONLY admin routes; any other path redirects to /admin
             <>
               <Route path="/admin/*" element={<AdminLayout />} />
               <Route path="*"        element={<Navigate to="/admin" replace />} />
             </>
           ) : (
-            // Faculty/staff users: ONLY faculty routes; /admin is blocked
             <>
               <Route path="/admin/*" element={<Navigate to="/" replace />} />
               <Route path="/*"       element={<FacultyLayout />} />

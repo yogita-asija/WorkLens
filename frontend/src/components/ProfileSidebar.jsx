@@ -1,34 +1,38 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { X, Mail, Phone, MapPin, BookOpen, Calendar, Clock, GraduationCap, Star } from "lucide-react"
 import * as api from "../services/api"
 import useAppStore from "../store/useAppStore"
 
-const profile = {
-  name: "Dr. Sarah Chen",
-  title: "Associate Professor",
-  department: "Computer Science",
-  employeeId: "FAC-2019-042",
-  email: "sarah.chen@university.edu",
-  phone: "+1 (555) 234-5678",
-  office: "Tech Building, Room 304",
-  joinDate: "August 2019",
-  qualification: "Ph.D. in Computer Science, MIT",
-  specialization: "Algorithms & Machine Learning",
-  experience: "8 years",
-  courses: [
-    { code: "CS401", name: "Advanced Algorithms", students: 45 },
-    { code: "CS301", name: "Data Structures", students: 62 },
-    { code: "CS201", name: "Programming II", students: 54 },
-  ],
-  stats: [
-    { label: "Classes Taught", value: "6" },
-    { label: "Students", value: "161" },
-    { label: "Activity Score", value: "94%" },
-    { label: "Avg Rating", value: "4.8" },
-  ],
-};
-
 export default function ProfileSidebar({ open, onClose }) {
+  const user = useAppStore((s) => s.user)
+  const navigate = useNavigate()
+
+  const [courses, setCourses] = useState([])
+  const [stats,   setStats]   = useState([])
+
+  useEffect(() => {
+    if (!open) return
+    api.getDashboardCourses().then(data => {
+      setCourses((data || []).slice(0, 3))
+    }).catch(() => {})
+    api.getDashboardStats().then(data => {
+      setStats([
+        { label: "Classes Taught", value: String(data.classesTaught ?? "—") },
+        { label: "Activity Score", value: String(data.activityScore ?? "—") },
+        { label: "Weekly Hours",   value: String(data.weeklyHours   ?? "—") },
+        { label: "Assignments",    value: String(data.assignments   ?? "—") },
+      ])
+    }).catch(() => {})
+  }, [open])
+
+  const initials = (user?.name || "?")
+    .split(" ")
+    .map(w => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
+
   return (
     <aside
       style={{
@@ -64,17 +68,17 @@ export default function ProfileSidebar({ open, onClose }) {
           margin: "0 auto 16px",
           fontSize: "28px", fontWeight: 700, color: "#000",
         }}>
-          SC
+          {initials}
         </div>
-        <p style={{ fontSize: "18px", fontWeight: 700, color: "#fff", margin: 0 }}>{profile.name}</p>
-        <p style={{ fontSize: "13px", color: "#22c55e", margin: "4px 0 0" }}>{profile.title}</p>
-        <p style={{ fontSize: "12px", color: "#9ca3af", margin: "3px 0 0" }}>{profile.department}</p>
-        <p style={{ fontSize: "11px", color: "#4b5563", margin: "6px 0 0", fontFamily: "monospace" }}>ID: {profile.employeeId}</p>
+        <p style={{ fontSize: "18px", fontWeight: 700, color: "#fff", margin: 0 }}>{user?.name || "—"}</p>
+        <p style={{ fontSize: "13px", color: "#22c55e", margin: "4px 0 0" }}>{user?.role === "teaching" ? "Teaching Staff" : user?.role === "non-teaching" ? "Non-Teaching Staff" : user?.role || "—"}</p>
+        <p style={{ fontSize: "12px", color: "#9ca3af", margin: "3px 0 0" }}>{user?.department || "—"}</p>
+        <p style={{ fontSize: "11px", color: "#4b5563", margin: "6px 0 0", fontFamily: "monospace" }}>ID: {user?._id?.slice(-8).toUpperCase() || "—"}</p>
       </div>
 
       {/* Stats row */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1px", background: "#1f1f1f", borderBottom: "1px solid #1f1f1f" }}>
-        {profile.stats.map((s) => (
+        {stats.map((s) => (
           <div key={s.label} style={{ background: "#0a0a0a", padding: "14px", textAlign: "center" }}>
             <p style={{ fontSize: "18px", fontWeight: 700, color: "#fff", margin: 0 }}>{s.value}</p>
             <p style={{ fontSize: "10px", color: "#6b7280", margin: "3px 0 0" }}>{s.label}</p>
@@ -86,9 +90,8 @@ export default function ProfileSidebar({ open, onClose }) {
       <div style={{ padding: "20px", borderBottom: "1px solid #1f1f1f" }}>
         <p style={{ fontSize: "11px", fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "14px" }}>Contact</p>
         {[
-          { icon: Mail, label: profile.email },
-          { icon: Phone, label: profile.phone },
-          { icon: MapPin, label: profile.office },
+          { icon: Mail,  label: user?.email || "—" },
+          { icon: Phone, label: user?.phone || "—" },
         ].map(({ icon: Icon, label }) => (
           <div key={label} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
             <div style={{ width: "32px", height: "32px", background: "#1c1c1c", border: "1px solid #2a2a2a", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -103,10 +106,9 @@ export default function ProfileSidebar({ open, onClose }) {
       <div style={{ padding: "20px", borderBottom: "1px solid #1f1f1f" }}>
         <p style={{ fontSize: "11px", fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "14px" }}>Academic Details</p>
         {[
-          { icon: GraduationCap, label: "Qualification", value: profile.qualification },
-          { icon: Star, label: "Specialization", value: profile.specialization },
-          { icon: Clock, label: "Experience", value: profile.experience },
-          { icon: Calendar, label: "Joined", value: profile.joinDate },
+          { icon: Calendar, label: "Joined",     value: user?.memberSince || "—" },
+          { icon: MapPin,   label: "Department", value: user?.department  || "—" },
+          { icon: Star,     label: "Bio",        value: user?.bio         || "—" },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} style={{ display: "flex", gap: "10px", marginBottom: "14px" }}>
             <div style={{ width: "32px", height: "32px", background: "#1c1c1c", border: "1px solid #2a2a2a", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -123,7 +125,9 @@ export default function ProfileSidebar({ open, onClose }) {
       {/* Current Courses */}
       <div style={{ padding: "20px" }}>
         <p style={{ fontSize: "11px", fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "14px" }}>Current Courses</p>
-        {profile.courses.map((c) => (
+        {courses.length === 0 ? (
+          <p style={{ fontSize: "12px", color: "#4b5563" }}>No courses found.</p>
+        ) : courses.map((c) => (
           <div key={c.code} style={{ background: "#1c1c1c", border: "1px solid #2a2a2a", borderRadius: "10px", padding: "12px", marginBottom: "10px", display: "flex", alignItems: "center", gap: "12px" }}>
             <div style={{ width: "36px", height: "36px", background: "#111", border: "1px solid #333", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <BookOpen size={14} color="#22c55e" />
@@ -146,6 +150,7 @@ export default function ProfileSidebar({ open, onClose }) {
         }}
           onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
           onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+          onClick={() => { onClose(); navigate("/settings") }}
         >
           Edit Profile
         </button>

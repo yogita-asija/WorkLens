@@ -5,7 +5,6 @@
 @tailwind utilities;
 
 
-
 @layer base {
   * { box-sizing: border-box; }
 
@@ -15,14 +14,89 @@
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.25s, color 0.25s;
+  }
+
+  /* Light mode body */
+  html.light body {
+    background-color: #F3F4F6;
+    color: #111827;
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: #0A0A0A; }
+  html.light ::-webkit-scrollbar-track { background: #F3F4F6; }
   ::-webkit-scrollbar-thumb { background: #2D2D2D; border-radius: 3px; }
+  html.light ::-webkit-scrollbar-thumb { background: #D1D5DB; }
   ::-webkit-scrollbar-thumb:hover { background: #393939; }
+  html.light ::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
 
   select option { background-color: #1c1c1c; color: #FFFFFF; }
+  html.light select option { background-color: #FFFFFF; color: #111827; }
+}
+
+/* ── Global theme-aware utility classes for Sidebar / Topbar ── */
+
+/* Sidebar */
+html.light aside.sidebar-root {
+  background-color: #FFFFFF !important;
+  border-right-color: #E5E7EB !important;
+}
+html.light .sidebar-brand { color: #111827 !important; }
+html.light .sidebar-brand-sub { color: #6B7280 !important; }
+html.light .sidebar-nav-link {
+  color: #6B7280 !important;
+}
+html.light .sidebar-nav-link:hover {
+  background-color: #F3F4F6 !important;
+  color: #111827 !important;
+}
+html.light .sidebar-nav-link.active {
+  background-color: #111827 !important;
+  color: #FFFFFF !important;
+}
+html.light .sidebar-logout {
+  color: #6B7280 !important;
+  border-top-color: #E5E7EB !important;
+}
+html.light .sidebar-logout:hover {
+  background-color: #F3F4F6 !important;
+  color: #111827 !important;
+}
+html.light .sidebar-logout-border {
+  border-top-color: #E5E7EB !important;
+}
+html.light .logout-modal-box {
+  background-color: #FFFFFF !important;
+  border-color: #E5E7EB !important;
+}
+html.light .logout-modal-text { color: #111827 !important; }
+html.light .logout-cancel { color: #6B7280 !important; }
+html.light .logout-cancel:hover { background-color: #F3F4F6 !important; color: #111827 !important; }
+
+/* Topbar */
+html.light header.topbar-root {
+  background-color: #FFFFFF !important;
+  border-bottom-color: #E5E7EB !important;
+}
+html.light .topbar-bell { color: #374151 !important; }
+html.light .topbar-bell:hover { color: #111827 !important; }
+html.light .topbar-name { color: #111827 !important; }
+html.light .topbar-dept { color: #6B7280 !important; }
+
+/* Main layout bg */
+html.light .faculty-layout-root {
+  background-color: #F3F4F6 !important;
+}
+html.light .faculty-main-bg {
+  background-color: #F3F4F6 !important;
+}
+
+/* Modal overlay in light mode */
+html.light .modal-overlay { background: rgba(0,0,0,0.4); }
+html.light .modal-box {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
 }
 
 @layer components {
@@ -31,10 +105,18 @@
     background-color: #1c1c1c;
     border: 1px solid #2D2D2D;
   }
+  html.light .glass-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+  }
 
   .glass-card-2 {
     background-color: #1c1c1c;
     border: 1px solid #2D2D2D;
+  }
+  html.light .glass-card-2 {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
   }
 
   .shimmer-bg {
@@ -49,16 +131,26 @@
     border: 1px solid #2D2D2D;
     @apply rounded-xl p-6 transition-all duration-300 cursor-default;
   }
+  html.light .stat-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    color: #111827;
+  }
 
   .stat-card:hover {
     border-color: #4a4a4a;
     transform: translateY(-2px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
   }
+  html.light .stat-card:hover {
+    border-color: #D1D5DB;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+  }
 
   /* ── Table row ── */
   .table-row-hover { @apply transition-all duration-200; }
   .table-row-hover:hover { background: rgba(255,255,255,0.04); }
+  html.light .table-row-hover:hover { background: rgba(0,0,0,0.03); }
 
   /* ── Primary Button ── */
   .btn-primary {
@@ -102,8 +194,14 @@
     border-color: #2D2D2D;
     color: #FFFFFF;
   }
+  html.light .input-dark {
+    background-color: #F9FAFB;
+    border-color: #E5E7EB;
+    color: #111827;
+  }
   .input-dark::placeholder { color: #9CA3AF; }
   .input-dark:hover { border-color: #4a4a4a; }
+  html.light .input-dark:hover { border-color: #D1D5DB; }
   .input-dark:focus { border-color: #0ea5e9; }
 
   /* ── Status Action Select ── */
@@ -135,6 +233,7 @@
 
   /* ── Subtext color from spec ── */
   .text-subtext { color: #9CA3AF; }
+  html.light .text-subtext { color: #6B7280; }
 }
 
 /* ── Toggle switch ── */
@@ -158,6 +257,9 @@
   border-radius: 999px;
   transition: background 0.2s;
 }
+html.light .toggle-slider {
+  background: #D1D5DB;
+}
 .toggle-slider::before {
   content: '';
   position: absolute;
@@ -172,11 +274,46 @@
 .toggle input:checked + .toggle-slider {
   background: #22C55E;
 }
+html.light .toggle input:checked + .toggle-slider {
+  background: #16A34A;
+}
 .toggle input:checked + .toggle-slider::before {
   transform: translateX(20px);
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+.modal-box {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  padding: 28px;
+  min-width: 340px;
+  max-width: 520px;
+  width: 90%;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes slideUp {
   from { transform: translateY(12px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }

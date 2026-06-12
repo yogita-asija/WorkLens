@@ -1,5 +1,6 @@
-const Assignment = require("../models/Assignment")
-const Course     = require("../models/course")
+const Assignment   = require("../models/Assignment")
+const Course       = require("../models/course")
+const Notification = require("../models/Notification")
 
 const toPlain = a => ({
   _id:         a._id,
@@ -90,6 +91,22 @@ exports.createAssignment = async (req, res) => {
       submissions: [],
       completed: false,
     })
+
+    // Notify the course teacher (best-effort)
+    try {
+      if (courseId) {
+        const c = await Course.findById(courseId).lean()
+        if (c?.teacher?.id) {
+          await Notification.create({
+            userId:  c.teacher.id,
+            type:    "assignment",
+            title:   "Assignment Created",
+            message: `"${title}" has been added to ${courseName || c.courseName}${deadline ? `. Due: ${new Date(deadline).toLocaleDateString()}` : ""}.`,
+          })
+        }
+      }
+    } catch {}
+
     res.status(201).json({ ...saved.toObject(), submitted: 0 })
   } catch (err) {
     res.status(400).json({ message: err.message })
@@ -112,6 +129,22 @@ exports.deleteAssignment = async (req, res) => {
   try {
     const deleted = await Assignment.findByIdAndDelete(req.params.id)
     if (!deleted) return res.status(404).json({ message: "Not found" })
+
+    // Notify course teacher (best-effort)
+    try {
+      if (deleted.courseId) {
+        const c = await Course.findById(deleted.courseId).lean()
+        if (c?.teacher?.id) {
+          await Notification.create({
+            userId:  c.teacher.id,
+            type:    "assignment",
+            title:   "Assignment Removed",
+            message: `"${deleted.title}" has been deleted from ${deleted.course || c.courseName}.`,
+          })
+        }
+      }
+    } catch {}
+
     res.json({ message: "Assignment deleted" })
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -173,6 +206,22 @@ exports.gradeSubmission = async (req, res) => {
     sub.feedback = feedback || ""
     sub.status   = "graded"
     await a.save()
+
+    // Notify course teacher (best-effort)
+    try {
+      if (a.courseId) {
+        const c = await Course.findById(a.courseId).lean()
+        if (c?.teacher?.id) {
+          await Notification.create({
+            userId:  c.teacher.id,
+            type:    "grade",
+            title:   "Submission Graded",
+            message: `${sub.studentName}'s submission for "${a.title}" graded: ${grade}/${a.maxGrade || 100}.`,
+          })
+        }
+      }
+    } catch {}
+
     res.json({ message: "Graded", submission: sub })
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -200,6 +249,101 @@ exports.getAnalytics = async (req, res) => {
     const avgRate = totalExpected > 0 ? Math.round((totalSubmissions / totalExpected) * 100) : 0
 
     res.json({ total, active, completed, overdue, byType, avgSubmissionRate: avgRate, totalSubmissions })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// GET /api/assignments/:id/students-marks
+// Returns all students enrolled in the assignment's course, with their marks if any
+exports.getAssignmentStudentsMarks = async (req, res) => {
+  try {
+    const assignment = await Assignment.findById(req.params.id).lean()
+    if (!assignment) return res.status(404).json({ message: "Assignment not found" })
+
+    if (!assignment.courseId) {
+      return res.json({ students: [], message: "No course linked to this assignment" })
+    }
+
+    const course = await Course.findById(assignment.courseId).lean()
+    if (!course) return res.status(404).json({ message: "Course not found" })
+
+    const students = (course.students || []).map(s => {
+      const submission = (assignment.submissions || []).find(sub => sub.studentId === s.id)
+      return {
+        id: s.id,
+        name: s.name,
+        submissionId: submission?._id || null,
+        grade: submission?.grade ?? null,
+        maxGrade: assignment.maxGrade || 100,
+        feedback: submission?.feedback || "",
+        status: submission?.status || "not_submitted",
+        submittedAt: submission?.submittedAt || null,
+      }
+    })
+
+    res.json({
+      assignmentId: assignment._id,
+      assignmentTitle: assignment.title,
+      maxGrade: assignment.maxGrade || 100,
+      courseId: course.courseId || course.courseCode,
+      courseName: course.courseName,
+      students,
+    })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// PUT /api/assignments/:id/bulk-marks
+// Save marks for multiple students at once
+exports.bulkSaveMarks = async (req, res) => {
+  try {
+    const { marks } = req.body // [{ studentId, studentName, grade, feedback }]
+    if (!Array.isArray(marks)) return res.status(400).json({ message: "marks must be an array" })
+
+    const assignment = await Assignment.findById(req.params.id)
+    if (!assignment) return res.status(404).json({ message: "Assignment not found" })
+
+    for (const m of marks) {
+      if (m.grade === null || m.grade === undefined || m.grade === "") continue
+      const existing = assignment.submissions.find(s => s.studentId === m.studentId)
+      if (existing) {
+        existing.grade = Number(m.grade)
+        existing.feedback = m.feedback || existing.feedback || ""
+        existing.status = "graded"
+      } else {
+        assignment.submissions.push({
+          studentId: m.studentId,
+          studentName: m.studentName,
+          grade: Number(m.grade),
+          feedback: m.feedback || "",
+          status: "graded",
+          submittedAt: new Date(),
+        })
+      }
+    }
+
+    assignment.submitted_names = assignment.submissions.map(s => s.studentName)
+    await assignment.save()
+
+    // Notify course teacher (best-effort)
+    try {
+      const gradedCount = marks.filter(m => m.grade !== null && m.grade !== undefined && m.grade !== "").length
+      if (gradedCount > 0 && assignment.courseId) {
+        const c = await Course.findById(assignment.courseId).lean()
+        if (c?.teacher?.id) {
+          await Notification.create({
+            userId:  c.teacher.id,
+            type:    "grade",
+            title:   "Marks Saved",
+            message: `${gradedCount} student mark(s) saved for "${assignment.title}" in ${assignment.course || c.courseName}.`,
+          })
+        }
+      }
+    } catch {}
+
+    res.json({ message: "Marks saved successfully", count: marks.length })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }

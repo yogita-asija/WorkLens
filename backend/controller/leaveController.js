@@ -1,4 +1,5 @@
 const { Leave, LeaveBalance, Holiday } = require("../models/Leave")
+const Notification = require("../models/Notification")
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -23,11 +24,11 @@ async function getOrCreateBalance(facultyId, year) {
 }
 
 // ─── GET /api/leaves ─────────────────────────────────────────────────────────
-// Returns all leave applications for the current faculty, newest first.
+// Returns all leave applications for the logged-in faculty, newest first.
 // Optional query params: ?status=Pending|Approved|Rejected, ?type=Sick|Casual|Earned
 const getLeaves = async (req, res) => {
   try {
-    const facultyId = req.query.facultyId || "faculty_001"
+    const facultyId = req.user._id.toString()
     const filter = { facultyId }
 
     if (req.query.status) filter.status = req.query.status
@@ -41,10 +42,10 @@ const getLeaves = async (req, res) => {
 }
 
 // ─── GET /api/leaves/balance ─────────────────────────────────────────────────
-// Returns leave balance stats (total, taken, remaining, holidays).
+// Returns leave balance stats for the logged-in faculty.
 const getBalance = async (req, res) => {
   try {
-    const facultyId = req.query.facultyId || "faculty_001"
+    const facultyId = req.user._id.toString()
     const year      = Number(req.query.year) || new Date().getFullYear()
 
     const bal = await getOrCreateBalance(facultyId, year)
@@ -72,11 +73,10 @@ const getBalance = async (req, res) => {
 }
 
 // ─── GET /api/leaves/monthly ─────────────────────────────────────────────────
-// Returns monthly leave day totals for the current year (for the bar chart).
-// Response: [ { month: "Jan", days: 2 }, ... ]
+// Returns monthly leave day totals for the current year for the logged-in faculty.
 const getMonthlyStats = async (req, res) => {
   try {
-    const facultyId = req.query.facultyId || "faculty_001"
+    const facultyId = req.user._id.toString()
     const year      = Number(req.query.year) || new Date().getFullYear()
 
     const from = new Date(year, 0, 1)
@@ -103,18 +103,14 @@ const getMonthlyStats = async (req, res) => {
 }
 
 // ─── POST /api/leaves ────────────────────────────────────────────────────────
-// Apply for leave.
-// Body: { type, fromDate, toDate, reason, facultyId?, facultyName? }
+// Apply for leave. facultyId and facultyName come from the authenticated user.
+// Body: { type, fromDate, toDate, reason }
 const applyLeave = async (req, res) => {
   try {
-    const {
-      type,
-      fromDate,
-      toDate,
-      reason,
-      facultyId   = "faculty_001",
-      facultyName = "Dr. Naman",
-    } = req.body
+    const facultyId   = req.user._id.toString()
+    const facultyName = req.user.name
+
+    const { type, fromDate, toDate, reason } = req.body
 
     // Validation
     if (!type || !fromDate || !reason) {
@@ -153,6 +149,16 @@ const applyLeave = async (req, res) => {
       reason,
       status: "Pending",
     })
+
+    // Notify the faculty member (best-effort)
+    try {
+      await Notification.create({
+        userId:  facultyId,
+        type:    "system",
+        title:   "Leave Application Submitted",
+        message: `Your ${type} leave request for ${duration} day(s) (${from.toLocaleDateString()} – ${to.toLocaleDateString()}) has been submitted and is pending approval.`,
+      })
+    } catch {}
 
     res.status(201).json({ success: true, message: "Leave application submitted", data: leave })
   } catch (err) {
@@ -208,7 +214,7 @@ const deleteLeave = async (req, res) => {
 }
 
 // ─── GET /api/leaves/holidays ────────────────────────────────────────────────
-// Returns the public holiday calendar.
+// Returns the public holiday calendar. (No auth needed — same for everyone)
 const getHolidays = async (req, res) => {
   try {
     const year = Number(req.query.year) || new Date().getFullYear()

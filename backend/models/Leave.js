@@ -2,9 +2,9 @@ const mongoose = require("mongoose")
 
 // Individual leave application
 const LeaveSchema = new mongoose.Schema({
-  // Who applied (faculty member ID or name – using a simple string for now)
-  facultyId:   { type: String, default: "faculty_001" },
-  facultyName: { type: String, default: "Dr. Naman" },
+  // Who applied — set from the authenticated user, no hardcoded default
+  facultyId:   { type: String, required: true },
+  facultyName: { type: String, required: true },
 
   // Leave details
   type: {
@@ -31,9 +31,9 @@ const LeaveSchema = new mongoose.Schema({
   updatedAt:  { type: Date, default: Date.now },
 })
 
-// Leave balance per faculty per year
+// Leave balance per faculty per year — facultyId set dynamically, no hardcoded default
 const LeaveBalanceSchema = new mongoose.Schema({
-  facultyId:   { type: String, default: "faculty_001" },
+  facultyId:   { type: String, required: true },
   year:        { type: Number, default: new Date().getFullYear() },
   totalLeaves: { type: Number, default: 12 },  // allocated
   taken:       { type: Number, default: 0  },   // approved + used days

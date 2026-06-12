@@ -370,11 +370,13 @@ export default function ActivityLogs() {
             {loading ? (
               // Skeleton
               Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-            ) : logs.length === 0 ? (
+            ) : filteredLogs.length === 0 ? (
               <div style={{ padding: "60px 0", textAlign: "center" }}>
                 <p style={{ color: "#6B7280", fontSize: "14px", marginBottom: "8px" }}>No activities found</p>
                 <p style={{ color: "#4b5563", fontSize: "12px" }}>
-                  Activities are logged automatically when you mark attendance, create assignments, etc.
+                  {logs.length === 0
+                    ? "Activities are logged automatically when you mark attendance, create assignments, etc."
+                    : "No activities match your current filters. Try adjusting the date range or type."}
                 </p>
               </div>
             ) : (
@@ -382,7 +384,7 @@ export default function ActivityLogs() {
                 <ActivityItem
                   key={log._id}
                   log={log}
-                  isLast={i === logs.length - 1}
+                  isLast={i === filteredLogs.length - 1}
                 />
               ))
             )}

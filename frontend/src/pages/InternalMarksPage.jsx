@@ -1,34 +1,40 @@
-import React, { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useMemo } from "react"
 import useAppStore from "../store/useAppStore"
-import { getCourses, getAttendanceRoster } from "../services/api"
+import { getCourses } from "../services/api"
 
-// ── API helpers (internal marks) ───────────────────────────────────────────────
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000"
+// ── API helpers ────────────────────────────────────────────────────────────────
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
 async function apiFetch(path, opts = {}) {
-  const res = await fetch(`${BASE}${path}`, { headers: { "Content-Type": "application/json" }, ...opts })
-  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `Error ${res.status}`) }
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: { "Content-Type": "application/json" },
+    ...opts,
+  })
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}))
+    throw new Error(e.message || `Error ${res.status}`)
+  }
   return res.json()
 }
 
 // ── Icons ──────────────────────────────────────────────────────────────────────
-const UserIcon = () => (
-  <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-    <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+const SearchIcon = () => (
+  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </svg>
+)
+const CloseIcon = () => (
+  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
   </svg>
 )
 const BackIcon = () => (
-  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+  <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <polyline points="15 18 9 12 15 6"/>
   </svg>
 )
-const PlusIcon = () => (
-  <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-  </svg>
-)
-const TrashIcon = () => (
-  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+const RefreshIcon = () => (
+  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
   </svg>
 )
 const EditIcon = () => (
@@ -37,597 +43,753 @@ const EditIcon = () => (
     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
   </svg>
 )
-const CloseIcon = () => (
-  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+const SaveIcon = () => (
+  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+)
+const CancelIcon = () => (
+  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
   </svg>
 )
-const AwardIcon = () => (
-  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+const UsersIcon = () => (
+  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
   </svg>
 )
-const SearchIcon = () => (
-  <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+const BookIcon = () => (
+  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
   </svg>
 )
-const ChevronIcon = () => (
-  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <polyline points="6 9 12 15 18 9"/>
+const LayersIcon = () => (
+  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+    <polyline points="2 17 12 22 22 17"/>
+    <polyline points="2 12 12 17 22 12"/>
   </svg>
 )
-const RefreshIcon = () => (
-  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-  </svg>
-)
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-function getInitials(name = "") {
-  return name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2) || "??"
-}
-const AVATAR_COLORS = [
-  "#227e44","#1d6fa8","#7c3aed","#c2410c","#0e7490",
-  "#be185d","#065f46","#92400e","#1e40af","#5b21b6",
-]
-function avatarColor(name = "") {
-  let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff
-  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]
-}
-function pct(marks, maxMarks) { return maxMarks ? Math.min(100, Math.round((marks / maxMarks) * 100)) : 0 }
-function gradeLabel(p) {
-  if (p >= 90) return { label: "A+", color: "#4ade80" }
-  if (p >= 80) return { label: "A",  color: "#a3e635" }
-  if (p >= 70) return { label: "B",  color: "#facc15" }
-  if (p >= 60) return { label: "C",  color: "#fb923c" }
-  return             { label: "D",  color: "#f87171" }
-}
 
 // ── Spinner ────────────────────────────────────────────────────────────────────
 function Spinner({ size = 28 }) {
   return (
-    <div style={{ width: size, height: size, border: "2px solid #2D2D2D", borderTopColor: "#227e44", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+    <div style={{
+      width: size, height: size,
+      border: "2px solid #2D2D2D",
+      borderTopColor: "#227e44",
+      borderRadius: "50%",
+      animation: "spin 0.7s linear infinite",
+    }} />
   )
 }
 
-// ── Student Card ───────────────────────────────────────────────────────────────
-function StudentCard({ student, onClick }) {
-  const color = avatarColor(student.name)
-  return (
-    <button
-      onClick={() => onClick(student)}
-      style={{ background: "#1c1c1c", border: "1px solid #2D2D2D" }}
-      className="flex flex-col items-center gap-3 p-5 rounded-2xl cursor-pointer transition-all duration-200 hover:border-neutral-500 hover:bg-neutral-800/60 hover:-translate-y-0.5 hover:shadow-lg w-full text-left"
-    >
-      <div style={{ background: color, width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
-        {getInitials(student.name)}
-      </div>
-      <div className="text-center min-w-0 w-full">
-        <p className="text-white font-semibold text-sm truncate">{student.name}</p>
-        <p className="text-neutral-500 text-xs mt-0.5">{student.id}</p>
-      </div>
-    </button>
-  )
+// ── TYPE badge colors ──────────────────────────────────────────────────────────
+const TYPE_COLORS = {
+  ASSIGNMENT: { bg: "rgba(59,130,246,0.15)",  color: "#60a5fa", label: "Assignment" },
+  QUIZ:       { bg: "rgba(168,85,247,0.15)",  color: "#c084fc", label: "Quiz" },
+  EXAM:       { bg: "rgba(239,68,68,0.15)",   color: "#f87171", label: "Exam" },
+  CODING:     { bg: "rgba(34,197,94,0.15)",   color: "#4ade80", label: "Coding" },
+  PROJECT:    { bg: "rgba(245,158,11,0.15)",  color: "#fbbf24", label: "Project" },
 }
 
-// ── Add / Edit Mark Modal ──────────────────────────────────────────────────────
-function MarkModal({ student, editMark, onSave, onClose }) {
-  const [form, setForm] = useState({
-    category: editMark?.category || "",
-    marks:    editMark?.marks !== undefined ? String(editMark.marks) : "",
-    maxMarks: editMark?.maxMarks !== undefined ? String(editMark.maxMarks) : "100",
-    courseId: editMark?.courseId || student.courses?.[0]?.courseId || "",
-    remarks:  editMark?.remarks || "",
-  })
-  const [saving, setSaving] = useState(false)
-  const [err, setErr] = useState("")
+// ── Batch chip colors (cycles through a palette) ──────────────────────────────
+const BATCH_PALETTE = [
+  { bg: "rgba(74,222,128,0.15)",  border: "rgba(74,222,128,0.35)",  color: "#4ade80"  },
+  { bg: "rgba(96,165,250,0.15)",  border: "rgba(96,165,250,0.35)",  color: "#60a5fa"  },
+  { bg: "rgba(251,191,36,0.15)",  border: "rgba(251,191,36,0.35)",  color: "#fbbf24"  },
+  { bg: "rgba(192,132,252,0.15)", border: "rgba(192,132,252,0.35)", color: "#c084fc"  },
+  { bg: "rgba(251,113,133,0.15)", border: "rgba(251,113,133,0.35)", color: "#fb7185"  },
+  { bg: "rgba(45,212,191,0.15)",  border: "rgba(45,212,191,0.35)",  color: "#2dd4bf"  },
+]
+function batchColor(idx) { return BATCH_PALETTE[idx % BATCH_PALETTE.length] }
 
-  const setF = (k, v) => setForm(p => ({ ...p, [k]: v }))
+// ── Inline editable cell ───────────────────────────────────────────────────────
+function EditableCell({ value, maxValue, onSave, placeholder = "Add" }) {
+  const [editing, setEditing] = useState(false)
+  const [val, setVal]         = useState(value !== null && value !== undefined ? String(value) : "")
+  const [saving, setSaving]   = useState(false)
 
-  const inputStyle = {
-    background: "#111", border: "1px solid #2D2D2D", borderRadius: 10,
-    color: "#fff", width: "100%", padding: "9px 12px", fontSize: 13, outline: "none",
+  function startEdit() { setVal(value !== null && value !== undefined ? String(value) : ""); setEditing(true) }
+
+  async function commitSave() {
+    if (val.trim() === "" || isNaN(Number(val)) || Number(val) < 0) { setEditing(false); return }
+    setSaving(true)
+    try { await onSave(Number(val)) } catch {}
+    finally { setSaving(false); setEditing(false) }
   }
 
-  async function handleSave() {
-    if (!form.category.trim()) { setErr("Category is required"); return }
-    if (form.marks === "" || isNaN(Number(form.marks))) { setErr("Marks must be a number"); return }
-    if (Number(form.marks) < 0) { setErr("Marks cannot be negative"); return }
-    setErr(""); setSaving(true)
-    try { await onSave(form) }
-    catch (e) { setErr(e.message) }
-    finally { setSaving(false) }
+  function handleKey(e) {
+    if (e.key === "Enter") commitSave()
+    if (e.key === "Escape") setEditing(false)
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backdropFilter: "blur(6px)", background: "rgba(0,0,0,0.75)" }}>
-      <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 20, width: "100%", maxWidth: 480, padding: 32 }} className="shadow-2xl mx-4">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-white font-semibold text-base">
-            {editMark ? "Edit Mark" : "Add Mark"}&nbsp;—&nbsp;<span className="text-neutral-400">{student.name}</span>
-          </h3>
-          <button onClick={onClose} className="text-neutral-500 hover:text-white transition"><CloseIcon /></button>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          {/* Course selector */}
-          {student.courses?.length > 0 && (
-            <div>
-              <label className="text-neutral-400 text-xs font-medium mb-1.5 block">Course</label>
-              <div style={{ position: "relative" }}>
-                <select
-                  value={form.courseId}
-                  onChange={e => setF("courseId", e.target.value)}
-                  style={{ ...inputStyle, appearance: "none", paddingRight: 32 }}
-                >
-                  <option value="">— Select course —</option>
-                  {student.courses.map(c => (
-                    <option key={c.courseId} value={c.courseId}>{c.courseId} — {c.courseName}</option>
-                  ))}
-                </select>
-                <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#9CA3AF" }}>
-                  <ChevronIcon />
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Category — free text, teacher decides */}
-          <div>
-            <label className="text-neutral-400 text-xs font-medium mb-1.5 block">
-              Category <span className="text-red-400">*</span>
-            </label>
-            <input
-              value={form.category}
-              onChange={e => setF("category", e.target.value)}
-              placeholder="e.g. Quiz 1, Assignment 2, Mid-term, Attendance…"
-              style={inputStyle}
-              onFocus={e => (e.target.style.borderColor = "#227e44")}
-              onBlur={e => (e.target.style.borderColor = "#2D2D2D")}
-            />
-          </div>
-
-          {/* Marks / Max */}
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="text-neutral-400 text-xs font-medium mb-1.5 block">Marks Obtained <span className="text-red-400">*</span></label>
-              <input
-                type="number" min="0"
-                value={form.marks}
-                onChange={e => setF("marks", e.target.value)}
-                placeholder="0"
-                style={inputStyle}
-                onFocus={e => (e.target.style.borderColor = "#227e44")}
-                onBlur={e => (e.target.style.borderColor = "#2D2D2D")}
-              />
-            </div>
-            <div className="flex-1">
-              <label className="text-neutral-400 text-xs font-medium mb-1.5 block">Max Marks</label>
-              <input
-                type="number" min="1"
-                value={form.maxMarks}
-                onChange={e => setF("maxMarks", e.target.value)}
-                placeholder="100"
-                style={inputStyle}
-                onFocus={e => (e.target.style.borderColor = "#227e44")}
-                onBlur={e => (e.target.style.borderColor = "#2D2D2D")}
-              />
-            </div>
-          </div>
-
-          {/* Remarks */}
-          <div>
-            <label className="text-neutral-400 text-xs font-medium mb-1.5 block">Remarks (optional)</label>
-            <input
-              value={form.remarks}
-              onChange={e => setF("remarks", e.target.value)}
-              placeholder="Any notes…"
-              style={inputStyle}
-              onFocus={e => (e.target.style.borderColor = "#227e44")}
-              onBlur={e => (e.target.style.borderColor = "#2D2D2D")}
-            />
-          </div>
-
-          {err && <p style={{ color: "#f87171", fontSize: 12 }}>{err}</p>}
-
-          <div className="flex gap-3 mt-1">
-            <button onClick={onClose} style={{ flex: 1, padding: "10px", borderRadius: 10, background: "rgba(255,255,255,0.05)", color: "#9CA3AF", fontSize: 13, border: "1px solid #2D2D2D" }} className="hover:text-white transition">
-              Cancel
-            </button>
-            <button onClick={handleSave} disabled={saving} style={{ flex: 2, padding: "10px", borderRadius: 10, background: "linear-gradient(135deg,#227e44,#1a6337)", color: "#fff", fontSize: 13, fontWeight: 600, border: "none" }} className="hover:opacity-90 transition disabled:opacity-50">
-              {saving ? "Saving…" : editMark ? "Update Mark" : "Save Mark"}
-            </button>
-          </div>
-        </div>
+  if (editing) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 90 }}>
+        <input autoFocus type="number" min="0" max={maxValue} value={val}
+          onChange={e => setVal(e.target.value)} onKeyDown={handleKey}
+          style={{ width: 54, padding: "3px 6px", borderRadius: 6, background: "#111",
+            border: "1px solid #227e44", color: "#fff", fontSize: 12, outline: "none" }}
+        />
+        <button onClick={commitSave} disabled={saving}
+          style={{ background: "rgba(34,126,68,0.18)", border: "none", borderRadius: 5,
+            padding: "3px 5px", cursor: "pointer", color: "#4ade80" }} title="Save">
+          {saving ? <Spinner size={10} /> : <SaveIcon />}
+        </button>
+        <button onClick={() => setEditing(false)}
+          style={{ background: "rgba(255,255,255,0.05)", border: "none", borderRadius: 5,
+            padding: "3px 5px", cursor: "pointer", color: "#9CA3AF" }} title="Cancel">
+          <CancelIcon />
+        </button>
       </div>
+    )
+  }
+
+  const display = value !== null && value !== undefined ? String(value) : null
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 5, cursor: "pointer",
+      minWidth: 60, justifyContent: "center" }} onClick={startEdit} title="Click to edit">
+      {display !== null
+        ? <span style={{ color: "#fff", fontSize: 13 }}>{display}{maxValue ? `/${maxValue}` : ""}</span>
+        : <span style={{ color: "#4D4D4D", fontSize: 12 }}>{placeholder}</span>
+      }
+      <span style={{ color: "#2D5A3D", opacity: 0.7 }}><EditIcon /></span>
     </div>
   )
 }
 
-// ── Student Detail View ────────────────────────────────────────────────────────
-function StudentDetailView({ student, teacherId, onBack, showToast }) {
-  const [marks, setMarks]           = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [showModal, setShowModal]   = useState(false)
-  const [editMark, setEditMark]     = useState(null)
-  const [delConfirm, setDelConfirm] = useState(null)
-
-  const color = avatarColor(student.name)
-
-  const loadMarks = useCallback(async () => {
-    setLoading(true)
-    try {
-      const data = await apiFetch(`/api/internal-marks/${student.id}${teacherId ? `?teacherId=${teacherId}` : ""}`)
-      setMarks(data)
-    } catch { setMarks([]) }
-    finally { setLoading(false) }
-  }, [student.id, teacherId])
-
-  useEffect(() => { loadMarks() }, [loadMarks])
-
-  async function handleSave(form) {
-    const course = student.courses?.find(c => c.courseId === form.courseId) || {}
-    const payload = {
-      studentId: student.id, studentName: student.name,
-      courseId: form.courseId, courseName: course.courseName || "",
-      teacherId, category: form.category.trim(),
-      marks: Number(form.marks), maxMarks: Number(form.maxMarks) || 100,
-      remarks: form.remarks,
-    }
-    if (editMark) {
-      await apiFetch(`/api/internal-marks/${editMark._id}`, { method: "PUT", body: JSON.stringify(payload) })
-      showToast("Mark updated")
-    } else {
-      await apiFetch("/api/internal-marks", { method: "POST", body: JSON.stringify(payload) })
-      showToast("Mark added")
-    }
-    setShowModal(false); setEditMark(null); loadMarks()
-  }
-
-  async function handleDelete(id) {
-    await apiFetch(`/api/internal-marks/${id}`, { method: "DELETE" })
-    setDelConfirm(null); showToast("Mark deleted", "error"); loadMarks()
-  }
-
-  const totalMarks = marks.length
-  const avgPct     = marks.length ? Math.round(marks.reduce((s, m) => s + pct(m.marks, m.maxMarks), 0) / marks.length) : null
-  const bestMark   = marks.length ? marks.reduce((b, m) => pct(m.marks, m.maxMarks) > pct(b.marks, b.maxMarks) ? m : b) : null
+// ─────────────────────────────────────────────────────────────────────────────
+// COURSE GROUP CARD  (one per unique course name, with batch chips inside)
+// ─────────────────────────────────────────────────────────────────────────────
+function CourseGroupCard({ courseName, batches, onSelectBatch }) {
+  // batches = array of course objects that share this courseName
+  const totalStudents = batches.reduce((s, c) => {
+    return s + (Array.isArray(c.students) ? c.students.length : (c.students || 0))
+  }, 0)
+  const hasBatches = batches.some(c => c.batch && c.batch.trim())
 
   return (
-    <div>
+    <div style={{
+      background: "#1c1c1c",
+      border: "1px solid #2D2D2D",
+      borderRadius: 16,
+      padding: "18px 18px 16px",
+      display: "flex",
+      flexDirection: "column",
+      gap: 14,
+    }}>
       {/* Header */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        <button onClick={onBack} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid #2D2D2D", padding: "8px 12px", borderRadius: 10, display: "flex", alignItems: "center", gap: 6, color: "#9CA3AF", fontSize: 13 }} className="hover:text-white hover:bg-neutral-800 transition">
-          <BackIcon /> Back
-        </button>
-        <div className="flex items-center gap-3">
-          <div style={{ background: color, width: 42, height: 42, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff" }}>
-            {getInitials(student.name)}
-          </div>
-          <div>
-            <h2 className="text-white font-semibold text-base">{student.name}</h2>
-            <p className="text-neutral-500 text-xs">{student.id}</p>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+        <div style={{
+          width: 42, height: 42, borderRadius: 11, flexShrink: 0,
+          background: "rgba(34,126,68,0.12)", border: "1px solid rgba(34,126,68,0.2)",
+          display: "flex", alignItems: "center", justifyContent: "center", color: "#4ade80",
+        }}>
+          <BookIcon />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: "0 0 3px",
+            lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {courseName}
+          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 10, color: "#9CA3AF", background: "rgba(156,163,175,0.08)",
+              border: "1px solid #2D2D2D", padding: "2px 8px", borderRadius: 5 }}>
+              {batches[0]?.courseCode || batches[0]?.courseId}
+            </span>
+            {batches[0]?.sem && batches[0].sem !== "N/A" && (
+              <span style={{ fontSize: 10, color: "#6B7280" }}>{batches[0].sem}</span>
+            )}
           </div>
         </div>
-        <div className="ml-auto">
-          <button
-            onClick={() => { setEditMark(null); setShowModal(true) }}
-            style={{ background: "linear-gradient(135deg,#227e44,#1a6337)", border: "none", padding: "9px 18px", borderRadius: 10, display: "flex", alignItems: "center", gap: 6, color: "#fff", fontSize: 13, fontWeight: 600 }}
-            className="hover:opacity-90 transition"
-          >
-            <PlusIcon /> Add Mark
-          </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, color: "#6B7280", flexShrink: 0 }}>
+          <UsersIcon />
+          <span style={{ fontSize: 11 }}>{totalStudents}</span>
         </div>
       </div>
 
-      {/* Stats */}
-      {marks.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[
-            { label: "Total Entries", value: totalMarks,                      color: "#818cf8" },
-            { label: "Avg Score",     value: avgPct != null ? `${avgPct}%` : "—", color: avgPct >= 60 ? "#4ade80" : "#f87171" },
-            { label: "Best Category", value: bestMark ? bestMark.category : "—", color: "#facc15", small: true },
-          ].map(s => (
-            <div key={s.label} style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 14, padding: "14px 16px" }}>
-              <p className="text-neutral-500 text-xs mb-1">{s.label}</p>
-              <p style={{ color: s.color, fontWeight: 700, fontSize: s.small ? 13 : 20, lineHeight: 1.2 }}>{s.value}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Divider */}
+      <div style={{ borderTop: "1px solid #222" }} />
 
-      {/* Marks list */}
-      <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 16, padding: "20px" }}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-white font-semibold text-sm flex items-center gap-2"><AwardIcon /> Internal Marks</h3>
-          <span style={{ fontSize: 11, color: "#9CA3AF" }}>{marks.length} entr{marks.length === 1 ? "y" : "ies"}</span>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-10"><Spinner /></div>
-        ) : marks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-2 text-center">
-            <AwardIcon />
-            <p className="text-neutral-500 text-sm mt-1">No marks added yet</p>
-            <p className="text-neutral-600 text-xs">Click "Add Mark" to begin entering internal marks</p>
+      {/* Batch chips / single button */}
+      {hasBatches ? (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
+            <span style={{ color: "#4D7055" }}><LayersIcon /></span>
+            <span style={{ fontSize: 10, color: "#6B7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Batches
+            </span>
           </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {marks.map(m => {
-              const p = pct(m.marks, m.maxMarks)
-              const g = gradeLabel(p)
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {batches.map((course, i) => {
+              const bc = batchColor(i)
+              const sc = Array.isArray(course.students) ? course.students.length : (course.students || 0)
               return (
-                <div key={m._id} style={{ background: "#111", border: "1px solid #2D2D2D", borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "center", gap: 14 }} className="hover:border-neutral-600 transition group">
-                  <div style={{ width: 44, height: 44, borderRadius: "50%", background: `${g.color}18`, border: `2px solid ${g.color}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <span style={{ color: g.color, fontWeight: 800, fontSize: 13 }}>{g.label}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <p className="text-white font-semibold text-sm">{m.category}</p>
-                      {m.courseId && (
-                        <span style={{ background: "rgba(34,126,68,0.12)", color: "#4ade80", border: "1px solid rgba(34,126,68,0.25)", fontSize: 10, padding: "1px 7px", borderRadius: 20 }}>
-                          {m.courseId}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ flex: 1, height: 5, background: "#2D2D2D", borderRadius: 3, overflow: "hidden" }}>
-                        <div style={{ width: `${p}%`, height: "100%", background: g.color, borderRadius: 3, transition: "width 0.6s ease" }} />
-                      </div>
-                      <span style={{ color: "#9CA3AF", fontSize: 11, whiteSpace: "nowrap" }}>{m.marks}/{m.maxMarks} ({p}%)</span>
-                    </div>
-                    {m.remarks && <p className="text-neutral-500 text-xs mt-1 truncate">{m.remarks}</p>}
-                  </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                    <button onClick={() => { setEditMark(m); setShowModal(true) }} style={{ padding: "6px 8px", borderRadius: 8, background: "rgba(255,255,255,0.05)", color: "#9CA3AF" }} className="hover:text-white hover:bg-neutral-700 transition">
-                      <EditIcon />
-                    </button>
-                    <button onClick={() => setDelConfirm(m._id)} style={{ padding: "6px 8px", borderRadius: 8, background: "rgba(248,113,113,0.08)", color: "#f87171" }} className="hover:bg-red-500/20 transition">
-                      <TrashIcon />
-                    </button>
-                  </div>
-                </div>
+                <button
+                  key={course._id || course.courseId}
+                  onClick={() => onSelectBatch(course)}
+                  style={{
+                    background: bc.bg, border: `1px solid ${bc.border}`,
+                    borderRadius: 10, padding: "8px 14px",
+                    cursor: "pointer", textAlign: "left",
+                    display: "flex", flexDirection: "column", gap: 2,
+                    transition: "all 0.15s",
+                    minWidth: 80,
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.filter = "brightness(1.2)"; e.currentTarget.style.transform = "translateY(-1px)" }}
+                  onMouseLeave={e => { e.currentTarget.style.filter = ""; e.currentTarget.style.transform = "" }}
+                  title={`Open ${course.batch} batch marks`}
+                >
+                  <span style={{ fontSize: 13, fontWeight: 700, color: bc.color }}>
+                    {course.batch}
+                  </span>
+                  <span style={{ fontSize: 10, color: "#6B7280" }}>
+                    {sc} student{sc !== 1 ? "s" : ""}
+                  </span>
+                </button>
               )
             })}
           </div>
-        )}
-      </div>
-
-      {showModal && (
-        <MarkModal student={student} editMark={editMark} onSave={handleSave} onClose={() => { setShowModal(false); setEditMark(null) }} />
-      )}
-
-      {delConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backdropFilter: "blur(6px)", background: "rgba(0,0,0,0.75)" }}>
-          <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 20, padding: "32px 40px", display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }} className="shadow-2xl mx-4">
-            <p className="text-white font-medium text-center">Delete this mark entry?<br/><span className="text-neutral-400 text-sm font-normal">This cannot be undone.</span></p>
-            <div className="flex gap-3">
-              <button onClick={() => setDelConfirm(null)} style={{ padding: "8px 24px", borderRadius: 20, background: "rgba(255,255,255,0.06)", color: "#9CA3AF", fontSize: 13, border: "1px solid #2D2D2D" }} className="hover:text-white transition">Cancel</button>
-              <button onClick={() => handleDelete(delConfirm)} style={{ padding: "8px 24px", borderRadius: 20, background: "#ef4444", color: "#fff", fontSize: 13, fontWeight: 600, border: "none" }} className="hover:bg-red-600 transition">Delete</button>
-            </div>
-          </div>
         </div>
+      ) : (
+        /* No batches defined — single "View Marks" button */
+        <button
+          onClick={() => onSelectBatch(batches[0])}
+          style={{
+            background: "rgba(34,126,68,0.1)", border: "1px solid rgba(34,126,68,0.25)",
+            borderRadius: 10, padding: "9px 14px", cursor: "pointer",
+            color: "#4ade80", fontSize: 13, fontWeight: 600,
+            width: "100%", textAlign: "center",
+            transition: "all 0.15s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(34,126,68,0.18)" }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(34,126,68,0.1)" }}
+        >
+          View Marks →
+        </button>
       )}
     </div>
   )
 }
 
-// ── Main Page ──────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN PAGE
+// ─────────────────────────────────────────────────────────────────────────────
 export default function InternalMarksPage() {
   const { user, showToast } = useAppStore()
 
-  // Courses — fetched the same way as Attendance page
-  const [courses, setCourses]               = useState([])
+  // "grid" = course group grid, "table" = student marks table
+  const [view, setView]                 = useState("grid")
+  const [selectedCourse, setSelectedCourse] = useState(null)
+
+  // Grid state
+  const [courses, setCourses]           = useState([])
   const [coursesLoading, setCoursesLoading] = useState(true)
-  const [coursesError, setCoursesError]     = useState(false)
-  const [selectedCourse, setSelectedCourse] = useState("")
+  const [coursesError, setCoursesError] = useState(false)
+  const [gridSearch, setGridSearch]     = useState("")
 
-  // Students — fetched from roster, exactly like Attendance page
-  const [students, setStudents]             = useState([])
-  const [studentsLoading, setStudentsLoading] = useState(false)
-  const [studentsError, setStudentsError]   = useState(false)
+  // Table state
+  const [tableData, setTableData]       = useState(null)
+  const [tableLoading, setTableLoading] = useState(false)
+  const [tableError, setTableError]     = useState(false)
+  const [tableSearch, setTableSearch]   = useState("")
 
-  const [selectedStudent, setSelectedStudent] = useState(null)
-  const [search, setSearch]                   = useState("")
-
-  // ── Fetch courses (same as Attendance) ──────────────────────────────────────
+  // ── Fetch courses ─────────────────────────────────────────────────────────
   const fetchCourses = useCallback(() => {
     setCoursesLoading(true)
     setCoursesError(false)
     getCourses()
-      .then(data => {
-        setCourses(data)
-        if (data.length > 0) setSelectedCourse(data[0].courseId)
-      })
+      .then(data => setCourses(data))
       .catch(() => setCoursesError(true))
       .finally(() => setCoursesLoading(false))
   }, [])
 
   useEffect(() => { fetchCourses() }, [fetchCourses])
 
-  // ── Fetch students from roster (same source as Attendance page) ─────────────
-  const fetchStudents = useCallback((courseId) => {
+  // ── Fetch marks table ─────────────────────────────────────────────────────
+  const fetchTable = useCallback((courseId) => {
     if (!courseId) return
-    setStudentsLoading(true)
-    setStudentsError(false)
-    getAttendanceRoster(courseId)
-      .then(data => {
-        // getAttendanceRoster returns { students: [{id, name, status, notes}] }
-        const list = (data.students || []).map(s => ({
-          id:   s.id,
-          name: s.name,
-          // attach course info so the mark modal can show it
-          courses: [{ courseId, courseName: courses.find(c => c.courseId === courseId)?.courseName || courseId }],
-        }))
-        setStudents(list)
+    setTableLoading(true)
+    setTableError(false)
+    const teacherParam = user?._id ? `?teacherId=${user._id}` : ""
+    apiFetch(`/api/internal-marks/course-table/${courseId}${teacherParam}`)
+      .then(data => setTableData(data))
+      .catch(() => setTableError(true))
+      .finally(() => setTableLoading(false))
+  }, [user])
+
+  // ── Open a specific batch/course ─────────────────────────────────────────
+  function openBatch(course) {
+    setSelectedCourse(course)
+    setTableData(null)
+    setTableSearch("")
+    setView("table")
+    fetchTable(course.courseId)
+  }
+
+  // ── Back to grid ──────────────────────────────────────────────────────────
+  function backToGrid() {
+    setView("grid")
+    setSelectedCourse(null)
+  }
+
+  // ── Save free mark ────────────────────────────────────────────────────────
+  async function saveFreeMarkForStudent(student, category, marks) {
+    const row = tableData?.rows?.find(r => r.studentId === student.studentId)
+    const existing = row?.freeMarks?.[category]
+
+    if (existing?._id) {
+      await apiFetch(`/api/internal-marks/${existing._id}`, {
+        method: "PUT",
+        body: JSON.stringify({ marks, maxMarks: existing.maxMarks }),
       })
-      .catch(() => setStudentsError(true))
-      .finally(() => setStudentsLoading(false))
-  }, [courses])
+    } else {
+      await apiFetch("/api/internal-marks", {
+        method: "POST",
+        body: JSON.stringify({
+          studentId:   student.studentId,
+          studentName: student.studentName,
+          courseId:    selectedCourse?.courseId,
+          courseName:  selectedCourse?.courseName,
+          teacherId:   user?._id,
+          category,
+          marks,
+          maxMarks: 100,
+        }),
+      })
+    }
+    showToast("Marks saved")
+    fetchTable(selectedCourse.courseId)
+  }
 
-  useEffect(() => {
-    if (selectedCourse) fetchStudents(selectedCourse)
-  }, [selectedCourse, fetchStudents])
+  // ── Group courses by courseName for grid ──────────────────────────────────
+  const courseGroups = useMemo(() => {
+    const filtered = courses.filter(c => {
+      if (!gridSearch.trim()) return true
+      const s = gridSearch.toLowerCase()
+      return (
+        c.courseName?.toLowerCase().includes(s) ||
+        c.courseId?.toLowerCase().includes(s) ||
+        c.batch?.toLowerCase().includes(s) ||
+        c.sem?.toLowerCase().includes(s)
+      )
+    })
 
-  // Enrich students with all their courses across the full course list
-  // (same pattern as Attendance — just attaching context for the mark modal)
-  const enrichedStudents = students.map(s => {
-  const allCourses = courses
-    .filter(c =>
-      Array.isArray(c.students) &&
-      c.students.some(cs => cs.id === s.id)
-    )
-    .map(c => ({
-      courseId: c.courseId,
-      courseName: c.courseName
-    }));
+    // Group by courseName
+    const map = {}
+    for (const c of filtered) {
+      const key = c.courseName?.trim() || c.courseId
+      if (!map[key]) map[key] = []
+      map[key].push(c)
+    }
 
-  return {
-    ...s,
-    allCourses
-  };
-});
+    // Sort batches within each group
+    return Object.entries(map).map(([name, batches]) => ({
+      courseName: name,
+      batches: batches.sort((a, b) => (a.batch || "").localeCompare(b.batch || "")),
+    }))
+  }, [courses, gridSearch])
 
-  const filtered = enrichedStudents.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.id.toLowerCase().includes(search.toLowerCase())
+  // ── Table data ────────────────────────────────────────────────────────────
+  const rows = tableData?.rows || []
+  const filteredRows = rows.filter(r =>
+    r.studentName.toLowerCase().includes(tableSearch.toLowerCase()) ||
+    r.studentId.toLowerCase().includes(tableSearch.toLowerCase())
   )
+  const assignmentCols = tableData?.assignmentCols || []
+  const freeCategories = tableData?.categories || []
 
-  // ── Detail view ─────────────────────────────────────────────────────────────
-  if (selectedStudent) {
+  // Shared styles
+  const cellStyle = {
+    padding: "10px 12px",
+    borderBottom: "1px solid #1A1A1A",
+    fontSize: 13, color: "#fff", whiteSpace: "nowrap",
+  }
+  const headerCellStyle = {
+    ...cellStyle,
+    fontSize: 10, fontWeight: 700,
+    textTransform: "uppercase", letterSpacing: "0.06em",
+    color: "#9CA3AF", background: "#141414",
+    borderBottom: "1px solid #2D2D2D",
+    position: "sticky", top: 0, zIndex: 2,
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // GRID VIEW
+  // ══════════════════════════════════════════════════════════════════════════
+  if (view === "grid") {
     return (
-      <>
-        <StudentDetailView
-          student={selectedStudent}
-          teacherId={user?._id}
-          onBack={() => setSelectedStudent(null)}
-          showToast={showToast}
-        />
+      <div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </>
+
+        {/* Header */}
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-white text-xl font-bold">Internal Marks</h1>
+            <p className="text-neutral-500 text-sm mt-0.5">
+              Select a course — batches are shown as chips inside each card
+            </p>
+          </div>
+          <button onClick={fetchCourses}
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid #2D2D2D",
+              padding: "7px 14px", borderRadius: 10, display: "flex", alignItems: "center",
+              gap: 6, color: "#9CA3AF", fontSize: 13, cursor: "pointer" }}
+            className="hover:text-white hover:bg-neutral-800 transition">
+            <RefreshIcon /> Refresh
+          </button>
+        </div>
+
+        {/* Search */}
+        {!coursesLoading && courses.length > 0 && (
+          <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 12,
+            display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", marginBottom: 20 }}>
+            <span className="text-neutral-500"><SearchIcon /></span>
+            <input value={gridSearch} onChange={e => setGridSearch(e.target.value)}
+              placeholder="Search by course name, ID, batch, or semester…"
+              style={{ background: "transparent", border: "none", outline: "none",
+                color: "#fff", flex: 1, fontSize: 13 }} />
+            {gridSearch && (
+              <button onClick={() => setGridSearch("")} className="text-neutral-500 hover:text-white transition">
+                <CloseIcon />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* States */}
+        {coursesLoading ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-3">
+            <Spinner size={32} /><p className="text-neutral-500 text-sm">Loading courses…</p>
+          </div>
+        ) : coursesError ? (
+          <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 16 }}
+            className="flex flex-col items-center justify-center py-16 gap-3">
+            <p style={{ color: "#f87171", fontSize: 14, fontWeight: 500 }}>Failed to load courses</p>
+            <button onClick={fetchCourses}
+              style={{ padding: "7px 16px", borderRadius: 10, background: "rgba(255,255,255,0.06)",
+                color: "#9CA3AF", fontSize: 13, border: "1px solid #2D2D2D", cursor: "pointer" }}
+              className="hover:text-white transition">Retry</button>
+          </div>
+        ) : courses.length === 0 ? (
+          <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 16 }}
+            className="flex flex-col items-center justify-center py-16 gap-2">
+            <p className="text-neutral-400 text-sm font-medium">No courses found</p>
+            <p className="text-neutral-600 text-xs">Add courses via the Course Management page</p>
+          </div>
+        ) : courseGroups.length === 0 ? (
+          <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 16 }}
+            className="flex flex-col items-center justify-center py-16 gap-2">
+            <p className="text-neutral-400 text-sm font-medium">No courses match your search</p>
+            <button onClick={() => setGridSearch("")}
+              className="text-neutral-500 hover:text-neutral-300 text-xs transition">
+              Clear search
+            </button>
+          </div>
+        ) : (
+          <>
+            <p className="text-neutral-500 text-xs mb-4">
+              {courseGroups.length} course{courseGroups.length !== 1 ? "s" : ""}
+              {" "}({courses.length} section{courses.length !== 1 ? "s" : ""} total)
+              {gridSearch ? ` matching "${gridSearch}"` : ""}
+              {" · "}Click a batch chip to open student marks
+            </p>
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: 16,
+            }}>
+              {courseGroups.map(group => (
+                <CourseGroupCard
+                  key={group.courseName}
+                  courseName={group.courseName}
+                  batches={group.batches}
+                  onSelectBatch={openBatch}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     )
   }
 
-  // ── List view ───────────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // TABLE VIEW
+  // ══════════════════════════════════════════════════════════════════════════
+  const batchLabel = selectedCourse?.batch ? `Batch ${selectedCourse.batch}` : ""
+
   return (
     <div>
-      {/* Page Header */}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-white text-xl font-bold">Internal Marks</h1>
-          <p className="text-neutral-500 text-sm mt-0.5">
-            Select a course, then click a student to manage their internal marks
-          </p>
+        <div className="flex items-center gap-3">
+          <button onClick={backToGrid}
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid #2D2D2D",
+              borderRadius: 10, padding: "7px 10px", cursor: "pointer",
+              display: "flex", alignItems: "center", color: "#9CA3AF" }}
+            className="hover:text-white hover:bg-neutral-800 transition" title="Back to courses">
+            <BackIcon />
+          </button>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <h1 className="text-white text-xl font-bold">{selectedCourse?.courseName}</h1>
+              {batchLabel && (
+                <span style={{
+                  fontSize: 12, fontWeight: 700, padding: "2px 10px", borderRadius: 20,
+                  background: "rgba(74,222,128,0.15)", border: "1px solid rgba(74,222,128,0.3)",
+                  color: "#4ade80",
+                }}>
+                  {batchLabel}
+                </span>
+              )}
+            </div>
+            <p className="text-neutral-500 text-sm mt-0.5">
+              {selectedCourse?.courseId}
+              {selectedCourse?.sem && selectedCourse.sem !== "N/A" ? ` · ${selectedCourse.sem}` : ""}
+              {" · "}Internal Marks
+            </p>
+          </div>
         </div>
-        <button
-          onClick={fetchCourses}
-          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid #2D2D2D", padding: "7px 14px", borderRadius: 10, display: "flex", alignItems: "center", gap: 6, color: "#9CA3AF", fontSize: 13 }}
-          className="hover:text-white hover:bg-neutral-800 transition"
-        >
+        <button onClick={() => fetchTable(selectedCourse?.courseId)}
+          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid #2D2D2D",
+            padding: "7px 14px", borderRadius: 10, display: "flex", alignItems: "center",
+            gap: 6, color: "#9CA3AF", fontSize: 13, cursor: "pointer" }}
+          className="hover:text-white hover:bg-neutral-800 transition">
           <RefreshIcon /> Refresh
         </button>
       </div>
 
-      {/* Course selector — same UX as Attendance page */}
-      <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 14, padding: "16px 18px", marginBottom: 20 }}>
-        <label className="text-neutral-400 text-xs font-medium mb-2 block">Select Course</label>
-        {coursesLoading ? (
-          <div className="flex items-center gap-2 py-1"><Spinner size={20} /><span className="text-neutral-500 text-sm">Loading courses…</span></div>
-        ) : coursesError ? (
-          <div className="flex items-center gap-3">
-            <span className="text-red-400 text-sm">Failed to load courses.</span>
-            <button onClick={fetchCourses} className="text-neutral-400 hover:text-white text-sm transition">Retry</button>
-          </div>
-        ) : courses.length === 0 ? (
-          <p className="text-neutral-500 text-sm">No active courses found.</p>
-        ) : (
-          <div style={{ position: "relative" }}>
-            <select
-              value={selectedCourse}
-              onChange={e => { setSelectedCourse(e.target.value); setSearch("") }}
-              style={{ background: "#111", border: "1px solid #2D2D2D", borderRadius: 10, color: "#fff", width: "100%", padding: "10px 36px 10px 12px", fontSize: 13, outline: "none", appearance: "none" }}
-            >
-              {courses.map(c => (
-                <option key={c.courseId} value={c.courseId}>
-                  {c.courseId} — {c.courseName}  ({c.students || 0} students)
-                </option>
-              ))}
-            </select>
-            <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#9CA3AF" }}>
-              <ChevronIcon />
-            </span>
-          </div>
-        )}
-      </div>
-
       {/* Search */}
-      {students.length > 0 && (
-        <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 12, display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", marginBottom: 20 }}>
+      {!tableLoading && rows.length > 0 && (
+        <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 12,
+          display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", marginBottom: 16 }}>
           <span className="text-neutral-500"><SearchIcon /></span>
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
+          <input value={tableSearch} onChange={e => setTableSearch(e.target.value)}
             placeholder="Search students by name or ID…"
-            style={{ background: "transparent", border: "none", outline: "none", color: "#fff", flex: 1, fontSize: 13 }}
-          />
-          {search && (
-            <button onClick={() => setSearch("")} className="text-neutral-500 hover:text-white transition"><CloseIcon /></button>
+            style={{ background: "transparent", border: "none", outline: "none",
+              color: "#fff", flex: 1, fontSize: 13 }} />
+          {tableSearch && (
+            <button onClick={() => setTableSearch("")} className="text-neutral-500 hover:text-white transition">
+              <CloseIcon />
+            </button>
           )}
         </div>
       )}
 
-      {/* Student count badge */}
-      {!studentsLoading && students.length > 0 && (
-        <div className="flex items-center justify-between mb-4">
+      {/* Count badge */}
+      {!tableLoading && rows.length > 0 && (
+        <div className="flex items-center justify-between mb-3">
           <p className="text-neutral-500 text-xs">
-            Showing {filtered.length} of {students.length} student{students.length !== 1 ? "s" : ""}
-            {search ? ` matching "${search}"` : ""}
+            Showing {filteredRows.length} of {rows.length} student{rows.length !== 1 ? "s" : ""}
+            {tableSearch ? ` matching "${tableSearch}"` : ""}
           </p>
-          <span style={{ background: "rgba(34,126,68,0.12)", border: "1px solid rgba(34,126,68,0.25)", borderRadius: 20, padding: "3px 12px", color: "#4ade80", fontSize: 11, fontWeight: 600 }}>
-            {students.length} enrolled
+          <span style={{ background: "rgba(34,126,68,0.12)", border: "1px solid rgba(34,126,68,0.25)",
+            borderRadius: 20, padding: "3px 12px", color: "#4ade80", fontSize: 11, fontWeight: 600 }}>
+            {rows.length} enrolled
           </span>
         </div>
       )}
 
       {/* States */}
-      {studentsLoading ? (
+      {tableLoading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Spinner size={32} />
-          <p className="text-neutral-500 text-sm">Loading students…</p>
+          <Spinner size={32} /><p className="text-neutral-500 text-sm">Loading marks…</p>
         </div>
-      ) : studentsError ? (
-        <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 16 }} className="flex flex-col items-center justify-center py-16 gap-3">
-          <p className="text-red-400 text-sm font-medium">Failed to load students</p>
-          <button onClick={() => fetchStudents(selectedCourse)} style={{ padding: "7px 16px", borderRadius: 10, background: "rgba(255,255,255,0.06)", color: "#9CA3AF", fontSize: 13, border: "1px solid #2D2D2D" }} className="hover:text-white transition">
-            Retry
-          </button>
+      ) : tableError ? (
+        <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 16 }}
+          className="flex flex-col items-center justify-center py-16 gap-3">
+          <p style={{ color: "#f87171", fontSize: 14, fontWeight: 500 }}>Failed to load marks</p>
+          <button onClick={() => fetchTable(selectedCourse?.courseId)}
+            style={{ padding: "7px 16px", borderRadius: 10, background: "rgba(255,255,255,0.06)",
+              color: "#9CA3AF", fontSize: 13, border: "1px solid #2D2D2D", cursor: "pointer" }}
+            className="hover:text-white transition">Retry</button>
         </div>
-      ) : !selectedCourse ? (
-        <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 16 }} className="flex flex-col items-center justify-center py-16 gap-2">
-          <p className="text-neutral-500 text-sm">Select a course above to see students</p>
-        </div>
-      ) : filtered.length === 0 && students.length > 0 ? (
-        <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 16 }} className="flex flex-col items-center justify-center py-16 gap-2">
-          <p className="text-neutral-400 text-sm font-medium">No students match your search</p>
-          <button onClick={() => setSearch("")} className="text-neutral-500 hover:text-neutral-300 text-xs transition">Clear search</button>
-        </div>
-      ) : students.length === 0 ? (
-        <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 16 }} className="flex flex-col items-center justify-center py-16 gap-2">
-          <UserIcon />
+      ) : rows.length === 0 ? (
+        <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 16 }}
+          className="flex flex-col items-center justify-center py-16 gap-2">
           <p className="text-neutral-400 text-sm font-medium">No students enrolled in this course</p>
           <p className="text-neutral-600 text-xs">Enroll students via the Courses page</p>
         </div>
+      ) : filteredRows.length === 0 && tableSearch ? (
+        <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 16 }}
+          className="flex flex-col items-center justify-center py-16 gap-2">
+          <p className="text-neutral-400 text-sm font-medium">No students match your search</p>
+          <button onClick={() => setTableSearch("")}
+            className="text-neutral-500 hover:text-neutral-300 text-xs transition">Clear search</button>
+        </div>
       ) : (
-        /* Horizontal card grid */
-        <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
-          {filtered.map(s => (
-            <StudentCard key={s.id} student={s} onClick={setSelectedStudent} />
-          ))}
+        <div style={{ background: "#1c1c1c", border: "1px solid #2D2D2D", borderRadius: 16, overflow: "hidden" }}>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={{ ...headerCellStyle, width: 44, textAlign: "center" }}>S.No</th>
+                  <th style={{ ...headerCellStyle, minWidth: 110 }}>Student ID</th>
+                  <th style={{ ...headerCellStyle, minWidth: 160 }}>Student Name</th>
+
+                  {/* Individual assignment columns */}
+                  {assignmentCols.map(col => {
+                    const tc = TYPE_COLORS[col.type] || TYPE_COLORS.ASSIGNMENT
+                    return (
+                      <th key={col.assignmentId} style={{ ...headerCellStyle, minWidth: 120, textAlign: "center" }}>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                          <span style={{ background: tc.bg, color: tc.color, fontSize: 9,
+                            padding: "1px 6px", borderRadius: 4, fontWeight: 700, letterSpacing: "0.05em" }}>
+                            {tc.label}
+                          </span>
+                          <span style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600,
+                            maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis",
+                            whiteSpace: "nowrap", textTransform: "none", letterSpacing: 0 }}>
+                            {col.title}
+                          </span>
+                          <span style={{ fontSize: 9, color: "#4D4D4D", textTransform: "none", letterSpacing: 0 }}>
+                            Max: {col.maxGrade}
+                          </span>
+                        </div>
+                      </th>
+                    )
+                  })}
+
+                  {/* Free-text mark columns */}
+                  {freeCategories.map(cat => (
+                    <th key={cat} style={{ ...headerCellStyle, minWidth: 110, textAlign: "center" }}>
+                      {cat}
+                    </th>
+                  ))}
+
+                  {/* Attendance */}
+                  <th style={{ ...headerCellStyle, minWidth: 100, textAlign: "center" }}>
+                    Attendance
+                    <div style={{ fontSize: 9, color: "#4D7055", marginTop: 1, textTransform: "none", letterSpacing: 0 }}>
+                      (synced)
+                    </div>
+                  </th>
+
+                  {/* Total */}
+                  <th style={{ ...headerCellStyle, minWidth: 100, textAlign: "center" }}>Total</th>
+
+                  {/* Edit */}
+                  <th style={{ ...headerCellStyle, width: 60, textAlign: "center" }}>Edit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRows.map((row, idx) => (
+                  <TableRow
+                    key={row.studentId}
+                    row={row} idx={idx}
+                    assignmentCols={assignmentCols}
+                    freeCategories={freeCategories}
+                    onSaveFreeMark={(cat, marks) => saveFreeMarkForStudent(row, cat, marks)}
+                    cellStyle={cellStyle}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Legend */}
+          <div style={{ padding: "10px 16px", borderTop: "1px solid #1E1E1E",
+            display: "flex", gap: 18, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, color: "#4D4D4D" }}>
+              <span style={{ color: "#4ade80" }}>●</span> Click Edit → then a free-mark cell to enter marks
+            </span>
+            <span style={{ fontSize: 11, color: "#4D4D4D" }}>
+              <span style={{ color: "#60a5fa" }}>●</span> Assignment columns auto-sync from Assignments feature
+            </span>
+            <span style={{ fontSize: 11, color: "#4D4D4D" }}>
+              <span style={{ color: "#9CA3AF" }}>—</span> Not yet graded / no submission
+            </span>
+          </div>
         </div>
       )}
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
+  )
+}
+
+// ── Table Row ─────────────────────────────────────────────────────────────────
+function TableRow({ row, idx, assignmentCols, freeCategories, onSaveFreeMark, cellStyle }) {
+  const [editMode, setEditMode] = useState(false)
+
+  return (
+    <tr style={{
+      background: editMode ? "rgba(34,126,68,0.04)" : (idx % 2 === 0 ? "transparent" : "#181818"),
+      transition: "background 0.15s",
+    }}>
+      <td style={{ ...cellStyle, textAlign: "center", color: "#6B7280" }}>{row.sno}</td>
+      <td style={{ ...cellStyle, color: "#9CA3AF", fontSize: 12 }}>{row.studentId}</td>
+      <td style={{ ...cellStyle, fontWeight: 500 }}>{row.studentName}</td>
+
+      {/* Per-assignment grade — "-" if not graded */}
+      {assignmentCols.map(col => {
+        const grade = row.assignmentGrades?.[col.assignmentId]
+        return (
+          <td key={col.assignmentId} style={{ ...cellStyle, textAlign: "center" }}>
+            {grade !== null && grade !== undefined
+              ? <span style={{ color: "#fff", fontSize: 13 }}>{grade}/{col.maxGrade}</span>
+              : <span style={{ color: "#3D3D3D", fontSize: 13 }}>—</span>
+            }
+          </td>
+        )
+      })}
+
+      {/* Free-text marks (editable in edit mode) */}
+      {freeCategories.map(cat => {
+        const d = row.freeMarks?.[cat]
+        return (
+          <td key={cat} style={{ ...cellStyle, textAlign: "center" }}>
+            {editMode
+              ? <EditableCell value={d?.marks ?? null} maxValue={d?.maxMarks ?? 100}
+                  onSave={marks => onSaveFreeMark(cat, marks)} placeholder="Add" />
+              : d
+                ? <span style={{ color: "#fff", fontSize: 13 }}>{d.marks}/{d.maxMarks}</span>
+                : <span style={{ color: "#3D3D3D", fontSize: 13 }}>—</span>
+            }
+          </td>
+        )
+      })}
+
+      {/* Attendance */}
+      <td style={{ ...cellStyle, textAlign: "center" }}>
+        {row.attendance !== null && row.attendance !== undefined
+          ? <span style={{
+              color: row.attendance >= 75 ? "#4ade80" : row.attendance >= 60 ? "#fbbf24" : "#f87171",
+              fontSize: 13,
+            }}>{row.attendance}%</span>
+          : <span style={{ color: "#3D3D3D", fontSize: 13 }}>—</span>
+        }
+      </td>
+
+      {/* Total */}
+      <td style={{ ...cellStyle, textAlign: "center" }}>
+        {row.totalMax !== null && row.totalMax !== undefined
+          ? <span style={{ color: "#4ade80", fontSize: 13, fontWeight: 600 }}>
+              {Math.round(row.totalObtained)}/{row.totalMax}
+            </span>
+          : <span style={{ color: "#3D3D3D", fontSize: 13 }}>—</span>
+        }
+      </td>
+
+      {/* Edit toggle */}
+      <td style={{ ...cellStyle, textAlign: "center" }}>
+        <button onClick={() => setEditMode(p => !p)}
+          style={{
+            padding: "5px 8px", borderRadius: 7,
+            background: editMode ? "rgba(34,126,68,0.18)" : "rgba(255,255,255,0.04)",
+            border: editMode ? "1px solid rgba(34,126,68,0.4)" : "1px solid #2D2D2D",
+            color: editMode ? "#4ade80" : "#6B7280",
+            cursor: "pointer", fontSize: 11,
+            display: "inline-flex", alignItems: "center", gap: 4,
+          }}
+          title={editMode ? "Done editing" : "Edit marks"}>
+          {editMode ? <SaveIcon /> : <EditIcon />}
+          {editMode ? "Done" : "Edit"}
+        </button>
+      </td>
+    </tr>
   )
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react"
 import CourseSelector from "../components/CourseSelector"
 import StatsCards from "../components/StatsCards"
 import AttendanceTable from "../components/AttendanceTable"
+import StudentProfile from "./StudentProfile"
 import {
   getCourses,
   getAttendanceRoster,
@@ -77,13 +78,24 @@ export default function AttendancePage() {
   const [saving, setSaving]                 = useState(false)
 
   const [showModal, setShowModal] = useState(false)
-  const [topic, setTopic] = useState("")
+  const [topic, setTopic]         = useState("")
   const [topicError, setTopicError] = useState("")
 
   const [coursesError, setCoursesError]   = useState(false)
   const [studentsError, setStudentsError] = useState(false)
 
   const [toast, setToast] = useState({ message: "", type: "" })
+
+  // ── Student Profile overlay ───────────────────────────────────────────────
+  const [profileStudentId, setProfileStudentId] = useState(null)
+
+  const handleViewProfile = useCallback((studentId) => {
+    setProfileStudentId(studentId)
+  }, [])
+
+  const handleCloseProfile = useCallback(() => {
+    setProfileStudentId(null)
+  }, [])
 
   const showToast = (message, type = "success") => {
     setToast({ message, type })
@@ -118,7 +130,6 @@ export default function AttendancePage() {
 
     getAttendanceByDate(courseId, date)
       .then((data) => {
-        // Saved record found — use it
         setStudents(data.students || [])
         setSavedSnapshot(data.students || [])
         setLoading(false)
@@ -126,8 +137,7 @@ export default function AttendancePage() {
       })
       .catch((err) => {
         console.log("Attendance fetch failed:", err)
-      
-        // No saved record for this date — load fresh roster
+
         getAttendanceRoster(courseId)
           .then((data) => {
             setStudents(data.students || [])
@@ -164,7 +174,6 @@ export default function AttendancePage() {
     setStudents(savedSnapshot.map((s) => ({ ...s })))
   }, [savedSnapshot])
 
-  // ── Save — backend automatically logs the activity ────────────────────────
   const handleSaveClick = () => {
     setShowModal(true)
   }
@@ -174,26 +183,25 @@ export default function AttendancePage() {
       setTopicError("Topic is required")
       return
     }
-  
+
     setTopicError("")
     setSaving(true)
-    
-  
+
     const courseName = courses.find((c) => c.courseId === selectedCourse)?.label || selectedCourse
-  
+
     const payload = {
-      courseId: selectedCourse,
+      courseId:   selectedCourse,
       courseName: courseName,
-      date: selectedDate,
-      topic: topic, 
-      students: students.map(({ id, name, status, notes }) => ({
+      date:       selectedDate,
+      topic:      topic,
+      students:   students.map(({ id, name, status, notes }) => ({
         id,
         name,
         status,
         notes: notes || "",
       })),
     }
-  
+
     try {
       await saveAttendance(payload)
       setSavedSnapshot(students.map((s) => ({ ...s })))
@@ -232,14 +240,24 @@ export default function AttendancePage() {
       })
     : ""
 
+  // ── StudentProfile full-screen overlay ───────────────────────────────────
+  if (profileStudentId) {
+    return (
+      <StudentProfile
+        studentId={profileStudentId}
+        onClose={handleCloseProfile}
+      />
+    )
+  }
+
   return (
     <div
-      className="min-h-screen px-4  max-w-[1400px] mx-auto space-y-6"
+      className="min-h-screen px-4 max-w-[1400px] mx-auto space-y-6"
       style={{ background: "#0A0A0A" }}
     >
       {/* Header */}
       <div>
-        <h1 className="font-semibold text-white  " style={{ fontSize: "24px",  margin: 0 }}>
+        <h1 className="font-semibold text-white" style={{ fontSize: "24px", margin: 0 }}>
           Attendance Management
         </h1>
         <p className="mt-1" style={{ fontSize: "13px", color: "#9CA3AF" }}>
@@ -301,6 +319,7 @@ export default function AttendancePage() {
             onNoteChange={handleNoteChange}
             onMarkAll={handleMarkAll}
             onExportCSV={handleExportCSV}
+            onViewProfile={handleViewProfile}
           />
 
           <div className="flex justify-end gap-3 pb-8">
@@ -316,11 +335,11 @@ export default function AttendancePage() {
               disabled={saving}
               className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
               style={{
-                background:    saving ? "#15803d" : "#22C55E",
-                color:         "#000",
-                border:        "none",
-                cursor:        saving ? "not-allowed" : "pointer",
-                opacity:       saving ? 0.8 : 1,
+                background: saving ? "#15803d" : "#22C55E",
+                color:      "#000",
+                border:     "none",
+                cursor:     saving ? "not-allowed" : "pointer",
+                opacity:    saving ? 0.8 : 1,
               }}
             >
               {saving ? "Saving..." : "Save Attendance"}
@@ -328,63 +347,58 @@ export default function AttendancePage() {
           </div>
         </>
       )}
+
+      {/* Topic modal */}
       {showModal && (
-  <div className="fixed inset-0 flex items-center justify-center z-50">
-    {/* Background overlay */}
-    <div
-      className="absolute inset-0"
-      style={{ background: "rgba(0,0,0,0.7)" }}
-      onClick={() => setShowModal(false)}
-    />
-
-    {/* Modal */}
-    <div
-      className="relative w-full max-w-md p-6 rounded-xl"
-      style={{ background: "#111", border: "1px solid #2D2D2D" }}
-    >
-      <h2 className="text-white font-semibold text-lg mb-3">
-        Enter Today's Topic
-      </h2>
-
-      <input
-        type="text"
-        value={topic}
-        onChange={(e) => setTopic(e.target.value)}
-        placeholder="e.g. React Hooks, DBMS Normalization..."
-        className="w-full px-4 py-2 rounded-lg text-sm"
-        style={{
-          background: "#0A0A0A",
-          border: "1px solid #2D2D2D",
-          color: "#fff",
-        }}
-      />
-
-      {topicError && (
-        <p className="text-xs mt-1" style={{ color: "#f87171" }}>
-          {topicError}
-        </p>
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div
+            className="absolute inset-0"
+            style={{ background: "rgba(0,0,0,0.7)" }}
+            onClick={() => setShowModal(false)}
+          />
+          <div
+            className="relative w-full max-w-md p-6 rounded-xl"
+            style={{ background: "#111", border: "1px solid #2D2D2D" }}
+          >
+            <h2 className="text-white font-semibold text-lg mb-3">
+              Enter Today's Topic
+            </h2>
+            <input
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="e.g. React Hooks, DBMS Normalization..."
+              className="w-full px-4 py-2 rounded-lg text-sm"
+              style={{
+                background: "#0A0A0A",
+                border:     "1px solid #2D2D2D",
+                color:      "#fff",
+              }}
+            />
+            {topicError && (
+              <p className="text-xs mt-1" style={{ color: "#f87171" }}>
+                {topicError}
+              </p>
+            )}
+            <div className="flex justify-end gap-3 mt-5">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 text-sm rounded-lg"
+                style={{ color: "#9CA3AF", border: "1px solid #2D2D2D" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 text-sm rounded-lg"
+                style={{ background: "#22C55E", color: "#000" }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-
-      <div className="flex justify-end gap-3 mt-5">
-        <button
-          onClick={() => setShowModal(false)}
-          className="px-4 py-2 text-sm rounded-lg"
-          style={{ color: "#9CA3AF", border: "1px solid #2D2D2D" }}
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={handleSave}
-          className="px-4 py-2 text-sm rounded-lg"
-          style={{ background: "#22C55E", color: "#000" }}
-        >
-          Save
-        </button>
-      </div>
-    </div>
-  </div>
-)}
 
       <Toast message={toast.message} type={toast.type} />
     </div>

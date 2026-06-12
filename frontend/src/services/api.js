@@ -28,12 +28,13 @@ export const updateSettings    = (uid, b)     => put(`/api/settings/${uid}`, b)
 // export const getAnalytics      = (role)       => req(`/api/analytics?role=${role}`)
 
 // Dashboard
-export const getDashboardStats   = ()         => req("/api/dashboard/stats")
-export const getDashboardToday   = ()         => req("/api/dashboard/today")
+export const getDashboardStats   = (p={})     => req(`/api/dashboard/stats?${new URLSearchParams(p)}`)
+export const getDashboardToday   = (p={})     => req(`/api/dashboard/today?${new URLSearchParams(p)}`)
 export const getWeeklyActivity   = ()         => req("/api/dashboard/weekly-activity")
 export const getDashboardHours   = ()         => req("/api/dashboard/hours")
 export const getRecentActivity   = ()         => req("/api/dashboard/recent-activity")
 export const getDashboardCourses = ()         => req("/api/dashboard/courses")
+export const getUpcomingTasks    = (p={})     => req(`/api/dashboard/upcoming-tasks?${new URLSearchParams(p)}`)
 
 // Courses
 export const getCourses          = (params = {}) => req(`/api/courses?${new URLSearchParams(params)}`)
@@ -44,6 +45,7 @@ export const deleteCourse        = (id)       => del(`/api/courses/${id}`)
 export const enrollStudents      = (id, b)    => post(`/api/courses/${id}/enroll`, b)
 export const unenrollStudent     = (id, sid)  => del(`/api/courses/${id}/enroll/${sid}`)
 export const getCourseAnalytics  = (id)       => req(`/api/courses/${id}/analytics`)
+export const getEnrolledStudents = (id)       => req(`/api/courses/${id}/enrolled-students`)
 export const getAttendanceRoster = (cid) => {
   console.log("Fetching roster for:", cid)
   return req(`/api/attendance/roster/${cid}`)
@@ -59,6 +61,8 @@ export const getAssignmentsByCourse  = (cid)     => req(`/api/assignments/course
 export const submitAssignment        = (id, b)   => post(`/api/assignments/${id}/submit`, b)
 export const gradeSubmission         = (id,sid,b)=> put(`/api/assignments/${id}/grade/${sid}`, b)
 export const getAssignmentAnalytics  = ()        => req("/api/assignments/analytics")
+export const getAssignmentStudentsMarks = (id)   => req(`/api/assignments/${id}/students-marks`)
+export const bulkSaveMarks           = (id, b)   => put(`/api/assignments/${id}/bulk-marks`, b)
 
 // Attendance
 export const getAllAttendance      = ()                 => req("/api/attendance")

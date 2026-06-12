@@ -43,7 +43,12 @@ export function useNotifications(userId) {
     } catch {}
   }, [userId, setNotifications])
 
-  useEffect(() => { reload() }, [reload])
+  useEffect(() => {
+    reload()
+    // Poll every 30 seconds for new real-time notifications
+    const interval = setInterval(reload, 30000)
+    return () => clearInterval(interval)
+  }, [reload])
 
   return { reload }
 }

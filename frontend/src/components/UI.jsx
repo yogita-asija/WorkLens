@@ -25,11 +25,14 @@ export const T = {
 
 /* ── Card wrapper ── */
 export function Card({ children, style }) {
+  const C = useC()
   return (
     <div style={{
-      background: T.card,
-      border: `1px solid ${T.border}`,
+      background: C.card,
+      border: `1px solid ${C.border}`,
       borderRadius: 12,
+      padding: 24,
+      transition: 'background 0.25s, border-color 0.25s',
       ...style,
     }}>{children}</div>
   )
@@ -37,25 +40,27 @@ export function Card({ children, style }) {
 
 /* ── Small stat card (used in sidebar and extra duties) ── */
 export function StatMiniCard({ label, value, sub, color, icon, style }) {
+  const C = useC()
   return (
     <div style={{
-      background: T.card,
-      border: `1px solid ${T.border}`,
+      background: C.card,
+      border: `1px solid ${C.border}`,
       borderRadius: 12,
       padding: '16px 20px',
       display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+      transition: 'background 0.25s, border-color 0.25s',
       ...style,
     }}>
       <div>
-        <p style={{ fontSize: 11, color: T.sub, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
-        <p style={{ fontSize: 26, fontWeight: 700, color: color ?? T.txt, lineHeight: 1 }}>{value}</p>
-        {sub && <p style={{ fontSize: 11, color: T.muted, marginTop: 5 }}>{sub}</p>}
+        <p style={{ fontSize: 11, color: C.sub, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
+        <p style={{ fontSize: 26, fontWeight: 700, color: color ?? C.txt, lineHeight: 1 }}>{value}</p>
+        {sub && <p style={{ fontSize: 11, color: C.muted, marginTop: 5 }}>{sub}</p>}
       </div>
       {icon && (
         <div style={{
           width: 32, height: 32, borderRadius: 8,
-          background: T.inner, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: T.sub, flexShrink: 0,
+          background: C.inner, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: C.sub, flexShrink: 0,
         }}>{icon}</div>
       )}
     </div>

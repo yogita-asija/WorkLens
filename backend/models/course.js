@@ -1,12 +1,13 @@
 const mongoose = require("mongoose")
 
 const CourseSchema = new mongoose.Schema({
-  courseId:    { type: String, required: true, unique: true },  // unique already creates index
+  courseId:    { type: String, required: true, unique: true },
   courseCode:  { type: String },
   courseName:  { type: String, required: true },
   description: { type: String, default: "" },
   label:       { type: String },
   sem:         { type: String, default: "N/A" },
+  batch:       { type: String, default: "" },   // e.g. "A", "B", "2024-25", "Morning"
   credits:     { type: Number, default: 3 },
   status:      { type: String, enum: ["active", "inactive", "archived"], default: "active" },
   teacher: {
@@ -23,7 +24,6 @@ const CourseSchema = new mongoose.Schema({
   students: [{ id: String, name: String, enrolledAt: { type: Date, default: Date.now } }],
 }, { timestamps: true })
 
-// Only add indexes not already created by schema-level options
 CourseSchema.index({ status: 1 })
 CourseSchema.index({ "teacher.id": 1 })
 

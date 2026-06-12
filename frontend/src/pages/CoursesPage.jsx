@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react"
-import { Search, Users, Eye, X, ChevronDown, BookOpen, Archive, ArchiveRestore } from "lucide-react"
+import React, { useState, useMemo, useEffect } from "react"
+import { Search, Users, Eye, X, ChevronDown, BookOpen, Archive, ArchiveRestore, UserCheck, CheckCircle, AlertCircle } from "lucide-react"
 import { Card, Badge, ProgressBar, Icons, T } from "../components/UI"
 import useAppStore from "../store/useAppStore"
 import { useCourses } from "../hooks/useData"
@@ -17,10 +17,11 @@ export default function CoursesPage() {
 
   const [search,   setSearch]   = useState("")
   const [filter,   setFilter]   = useState("all")
-  const [modal,    setModal]    = useState(null) // null | "view" | "enroll"
+  const [modal,    setModal]    = useState(null) // null | "view" | "students"
   const [target,   setTarget]   = useState(null)
 
-  const [enrollInput, setEnrollInput] = useState("")
+  const [enrolledStudents, setEnrolledStudents] = useState([])
+  const [studentsLoading, setStudentsLoading]   = useState(false)
 
   const filtered = useMemo(() => {
     let list = courses
@@ -41,7 +42,20 @@ export default function CoursesPage() {
 
  
   const openView     = (c) => { setTarget(c); setModal("view") }
-  const openEnroll   = (c) => { setTarget(c); setEnrollInput(""); setModal("enroll") }
+  const openStudents = async (c) => {
+    setTarget(c)
+    setEnrolledStudents([])
+    setModal("students")
+    setStudentsLoading(true)
+    try {
+      const data = await api.getEnrolledStudents(c._id)
+      setEnrolledStudents(data.students || [])
+    } catch (err) {
+      showToast(err.message || "Failed to load students", "error")
+    } finally {
+      setStudentsLoading(false)
+    }
+  }
   const handleArchive = async (c) => {
     try {
       await api.updateCourse(c._id, { status: "archived" })
@@ -57,23 +71,9 @@ export default function CoursesPage() {
     } catch (err) { showToast(err.message || "Unarchive failed", "error") }
   }
 
-  const closeModal = () => { setModal(null); setTarget(null); setAnalytics(null) }
+  const closeModal = () => { setModal(null); setTarget(null); setEnrolledStudents([]) }
 
 
-
-  const handleEnroll = async () => {
-    const lines = enrollInput.split("\n").map(l => l.trim()).filter(Boolean)
-    if (!lines.length) return showToast("Enter at least one student", "error")
-    const students = lines.map((l, i) => {
-      const parts = l.split(",")
-      return { id: parts[0]?.trim() || `S${i+1}`, name: parts[1]?.trim() || parts[0]?.trim() }
-    })
-    try {
-      const res = await api.enrollStudents(target._id, { students })
-      showToast(res.message || "Students enrolled")
-      closeModal(); reload()
-    } catch (err) { showToast(err.message || "Enrollment failed", "error") }
-  }
 
   const F = ({ label, children, required }) => (
     <div style={{ marginBottom: 14 }}>
@@ -100,9 +100,9 @@ export default function CoursesPage() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
         {[
           { label: "Total Courses",   value: courses.length,    color: T.txt },
-          { label: "Active",          value: courses.filter(c=>c.status==="active").length, color: "#22C55E" },
-          { label: "Total Students",  value: totalStudents,     color: "#EAB308" },
-          { label: "Avg Progress",    value: `${avgProgress}%`, color: "#4ade80" },
+          { label: "Active",          value: courses.filter(c=>c.status==="active").length, color:  T.txt},
+          { label: "Total Students",  value: totalStudents,     color: T.txt },
+          { label: "Avg Progress",    value: `${avgProgress}%`, color:  T.txt },
         ].map(s => (
           <div key={s.label} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px" }}>
             <p style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 6px" }}>{s.label}</p>
@@ -133,7 +133,7 @@ export default function CoursesPage() {
           <CourseCard key={c._id} course={c}
             onView={() => openView(c)} onEdit={() => openEdit(c)}
             
-             onEnroll={() => openEnroll(c)}
+             onStudents={() => openStudents(c)}
              onArchive={() => handleArchive(c)}
              onUnarchive={() => handleUnarchive(c)}
           />
@@ -150,20 +150,65 @@ export default function CoursesPage() {
       
       {modal === "view" && target && <CourseViewModal course={target} assignments={useAppStore.getState().assignments} onClose={closeModal} />}
 
-      {modal === "enroll" && target && (
-        <ModalWrap title={`Enroll Students — ${target.courseId}`} onClose={closeModal}>
-          <p style={{ fontSize: 12, color: T.sub, marginBottom: 10 }}>
-            One per line: <code style={{ color: T.accent }}>StudentID, Full Name</code> — or just a name.
-          </p>
-          <textarea
-            value={enrollInput}
-            onChange={e => setEnrollInput(e.target.value)}
-            style={{ ...inp, height: 160, resize: "vertical", fontFamily: "monospace", fontSize: 12 }}
-            placeholder={"CS2021001, Alice Johnson\nCS2021002, Bob Smith"}
-          />
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-            <Btn label="Cancel" ghost onClick={closeModal} />
-            <Btn label="Enroll" onClick={handleEnroll} />
+      {modal === "students" && target && (
+        <ModalWrap title={`Enrolled Students — ${target.courseId}`} onClose={closeModal}>
+          {studentsLoading ? (
+            <div style={{ textAlign: "center", padding: "40px 0", color: T.muted }}>
+              <Users size={28} style={{ margin: "0 auto 10px", display: "block", opacity: 0.4 }} />
+              <p style={{ fontSize: 13 }}>Loading students…</p>
+            </div>
+          ) : enrolledStudents.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px 0", color: T.muted }}>
+              <UserCheck size={28} style={{ margin: "0 auto 10px", display: "block", opacity: 0.4 }} />
+              <p style={{ fontSize: 13 }}>No students enrolled in this course</p>
+            </div>
+          ) : (
+            <>
+              <p style={{ fontSize: 11, color: T.sub, marginBottom: 12 }}>
+                {enrolledStudents.length} student{enrolledStudents.length !== 1 ? "s" : ""} enrolled
+              </p>
+              <div style={{ maxHeight: 380, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
+                {enrolledStudents.map((s, i) => {
+                 
+                  const asgSubmitted = s.assignments.submitted
+                  const asgTotal = s.assignments.total
+                  return (
+                    <div key={s.id} style={{
+                      background: T.inner, border: `1px solid ${T.border}`, borderRadius: 10,
+                      padding: "10px 14px", display: "flex", alignItems: "center", gap: 12,
+                    }}>
+                      {/* Avatar */}
+                      <div style={{
+                        width: 34, height: 34, borderRadius: "50%", background: "rgba(74,222,128,0.15)",
+                        border: "1px solid rgba(74,222,128,0.3)", display: "flex", alignItems: "center",
+                        justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#4ade80", flexShrink: 0,
+                      }}>
+                        {s.name?.charAt(0)?.toUpperCase() || "?"}
+                      </div>
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: T.txt, margin: "0 0 2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {s.name}
+                        </p>
+                        <p style={{ fontSize: 11, color: T.muted, margin: 0 }}>{s.id}</p>
+                      </div>
+                      
+                      {/* Assignment badge */}
+                      <div style={{ textAlign: "center", flexShrink: 0 }}>
+                        <p style={{ fontSize: 10, color: T.muted, margin: "0 0 2px" }}>Assignments</p>
+                        <p style={{ fontSize: 12, fontWeight: 700, color: asgTotal > 0 ? (asgSubmitted === asgTotal ? "#22C55E" : "#EAB308") : T.muted, margin: 0 }}>
+                          {asgSubmitted}/{asgTotal}
+                        </p>
+                        <p style={{ fontSize: 10, color: T.muted, margin: 0 }}>submitted</p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+          <div style={{ textAlign: "right", marginTop: 14 }}>
+            <Btn label="Close" ghost onClick={closeModal} />
           </div>
         </ModalWrap>
       )}
@@ -173,7 +218,7 @@ export default function CoursesPage() {
   )
 }
 
-function CourseCard({ course, onView, onEnroll, onArchive, onUnarchive }) {
+function CourseCard({ course, onView, onStudents, onArchive, onUnarchive }) {
   const [hov, setHov] = useState(false)
   const tc = TYPE_COLORS[course.status] || TYPE_COLORS.active
   const enrollPct = course.capacity ? Math.min(100, Math.round((course.students / course.capacity) * 100)) : 0
@@ -189,7 +234,7 @@ function CourseCard({ course, onView, onEnroll, onArchive, onUnarchive }) {
         </div>
         <div style={{ display: "flex", gap: 4 }}>
          
-          <IBtn icon={<Users size={13} />} onClick={onEnroll} title="Enroll" />
+          <IBtn icon={<Users size={13} />} onClick={onStudents} title="View Students" />
           {course.status === "archived"
             ? <IBtn icon={<ArchiveRestore size={13} />} onClick={onUnarchive} title="Unarchive" />
             : <IBtn icon={<Archive size={13} />} onClick={onArchive} title="Archive" />

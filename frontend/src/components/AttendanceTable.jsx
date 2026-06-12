@@ -59,9 +59,9 @@ const DownloadIcon = () => (
 const STATUS_CYCLE = ['present', 'absent', 'late']
 
 const STATUS_STYLE = {
-  present: { label: 'Present', bg: 'rgba(22,163,74,0.15)',  color: '#4ade80', border: '1px solid rgba(22,163,74,0.4)',  dot: '#4ade80' },
-  absent:  { label: 'Absent',  bg: 'rgba(220,38,38,0.12)',  color: '#f87171', border: '1px solid rgba(220,38,38,0.5)',  dot: '#f87171' },
-  late:    { label: 'Late',    bg: 'rgba(202,138,4,0.15)',  color: '#facc15', border: '1px solid rgba(202,138,4,0.4)', dot: '#facc15' },
+  present: { label: 'Present', bg: 'rgba(22,163,74,0.15)',  color: '#4ade80' },
+  absent:  { label: 'Absent',  bg: 'rgba(220,38,38,0.12)',  color: '#f87171'},
+  late:    { label: 'Late',    bg: 'rgba(202,138,4,0.15)',  color: '#facc15' },
 }
 
 function NotePopup({ note, onSave, onClose }) {
@@ -353,12 +353,12 @@ export default function AttendanceTable({ students, onStatusChange, onNoteChange
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
-                cursor: 'pointer', border: '1px solid rgba(59,130,246,0.4)',
-                background: 'rgba(59,130,246,0.12)', color: '#60a5fa',
+                cursor: 'pointer', border: '1px solid rgba(22,163,74,0.15)',
+                background: 'rgba(22,163,74,0.15)', color: '#4ade80',
                 transition: 'all 0.2s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.2)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.6)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.12)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.4)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(22,163,74,0.15)'; e.currentTarget.style.borderColor = 'rgba(22,163,74,0.15)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(22,163,74,0.15)'; e.currentTarget.style.borderColor = 'rgba(22,163,74,0.15)' }}
             >
               <DownloadIcon /> Export CSV
             </button>
@@ -385,9 +385,9 @@ export default function AttendanceTable({ students, onStatusChange, onNoteChange
       {/* Stats bar */}
       <div style={{ padding: '10px 20px', borderBottom: '1px solid #1f1f1f', display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
         {[
-          { label: 'Present', color: '#4ade80', count: presentCount },
-          { label: 'Absent',  color: '#f87171', count: absentCount },
-          { label: 'Late',    color: '#facc15', count: lateCount },
+          { label: 'Present', color: '#9CA3AF', count: presentCount },
+          { label: 'Absent',  color: '#9CA3AF', count: absentCount },
+          { label: 'Late',    color: '#9CA3AF', count: lateCount },
         ].map(item => (
           <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.color }} />
@@ -458,9 +458,9 @@ export default function AttendanceTable({ students, onStatusChange, onNoteChange
 
       {/* Footer */}
       <div style={{ padding: '10px 20px', borderTop: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <p style={{ fontSize: '11px', color: '#4b5563', margin: 0 }}>
+        {/* <p style={{ fontSize: '11px', color: '#4b5563', margin: 0 }}>
           Click <span style={{ color: '#d1d5db' }}>badge</span> to cycle status &nbsp;·&nbsp; Click <span style={{ color: '#d1d5db' }}>pencil</span> to add note
-        </p>
+        </p> */}
         <p style={{ fontSize: '11px', color: '#6b7280', margin: 0 }}>
           {students.length > 0 && `${presentCount}/${students.length} present`}
         </p>

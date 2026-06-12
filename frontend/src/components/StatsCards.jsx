@@ -76,8 +76,8 @@ export default function StatsCards({ total, present, absent, late }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard delay="0ms"    icon={<UsersIcon />}       label="Total Students"   value={total}   subLabel={`${total} enrolled`} />
-      <StatCard delay="80ms"   icon={<CheckCircleIcon />} label="Present"          value={present} accentColor="#4ade80" subLabel={late > 0 ? `+${late} late` : 'All on time'} />
-      <StatCard delay="160ms"  icon={<XCircleIcon />}     label="Absent"           value={absent}  accentColor="#f87171" subLabel={absent === 0 ? 'Full attendance!' : `${absent} missing`} />
+      <StatCard delay="80ms"   icon={<CheckCircleIcon />} label="Present"          value={present} accentColor="#9CA3AF" subLabel={late > 0 ? `+${late} late` : 'All on time'} />
+      <StatCard delay="160ms"  icon={<XCircleIcon />}     label="Absent"           value={absent}  accentColor="#9CA3AF" subLabel={absent === 0 ? 'Full attendance!' : `${absent} missing`} />
       <StatCard delay="240ms"  icon={<TrendingUpIcon />}  label="Attendance Rate"  value={pct}     suffix="%" subLabel={pct >= 75 ? '↑ Good standing' : pct >= 50 ? '~ Needs attention' : '↓ Critical'} />
     </div>
   )

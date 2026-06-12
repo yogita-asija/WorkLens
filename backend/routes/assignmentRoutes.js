@@ -11,5 +11,7 @@ router.put("/:id",                    ctrl.updateAssignment)
 router.delete("/:id",                 ctrl.deleteAssignment)
 router.post("/:id/submit",            ctrl.submitAssignment)
 router.put("/:id/grade/:submissionId", ctrl.gradeSubmission)
+router.get("/:id/students-marks",     ctrl.getAssignmentStudentsMarks)
+router.put("/:id/bulk-marks",         ctrl.bulkSaveMarks)
 
 module.exports = router

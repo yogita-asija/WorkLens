@@ -1,13 +1,7 @@
-import { useState } from "react";
-import { CheckSquare, Square, Clock, Flag } from "lucide-react";
-
-const defaultTasks = [
-  { id: 1, label: "Grade CS401 midterm papers",   due: "Today",       priority: "high",   done: false },
-  { id: 2, label: "Prepare lab session material",  due: "Tomorrow",    priority: "medium", done: false },
-  { id: 3, label: "Submit monthly activity report",due: "In 3 days",   priority: "high",   done: false },
-  { id: 4, label: "Update syllabus for CS301",     due: "This week",   priority: "low",    done: true  },
-  { id: 5, label: "Review leave application",      due: "Today",       priority: "medium", done: false },
-];
+import { useState, useEffect } from "react";
+import { CheckSquare, Square, Clock, Flag, Loader } from "lucide-react";
+import useAppStore from "../store/useAppStore";
+import * as api from "../services/api";
 
 const priorityConfig = {
   high:   { color: "#f87171", label: "High" },
@@ -16,12 +10,12 @@ const priorityConfig = {
 };
 
 function TaskItem({ task, onToggle }) {
-  const p = priorityConfig[task.priority];
+  const p = priorityConfig[task.priority] || priorityConfig.low;
   return (
     <div
       className={`flex items-start gap-3 py-3 border-b border-[#242424] last:border-b-0 group transition-opacity ${task.done ? "opacity-40" : ""}`}
     >
-      <button onClick={() => onToggle(task.id)} className="mt-0.5 flex-shrink-0 text-neutral-500 hover:text-green-400 transition-colors">
+      <button onClick={() => onToggle(task.id)} className="mt-0.5 flex-shrink-0 text-neutral-500 hover:text-green-400 transition-colors cursor-pointer">
         {task.done ? <CheckSquare size={16} className="text-green-500" /> : <Square size={16} />}
       </button>
       <div className="flex-1 min-w-0">
@@ -44,7 +38,17 @@ function TaskItem({ task, onToggle }) {
 }
 
 export default function UpcomingTasks() {
-  const [tasks, setTasks] = useState(defaultTasks);
+  const [tasks, setTasks]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAppStore();
+
+  useEffect(() => {
+    const params = user?._id ? { userId: user._id } : {};
+    api.getUpcomingTasks(params)
+      .then(data => setTasks(Array.isArray(data) ? data : []))
+      .catch(() => setTasks([]))
+      .finally(() => setLoading(false));
+  }, [user?._id]);
 
   const toggle = (id) => setTasks(t => t.map(x => x.id === id ? { ...x, done: !x.done } : x));
   const done   = tasks.filter(t => t.done).length;
@@ -56,21 +60,37 @@ export default function UpcomingTasks() {
           <Flag size={15} className="text-neutral-500" />
           Tasks & To-Do
         </h3>
-        <span className="text-xs text-neutral-500">{done}/{tasks.length} done</span>
+        {!loading && tasks.length > 0 && (
+          <span className="text-xs text-neutral-500">{done}/{tasks.length} done</span>
+        )}
       </div>
-      <p className="text-xs text-neutral-600 mb-3">Your pending action items</p>
+      <p className="text-xs text-neutral-600 mb-3">Assignment deadlines from your courses</p>
 
       {/* Mini progress */}
-      <div className="w-full h-1 rounded-full bg-[#2a2a2a] overflow-hidden mb-4">
-        <div
-          className="h-full rounded-full bg-green-500 transition-all duration-500"
-          style={{ width: `${(done / tasks.length) * 100}%` }}
-        />
-      </div>
+      {!loading && tasks.length > 0 && (
+        <div className="w-full h-1 rounded-full bg-[#2a2a2a] overflow-hidden mb-4">
+          <div
+            className="h-full rounded-full bg-green-500 transition-all duration-500"
+            style={{ width: `${tasks.length > 0 ? (done / tasks.length) * 100 : 0}%` }}
+          />
+        </div>
+      )}
 
-      <div>
-        {tasks.map(task => <TaskItem key={task.id} task={task} onToggle={toggle} />)}
-      </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-8 gap-2 text-neutral-600">
+          <Loader size={16} className="animate-spin" />
+          <span className="text-sm">Loading tasks…</span>
+        </div>
+      ) : tasks.length === 0 ? (
+        <div className="py-8 text-center">
+          <CheckSquare size={28} className="text-neutral-700 mx-auto mb-2" />
+          <p className="text-sm text-neutral-500">No upcoming assignment deadlines</p>
+        </div>
+      ) : (
+        <div>
+          {tasks.map(task => <TaskItem key={task.id} task={task} onToggle={toggle} />)}
+        </div>
+      )}
     </div>
   );
 }

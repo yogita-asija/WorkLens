@@ -4,7 +4,7 @@ import * as api from "../services/api"
 import { T } from "./UI"
 
 export default function NotifPanel({ open, onClose }) {
-  const { notifications, unreadCount, markNotifRead, markAllNotifRead, user } = useAppStore()
+  const { notifications, unreadCount, markNotifRead , markAllNotifRead, user } = useAppStore()
 
   const handleRead = async (id) => {
     try {
@@ -19,6 +19,31 @@ export default function NotifPanel({ open, onClose }) {
       markAllNotifRead()
     } catch {}
   }
+
+
+  const handleDelete = async (id, e) => {
+  e.stopPropagation()
+
+  
+
+  try {
+    await api.deleteNotification(id)
+
+    useAppStore.setState((state) => ({
+      notifications: state.notifications.filter(
+        (n) => n._id !== id
+      ),
+      unreadCount:
+        state.notifications.find(
+          (n) => n._id === id && !n.read
+        )
+          ? Math.max(0, state.unreadCount - 1)
+          : state.unreadCount,
+    }))
+  } catch (err) {
+    console.error(err)
+  }
+}
 
   const typeColor = (t) => ({
     assignment: "#3B82F6", submission: "#22C55E", course: "#F97316",
@@ -47,7 +72,15 @@ export default function NotifPanel({ open, onClose }) {
               <CheckCheck size={14} />
             </button>
           )}
-          <button onClick={onClose} style={{ background: "#1c1c1c", border: "1px solid #333", borderRadius: 8, padding: 6, cursor: "pointer", color: "#9ca3af", display: "flex" }}>
+          <button onClick={onClose} style={{ background: "#1c1c1c", border: "1px solid #333", borderRadius: 8, padding: 6, cursor: "pointer", color: "#9ca3af", display: "flex" }}
+          onMouseEnter={(e) => {
+    e.currentTarget.style.color = "#ef4444"
+    e.currentTarget.style.opacity = "1"
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.color = "#6b7280"
+    e.currentTarget.style.opacity = "0.4"
+  }}>
             <X size={15} />
           </button>
         </div>
@@ -75,6 +108,47 @@ export default function NotifPanel({ open, onClose }) {
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: n.read ? "#333" : typeColor(n.type), flexShrink: 0, marginTop: 5 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+    }}
+  >
+    <p
+      style={{
+        fontSize: 12,
+        fontWeight: 600,
+        color: n.read ? "#9ca3af" : "#fff",
+        margin: 0,
+      }}
+    >
+      {n.title}
+    </p>
+
+    <button
+  onClick={(e) => handleDelete(n._id, e)}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.color = "#ef4444"
+    e.currentTarget.style.opacity = "1"
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.color = "#6b7280"
+    e.currentTarget.style.opacity = "0.4"
+  }}
+  style={{
+    opacity: 0.4,
+    transition: "all 0.2s",
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    color: "#6b7280",
+    padding: "2px",
+  }}
+>
+  <X size={14} />
+</button>
+  </div>
                   <p style={{ fontSize: 12, fontWeight: 600, color: n.read ? "#9ca3af" : "#fff", margin: 0 }}>{n.title}</p>
                   <p style={{ fontSize: 11, color: "#6b7280", margin: "3px 0 0", lineHeight: 1.4 }}>{n.message}</p>
                   <p style={{ fontSize: 10, color: "#4b5563", margin: "5px 0 0" }}>

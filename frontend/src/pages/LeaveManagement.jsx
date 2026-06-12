@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import "react-datepicker/dist/react-datepicker.css";
+import useAppStore from "../store/useAppStore";
 
 ChartJS.register(
   CategoryScale,
@@ -26,8 +27,7 @@ ChartJS.register(
   Legend
 );
 
-const API = "http://localhost:8000/api/leaves";
-const FACULTY_ID = "faculty_001";
+const API = `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/leaves`;
 
 function statusBadge(status) {
   const base =
@@ -51,6 +51,10 @@ function fmt(dateStr) {
 }
 
 const LeaveManagement = () => {
+  // Read the logged-in user from the global store
+  const user = useAppStore((s) => s.user);
+  const userId = user?._id;
+
   const [open, setOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -82,16 +86,28 @@ const LeaveManagement = () => {
   // DYNAMIC HOLIDAYS
   const [holidays, setHolidays] = useState([]);
 
+  // Auth headers for every request — sends the logged-in user's _id
+  const authHeaders = {
+    "Content-Type": "application/json",
+    "x-user-id": userId || "",
+  };
+
   // FETCH EVERYTHING
   const fetchAll = async () => {
+    if (!userId) {
+      setError("You are not logged in. Please log in to view leave data.");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
       const [lR, bR, mR, hR] = await Promise.all([
-        fetch(`${API}?facultyId=${FACULTY_ID}`),
-        fetch(`${API}/balance?facultyId=${FACULTY_ID}`),
-        fetch(`${API}/monthly?facultyId=${FACULTY_ID}`),
+        fetch(`${API}`,           { headers: authHeaders }),
+        fetch(`${API}/balance`,   { headers: authHeaders }),
+        fetch(`${API}/monthly`,   { headers: authHeaders }),
         fetch(`${API}/holidays`),
       ]);
 
@@ -139,7 +155,7 @@ const LeaveManagement = () => {
 
     } catch {
       setError(
-        "Could not reach the server. Make sure the backend is running on port 5000."
+        "Could not reach the server. Make sure the backend is running."
       );
     } finally {
       setLoading(false);
@@ -148,7 +164,7 @@ const LeaveManagement = () => {
 
   useEffect(() => {
     fetchAll();
-  }, []);
+  }, [userId]);
 
   // APPLY LEAVE
   const handleSubmit = async () => {
@@ -198,13 +214,8 @@ const LeaveManagement = () => {
     try {
       const res = await fetch(API, {
         method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
+        headers: authHeaders,
         body: JSON.stringify({
-          facultyId: FACULTY_ID,
           type: form.type,
           fromDate: form.from.toISOString(),
           toDate: (
