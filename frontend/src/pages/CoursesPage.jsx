@@ -250,7 +250,11 @@ function CourseCard({ course, onView, onStudents, onArchive, onUnarchive }) {
       <div style={{ display: "flex", gap: 14, marginBottom: 12, flexWrap: "wrap" }}>
         <span style={{ fontSize: 11, color: T.muted }}> {course.students}/{course.capacity} students</span>
         {course.schedule?.days && <span style={{ fontSize: 11, color: T.muted }}> {course.schedule.days}{course.schedule.time ? ` · ${course.schedule.time}` : ""}</span>}
-       
+        {Array.isArray(course.batches) && course.batches.length > 0 && (
+          <span style={{ fontSize: 11, color: "#4ade80" }}>
+            {course.batches.length} batch{course.batches.length !== 1 ? "es" : ""}
+          </span>
+        )}
       </div>
 
       <div>
@@ -289,6 +293,25 @@ function CourseViewModal({ course, assignments, onClose }) {
         ))}
       </div>
       {course.description && <p style={{ fontSize: 12, color: T.sub, marginBottom: 16, lineHeight: 1.5 }}>{course.description}</p>}
+      {Array.isArray(course.batches) && course.batches.length > 0 && (
+        <>
+          <p style={{ fontSize: 11, fontWeight: 600, color: T.txt, marginBottom: 8 }}>Batches ({course.batches.length})</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+            {course.batches.map(b => (
+              <div key={b._id} style={{ background: T.inner, border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: T.txt }}>{b.batchName}</span>
+                  <span style={{ fontSize: 11, color: T.muted }}>{b.students}/{b.capacity} students</span>
+                </div>
+                <p style={{ fontSize: 11, color: T.muted, margin: "4px 0 0" }}>
+                  Teacher: {b.teacher?.name || "Unassigned"}
+                  {(b.schedule?.days || b.schedule?.time) && ` · ${[b.schedule?.days, b.schedule?.time, b.schedule?.room].filter(Boolean).join(" · ")}`}
+                </p>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
       {cas.length > 0 && (
         <>
           <p style={{ fontSize: 11, fontWeight: 600, color: T.txt, marginBottom: 8 }}>Linked Assignments ({cas.length})</p>

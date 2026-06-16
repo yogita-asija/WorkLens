@@ -23,6 +23,13 @@ import ExtraDutiesPage   from "./pages/ExtraDutiesPage"
 import StudentProfile    from "./pages/StudentProfile"
 import InternalMarksPage from "./pages/InternalMarksPage"
 import SettingsPage      from "./pages/SettingsPage"
+import LessonPlansPage   from "./pages/LessonPlansPage"
+import StudyMaterialsPage from "./pages/StudyMaterialsPage"
+import SyllabusPage      from "./pages/SyllabusPage"
+import QuestionPapersPage  from "./pages/QuestionPapersPage"
+import OnlineClassesPage from "./pages/OnlineClassesPage"
+import TimetablePage     from "./pages/TimetablePage"
+import StudentMessages    from "./pages/StudentMessages"
 import { useNotifications } from "./hooks/useData"
 
 // ── Admin module ───────────────────────────────────────────────────────────
@@ -95,27 +102,30 @@ function FacultyLayout() {
               <Route path="/attendance"     element={<AttendancePage />} />
               <Route path="/courses"        element={<CoursesPage />} />
               <Route path="/assignments"    element={<AssignmentsPage />} />
-              <Route path="/materials"      element={<ComingSoon title="Study Materials" desc="Upload and manage lecture notes, slides, and reference material for your courses." />} />
+              <Route path="/materials"      element={<StudyMaterialsPage />} />
+              <Route path="/lesson-plans"   element={<LessonPlansPage />} />
+               {/* <Route path="/syllabus"       element={<SyllabusPage />} /> */}
+              <Route path="/question-papers" element={<QuestionPapersPage />} />
+              <Route path="/online-classes" element={<OnlineClassesPage />} />
               <Route path="/lesson-plans"   element={<ComingSoon title="Lesson Plans" desc="Plan and track lesson delivery across your courses for the semester." />} />
-              <Route path="/syllabus"       element={<ComingSoon title="Syllabus Progress" desc="Monitor how much of the syllabus has been covered per course." />} />
+              {/* <Route path="/syllabus"       element={<ComingSoon title="Syllabus Progress" desc="Monitor how much of the syllabus has been covered per course." />} /> */}
               <Route path="/online-classes" element={<ComingSoon title="Online Classes" desc="Schedule and conduct live online classes and track student participation." />} />
               {/* <Route path="/obe-mapping"    element={<ComingSoon title="OBE Mapping" desc="Map course outcomes to program outcomes for outcome-based education compliance." />} /> */}
 
               {/* ── Assessment group ── */}
               <Route path="/internal-marks"   element={<InternalMarksPage />} />
               <Route path="/question-papers"  element={<ComingSoon title="Question Papers" desc="Create and manage question papers for internal and external exams." />} />
-              <Route path="/grades"           element={<ComingSoon title="Grades & Rubrics" desc="Submit final grades and use rubric-based evaluation for assignments." />} />
-              {/* <Route path="/performance"      element={<ComingSoon title="Performance Analytics" desc="View student performance trends across tests and assignments." />} /> */}
+              {/* <Route path="/grades"           element={<ComingSoon title="Grades & Rubrics" desc="Submit final grades and use rubric-based evaluation for assignments." />} /> */}
+              <Route path="/performance"      element={<ComingSoon title="Performance Analytics" desc="View student performance trends across tests and assignments." />} />
 
               {/* ── Students group ── */}
               {/* <Route path="/student-attendance"  element={<ComingSoon title="Attendance Reports" desc="Per-student attendance summary across all your courses." />} /> */}
-              <Route path="/student-performance" element={<ComingSoon title="Performance Reports" desc="Detailed performance breakdown per student." />} />
-              <Route path="/at-risk"             element={<ComingSoon title="At-Risk Students" desc="Students flagged for low attendance or poor performance — act before it's too late." />} />
-              <Route path="/student-messages"    element={<ComingSoon title="Student Messages" desc="Send and receive messages directly with your students." />} />
-
+              {/* <Route path="/student-performance" element={<ComingSoon title="Performance Reports" desc="Detailed performance breakdown per student." />} />
+              <Route path="/at-risk"             element={<ComingSoon title="At-Risk Students" desc="Students flagged for low attendance or poor performance — act before it's too late." />} /> */}
+              <Route path="/student-messages"    element={<StudentMessages />} />
               {/* ── Self-Service group ── */}
               <Route path="/leave-management" element={<LeaveManagement />} />
-              <Route path="/timetable"        element={<ComingSoon title="My Timetable" desc="View your weekly class schedule for the current semester." />} />
+              <Route path="/timetable"        element={<TimetablePage />} />
               {/* <Route path="/workload"         element={<ComingSoon title="Workload" desc="Your current workload score based on courses, duties, and assignments." />} /> */}
               {/* <Route path="/kpi"              element={<ComingSoon title="KPI Dashboard" desc="Your personal KPIs — attendance %, assignment completion, student scores." />} /> */}
               <Route path="/extra-duties"     element={<ExtraDutiesPage />} />

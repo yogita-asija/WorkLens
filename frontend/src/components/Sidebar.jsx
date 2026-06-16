@@ -24,7 +24,7 @@ const menuGroups = [
       { name: "Assignments",      icon: FileQuestion, path: "/assignments"     },
       { name: "Study Materials",  icon: FileUp,       path: "/materials"       },
       { name: "Lesson Plans",     icon: BookMarked,   path: "/lesson-plans"    },
-      { name: "Syllabus Progress",icon: BarChart2,    path: "/syllabus"        },
+      // { name: "Syllabus Progress",icon: BarChart2,    path: "/syllabus"        },
       { name: "Online Classes",   icon: Video,        path: "/online-classes"  },
       // { name: "OBE Mapping",      icon: Target,       path: "/obe-mapping"     },
     ],
@@ -34,7 +34,7 @@ const menuGroups = [
     items: [
       { name: "Internal Marks",   icon: ClipboardList, path: "/internal-marks" },
       { name: "Question Papers",  icon: FileQuestion,  path: "/question-papers"},
-      { name: "Grades & Rubrics", icon: Star,          path: "/grades"         },
+      // { name: "Grades & Rubrics", icon: Star,          path: "/grades"         },
       // { name: "Performance",      icon: TrendingUp,    path: "/performance"    },
     ],
   },
@@ -42,8 +42,8 @@ const menuGroups = [
     group: "Students",
     items: [
       // { name: "Attendance Reports",icon: PieChart,       path: "/student-attendance" },
-      { name: "Performance Reports",icon: Users,         path: "/student-performance"},
-      { name: "At-Risk Students",  icon: AlertTriangle,  path: "/at-risk"            },
+      // { name: "Performance Reports",icon: Users,         path: "/student-performance"},
+      // { name: "At-Risk Students",  icon: AlertTriangle,  path: "/at-risk"            },
       { name: "Student Messages",  icon: MessageSquare,  path: "/student-messages"   },
     ],
   },

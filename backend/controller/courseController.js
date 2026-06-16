@@ -6,7 +6,7 @@ const Notification = require("../models/Notification")
 // GET /api/courses
 exports.getCourses = async (req, res) => {
   try {
-    const { status, search } = req.query
+    const { status, search, teacherId } = req.query
     const filter = {}
     if (status && status !== "all") filter.status = status
     if (search) filter.$or = [
@@ -14,6 +14,12 @@ exports.getCourses = async (req, res) => {
       { courseId:   { $regex: search, $options: "i" } },
       { courseCode: { $regex: search, $options: "i" } },
     ]
+    if (teacherId) {
+      filter.$or = [
+        { "teacher.id": teacherId },
+        { "batches.teacher.id": teacherId },
+      ]
+    }
 
     const courses = await Course.find(filter).lean()
     const assignments = await Assignment.find({}, "courseId submissions total completed").lean()
@@ -33,13 +39,20 @@ exports.getCourses = async (req, res) => {
         description: c.description || "",
         label:       c.label || `${c.courseCode} — ${c.courseName}`,
         sem:         c.sem || "N/A",
-        batch:       c.batch || "",
         credits:     c.credits || 3,
         status:      c.status || "active",
         teacher:     c.teacher || {},
         students:    c.students?.length || 0,
         capacity:    c.capacity || 60,
         schedule:    c.schedule || { days: "Not set", time: "", room: "" },
+        batches:     (c.batches || []).map(b => ({
+          _id:      b._id,
+          batchName: b.batchName,
+          teacher:   b.teacher || {},
+          schedule:  b.schedule || { days: "", time: "", room: "" },
+          capacity:  b.capacity || 60,
+          students:  b.students?.length || 0,
+        })),
         progress,
         assignmentCount: cas.length,
       }

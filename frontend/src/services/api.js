@@ -116,3 +116,58 @@ export const getStudentMarks     = (sid, tid)  => req(`/api/internal-marks/${sid
 export const addInternalMark     = (b)         => post("/api/internal-marks", b)
 export const updateInternalMark  = (id, b)     => put(`/api/internal-marks/${id}`, b)
 export const deleteInternalMark  = (id)        => del(`/api/internal-marks/${id}`)
+
+// Study Materials
+export const getStudyMaterials      = (p={}) => req(`/api/study-materials?${new URLSearchParams(p)}`)
+export const getStudyMaterialById   = (id)   => req(`/api/study-materials/${id}`)
+export const createStudyMaterial    = (b)    => post("/api/study-materials", b)
+export const updateStudyMaterial    = (id,b) => put(`/api/study-materials/${id}`, b)
+export const deleteStudyMaterial    = (id)   => del(`/api/study-materials/${id}`)
+export const getStudyMaterialStats  = (p={}) => req(`/api/study-materials/stats?${new URLSearchParams(p)}`)
+
+
+
+// Lesson Plans
+export const getLessonPlans        = (p={})    => req(`/api/lesson-plans?${new URLSearchParams(p)}`)
+export const getLessonPlanStats    = (p={})    => req(`/api/lesson-plans/stats?${new URLSearchParams(p)}`)
+export const getCalendarData       = (p={})    => req(`/api/lesson-plans/calendar?${new URLSearchParams(p)}`)
+export const getLessonPlanById     = (id)      => req(`/api/lesson-plans/${id}`)
+export const createLessonPlan      = (b)       => post("/api/lesson-plans", b)
+export const updateLessonPlan      = (id, b)   => put(`/api/lesson-plans/${id}`, b)
+export const markLessonPlanComplete= (id)      => patch(`/api/lesson-plans/${id}/complete`, {})
+export const deleteLessonPlan      = (id)      => del(`/api/lesson-plans/${id}`)
+
+
+
+// Syllabus
+export const getAllSyllabus        = ()             => req("/api/syllabus")
+export const getSyllabusByCourse   = (courseId)    => req(`/api/syllabus/${courseId}`)
+export const createSyllabus        = (b)           => post("/api/syllabus", b)
+export const updateSyllabus        = (courseId, b) => put(`/api/syllabus/${courseId}`, b)
+export const updateSyllabusTopic   = (courseId, b) => patch(`/api/syllabus/${courseId}/topic`, b)
+export const deleteSyllabus        = (courseId)    => del(`/api/syllabus/${courseId}`)
+
+
+
+// Question Papers
+export const getQuestionPapers      = (p={})  => req(`/api/question-papers?${new URLSearchParams(p)}`)
+export const getQuestionPaperStats  = ()       => req("/api/question-papers/stats")
+export const getQuestionPaperById   = (id)     => req(`/api/question-papers/${id}`)
+export const createQuestionPaper    = (b)      => post("/api/question-papers", b)
+export const updateQuestionPaper    = (id, b)  => put(`/api/question-papers/${id}`, b)
+export const deleteQuestionPaper    = (id)     => del(`/api/question-papers/${id}`)
+export const publishQuestionPaper   = (id)     => patch(`/api/question-papers/${id}/publish`, {})
+
+
+
+// Online Classes
+export const getOnlineClasses       = (q = "")     => req(`/api/online-classes${q}`)
+export const getOnlineClassStats    = ()            => req("/api/online-classes/stats")
+export const getOnlineClassById     = (id)          => req(`/api/online-classes/${id}`)
+export const createOnlineClass      = (b)           => post("/api/online-classes", b)
+export const updateOnlineClass      = (id, b)       => put(`/api/online-classes/${id}`, b)
+export const updateOnlineClassStatus= (id, status)  => patch(`/api/online-classes/${id}/status`, { status })
+export const deleteOnlineClass      = (id)          => del(`/api/online-classes/${id}`)
+
+// Timetable
+export const getTimetable        = (teacherId) => req(`/api/timetable${teacherId ? `?teacherId=${teacherId}` : ""}`)
