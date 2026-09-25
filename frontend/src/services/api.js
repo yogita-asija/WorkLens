@@ -110,13 +110,6 @@ export const markNotifRead        = (id)   => patch(`/api/notifications/${id}/re
 export const markAllNotifRead     = (b)    => patch("/api/notifications/read-all", b)
 export const deleteNotification   = (id)   => del(`/api/notifications/${id}`)
 
-// Internal Marks
-export const getTeacherStudents  = (teacherId) => req(`/api/internal-marks/students?teacherId=${teacherId}`)
-export const getStudentMarks     = (sid, tid)  => req(`/api/internal-marks/${sid}?teacherId=${tid}`)
-export const addInternalMark     = (b)         => post("/api/internal-marks", b)
-export const updateInternalMark  = (id, b)     => put(`/api/internal-marks/${id}`, b)
-export const deleteInternalMark  = (id)        => del(`/api/internal-marks/${id}`)
-
 // Study Materials
 export const getStudyMaterials      = (p={}) => req(`/api/study-materials?${new URLSearchParams(p)}`)
 export const getStudyMaterialById   = (id)   => req(`/api/study-materials/${id}`)
@@ -137,6 +130,9 @@ export const updateLessonPlan      = (id, b)   => put(`/api/lesson-plans/${id}`,
 export const markLessonPlanComplete= (id)      => patch(`/api/lesson-plans/${id}/complete`, {})
 export const deleteLessonPlan      = (id)      => del(`/api/lesson-plans/${id}`)
 
+// AI
+export const generateLessonPlanAI  = (b)       => post("/api/ai/generate-lesson-plan", b)
+
 
 
 // Syllabus
@@ -147,16 +143,6 @@ export const updateSyllabus        = (courseId, b) => put(`/api/syllabus/${cours
 export const updateSyllabusTopic   = (courseId, b) => patch(`/api/syllabus/${courseId}/topic`, b)
 export const deleteSyllabus        = (courseId)    => del(`/api/syllabus/${courseId}`)
 
-
-
-// Question Papers
-export const getQuestionPapers      = (p={})  => req(`/api/question-papers?${new URLSearchParams(p)}`)
-export const getQuestionPaperStats  = ()       => req("/api/question-papers/stats")
-export const getQuestionPaperById   = (id)     => req(`/api/question-papers/${id}`)
-export const createQuestionPaper    = (b)      => post("/api/question-papers", b)
-export const updateQuestionPaper    = (id, b)  => put(`/api/question-papers/${id}`, b)
-export const deleteQuestionPaper    = (id)     => del(`/api/question-papers/${id}`)
-export const publishQuestionPaper   = (id)     => patch(`/api/question-papers/${id}/publish`, {})
 
 
 

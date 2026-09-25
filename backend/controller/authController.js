@@ -11,7 +11,6 @@ exports.loginUser = async (req, res) => {
   const roleMap = {
     "Teaching Staff":     "teaching",
     "Non-Teaching Staff": "non-teaching",
-    "Admin":              "admin",
   }
   const dbRole = roleMap[role] || role
 

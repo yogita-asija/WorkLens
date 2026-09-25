@@ -11,7 +11,6 @@ import NotifPanel     from "./components/NotifPanel"
 import GlobalToast    from "./components/GlobalToast"
 
 // ── Existing faculty pages ─────────────────────────────────────────────────
-import LoginPage         from "./pages/LoginPage"
 import Dashboard         from "./pages/Dashboard"
 import LeaveManagement   from "./pages/LeaveManagement"
 import WorkflowReview    from "./pages/WorkflowReview"
@@ -21,19 +20,14 @@ import CoursesPage       from "./pages/CoursesPage"
 import AssignmentsPage   from "./pages/AssignmentsPage"
 import ExtraDutiesPage   from "./pages/ExtraDutiesPage"
 import StudentProfile    from "./pages/StudentProfile"
-import InternalMarksPage from "./pages/InternalMarksPage"
 import SettingsPage      from "./pages/SettingsPage"
 import LessonPlansPage   from "./pages/LessonPlansPage"
 import StudyMaterialsPage from "./pages/StudyMaterialsPage"
-import SyllabusPage      from "./pages/SyllabusPage"
-import QuestionPapersPage  from "./pages/QuestionPapersPage"
+// import SyllabusPage      from "./pages/SyllabusPage"
 import OnlineClassesPage from "./pages/OnlineClassesPage"
 import TimetablePage     from "./pages/TimetablePage"
 import StudentMessages    from "./pages/StudentMessages"
 import { useNotifications } from "./hooks/useData"
-
-// ── Admin module ───────────────────────────────────────────────────────────
-import AdminLayout from "./pages/admin/AdminLayout"
 
 // ── Coming soon placeholder ────────────────────────────────────────────────
 function ComingSoon({ title, desc }) {
@@ -105,7 +99,6 @@ function FacultyLayout() {
               <Route path="/materials"      element={<StudyMaterialsPage />} />
               <Route path="/lesson-plans"   element={<LessonPlansPage />} />
                {/* <Route path="/syllabus"       element={<SyllabusPage />} /> */}
-              <Route path="/question-papers" element={<QuestionPapersPage />} />
               <Route path="/online-classes" element={<OnlineClassesPage />} />
               <Route path="/lesson-plans"   element={<ComingSoon title="Lesson Plans" desc="Plan and track lesson delivery across your courses for the semester." />} />
               {/* <Route path="/syllabus"       element={<ComingSoon title="Syllabus Progress" desc="Monitor how much of the syllabus has been covered per course." />} /> */}
@@ -113,8 +106,6 @@ function FacultyLayout() {
               {/* <Route path="/obe-mapping"    element={<ComingSoon title="OBE Mapping" desc="Map course outcomes to program outcomes for outcome-based education compliance." />} /> */}
 
               {/* ── Assessment group ── */}
-              <Route path="/internal-marks"   element={<InternalMarksPage />} />
-              <Route path="/question-papers"  element={<ComingSoon title="Question Papers" desc="Create and manage question papers for internal and external exams." />} />
               {/* <Route path="/grades"           element={<ComingSoon title="Grades & Rubrics" desc="Submit final grades and use rubric-based evaluation for assignments." />} /> */}
               <Route path="/performance"      element={<ComingSoon title="Performance Analytics" desc="View student performance trends across tests and assignments." />} />
 
@@ -165,23 +156,11 @@ export default function App() {
     )
   }
 
-  const isAdmin = user.role === "admin"
-
   return (
     <ThemeProvider>
       <Router>
         <Routes>
-          {isAdmin ? (
-            <>
-              <Route path="/admin/*" element={<AdminLayout />} />
-              <Route path="*"        element={<Navigate to="/admin" replace />} />
-            </>
-          ) : (
-            <>
-              <Route path="/admin/*" element={<Navigate to="/" replace />} />
-              <Route path="/*"       element={<FacultyLayout />} />
-            </>
-          )}
+          <Route path="/*" element={<FacultyLayout />} />
         </Routes>
       </Router>
     </ThemeProvider>

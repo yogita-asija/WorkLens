@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 
 const API = 'http://localhost:8000/api'
-const ROLES = ['Teaching Staff', 'Non-Teaching Staff', 'Admin']
+const ROLES = ['Teaching Staff', 'Non-Teaching Staff']
 
 function EyeIcon() {
   return <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -161,7 +161,7 @@ export default function LoginPage({ onLogin }) {
         </form>
 
         <p style={{ fontSize: 11, color: '#4B5563', textAlign: 'center', marginTop: 20 }}>
-          Demo: teaching@gmail.com / 123456 &nbsp;|&nbsp; admin@gmail.com / admin123
+          Demo: teaching@gmail.com / 123456
         </p>
       </div>
     </div>

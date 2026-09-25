@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom"
 import {
   LayoutDashboard,
   CheckSquare, BookMarked, BarChart2, BookOpen, FileUp, Video, Target,
-  FileQuestion, ClipboardList, Star, TrendingUp,
+  FileQuestion,
   Users, PieChart, AlertTriangle, MessageSquare,
   CalendarDays, Table2, Gauge, Activity,
   Settings, LogOut,
@@ -27,15 +27,6 @@ const menuGroups = [
       // { name: "Syllabus Progress",icon: BarChart2,    path: "/syllabus"        },
       { name: "Online Classes",   icon: Video,        path: "/online-classes"  },
       // { name: "OBE Mapping",      icon: Target,       path: "/obe-mapping"     },
-    ],
-  },
-  {
-    group: "Assessment",
-    items: [
-      { name: "Internal Marks",   icon: ClipboardList, path: "/internal-marks" },
-      { name: "Question Papers",  icon: FileQuestion,  path: "/question-papers"},
-      // { name: "Grades & Rubrics", icon: Star,          path: "/grades"         },
-      // { name: "Performance",      icon: TrendingUp,    path: "/performance"    },
     ],
   },
   {

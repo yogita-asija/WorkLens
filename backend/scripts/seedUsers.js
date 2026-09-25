@@ -24,15 +24,6 @@ const USERS = [
     phone: "+91-9876543211",
     bio: "Administrative staff handling faculty records and academic operations.",
   },
-  {
-    name: "Dr. Admin User",
-    email: "admin@gmail.com",
-    password: "admin123",
-    role: "admin",
-    department: "Management",
-    phone: "+91-9876543212",
-    bio: "System administrator with full access to all modules.",
-  },
 ]
 
 async function seed() {

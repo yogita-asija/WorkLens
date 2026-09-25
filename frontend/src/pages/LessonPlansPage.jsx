@@ -3,6 +3,7 @@ import {
   Plus, Search, Edit2, Trash2, Eye, CheckCircle, BookMarked,
   Calendar, ChevronLeft, ChevronRight, X, BookOpen,
   Target, Clock, TrendingUp, ChevronDown, ChevronUp, Loader2,
+  Sparkles, Wand2, AlertCircle,
 } from "lucide-react"
 import { useC } from "../components/UI"
 import useAppStore from "../store/useAppStore"
@@ -48,6 +49,15 @@ function PlanModal({ open, onClose, existing, courses, onSaved, user }) {
   const C    = useC()
   const { showToast } = useAppStore()
   const [saving, setSaving] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState("")
+const [aiForm, setAiForm] = useState({
+  planType: "standard",
+  durationWeeks: "",
+  topics: "",
+  extraInstructions: ""
+})
   const [form, setForm] = useState({
     title: "", courseId: "", description: "", startDate: "", endDate: "",
     units: [{ title: "Unit 1", topics: [{ title: "", date: "", status: "pending", description: "" }] }],
@@ -56,6 +66,14 @@ function PlanModal({ open, onClose, existing, courses, onSaved, user }) {
 
   useEffect(() => {
     if (!open) return
+    setAiOpen(false)
+    setAiError("")
+   setAiForm({
+  planType: "standard",
+  durationWeeks: "",
+  topics: "",
+  extraInstructions: ""
+})
     if (existing) {
       setForm({
         title:       existing.title || "",
@@ -91,6 +109,41 @@ function PlanModal({ open, onClose, existing, courses, onSaved, user }) {
   }))
 
   const toggleUnit = (i) => setExpandedUnits(e => ({ ...e, [i]: !e[i] }))
+
+  const generateWithAI = async () => {
+    if (!form.courseId) { setAiError("Select a course first so AI knows what to plan for."); return }
+    setAiLoading(true)
+    setAiError("")
+    try {
+      const result = await api.generateLessonPlanAI({
+  courseId: form.courseId,
+  planType: aiForm.planType,
+  durationWeeks: aiForm.durationWeeks
+    ? Number(aiForm.durationWeeks)
+    : undefined,
+  topics: aiForm.topics,
+  extraInstructions: aiForm.extraInstructions,
+})
+      const newUnits = (result.units || []).map(u => ({
+        title: u.title,
+        topics: (u.topics || []).map(t => ({ title: t.title, date: "", status: "pending", description: t.description || "" })),
+      }))
+      if (!newUnits.length) { setAiError("AI did not return a usable plan. Try again."); return }
+      setForm(f => ({
+        ...f,
+        title: f.title || `${courses.find(c => c._id === f.courseId)?.courseName || ""} Teaching Plan`,
+        units: newUnits,
+      }))
+      const exp = {}; newUnits.forEach((_, i) => { exp[i] = true }); setExpandedUnits(exp)
+      setAiOpen(false)
+      showToast("AI plan generated — review and adjust before saving")
+    } catch (e) {
+      setAiError(e.message || "Failed to generate plan")
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
 
   const submit = async () => {
     if (!form.title.trim()) return showToast("Title is required", "error")
@@ -159,12 +212,258 @@ function PlanModal({ open, onClose, existing, courses, onSaved, user }) {
 
           {/* Units */}
           <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16, marginTop: 4 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: C.sub, textTransform: "uppercase", letterSpacing: "0.05em" }}>Units & Topics</span>
-              <button onClick={addUnit} style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(34,197,94,0.1)", border: "none", color: C.accent, borderRadius: 7, padding: "5px 10px", fontSize: 12, cursor: "pointer", fontWeight: 500 }}>
-                <Plus size={13} /> Add Unit
-              </button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => { setAiOpen(o => !o); setAiError("") }} style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  background: aiOpen ? "rgba(168,85,247,0.18)" : "rgba(168,85,247,0.1)",
+                  border: `1px solid ${aiOpen ? "#A855F7" : "transparent"}`,
+                  color: "#A855F7", borderRadius: 7, padding: "5px 10px", fontSize: 12, cursor: "pointer", fontWeight: 500,
+                }}>
+                  <Sparkles size={13} /> Generate with AI
+                </button>
+                <button onClick={addUnit} style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(34,197,94,0.1)", border: "none", color: C.accent, borderRadius: 7, padding: "5px 10px", fontSize: 12, cursor: "pointer", fontWeight: 500 }}>
+                  <Plus size={13} /> Add Unit
+                </button>
+              </div>
             </div>
+
+            {/* AI Generation Panel */}
+           {/* AI Generation Panel */}
+{aiOpen && (
+  <div
+    style={{
+      background: "rgba(168,85,247,0.06)",
+      border: "1px solid rgba(168,85,247,0.3)",
+      borderRadius: 10,
+      padding: 14,
+      marginBottom: 14,
+    }}
+  >
+    {/* Header */}
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 7,
+        marginBottom: 10,
+      }}
+    >
+      <Wand2 size={14} color="#A855F7" />
+      <span
+        style={{
+          fontSize: 12.5,
+          fontWeight: 600,
+          color: C.txt,
+        }}
+      >
+        AI Lesson Plan Generator
+      </span>
+    </div>
+
+    <p
+      style={{
+        fontSize: 11.5,
+        color: C.sub,
+        marginBottom: 12,
+      }}
+    >
+      Uses the selected course's name & description to draft a complete
+      lesson plan. The AI will automatically decide the number of units,
+      topics, and teaching sequence.
+    </p>
+
+    {/* Plan Type + Duration */}
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: 10,
+        marginBottom: 12,
+      }}
+    >
+      <div>
+        <label
+          style={{
+            fontSize: 10.5,
+            color: C.sub,
+            display: "block",
+            marginBottom: 4,
+          }}
+        >
+          Plan Type
+        </label>
+
+        <select
+          style={inp}
+          value={aiForm.planType}
+          onChange={(e) =>
+            setAiForm((f) => ({
+              ...f,
+              planType: e.target.value,
+            }))
+          }
+        >
+          <option value="compact">
+            Compact (4-5 Units)
+          </option>
+
+          <option value="standard">
+            Standard (6-8 Units)
+          </option>
+
+          <option value="detailed">
+            Detailed (8-10 Units + Labs)
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label
+          style={{
+            fontSize: 10.5,
+            color: C.sub,
+            display: "block",
+            marginBottom: 4,
+          }}
+        >
+          Semester Duration (Weeks)
+        </label>
+
+        <input
+          type="number"
+          min={1}
+          max={52}
+          style={inp}
+          placeholder="Optional"
+          value={aiForm.durationWeeks}
+          onChange={(e) =>
+            setAiForm((f) => ({
+              ...f,
+              durationWeeks: e.target.value,
+            }))
+          }
+        />
+      </div>
+    </div>
+
+    {/* Topics / Syllabus to Cover */}
+    <div style={{ marginBottom: 12 }}>
+      <label
+        style={{
+          fontSize: 10.5,
+          color: C.sub,
+          display: "block",
+          marginBottom: 4,
+        }}
+      >
+       Topics / Syllabus to Cover*
+      </label>
+
+      <textarea
+  style={{
+    ...inp,
+    minHeight: 10,
+    resize: "vertical"
+  }}
+//   placeholder="e.g.
+// Arrays,Linked Lists,Stacks,Queues
+// Trees
+// Graphs
+// Sorting
+// Searching"
+  value={aiForm.topics}
+  onChange={(e) =>
+    setAiForm((f) => ({
+      ...f,
+      topics: e.target.value
+    }))
+  }
+/>
+    </div>
+
+    {/* Error Message */}
+    {aiError && (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 6,
+          color: C.danger,
+          fontSize: 11.5,
+          marginBottom: 10,
+        }}
+      >
+        <AlertCircle
+          size={13}
+          style={{
+            marginTop: 1,
+            flexShrink: 0,
+          }}
+        />
+        <span>{aiError}</span>
+      </div>
+    )}
+
+    {/* Footer Buttons */}
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "flex-end",
+        gap: 8,
+      }}
+    >
+      <button
+        onClick={() => setAiOpen(false)}
+        style={{
+          padding: "7px 14px",
+          borderRadius: 7,
+          background: "none",
+          border: `1px solid ${C.border}`,
+          color: C.sub,
+          fontSize: 12,
+          cursor: "pointer",
+        }}
+      >
+        Cancel
+      </button>
+
+      <button
+        onClick={generateWithAI}
+        disabled={aiLoading}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "7px 16px",
+          borderRadius: 7,
+          background: "#A855F7",
+          border: "none",
+          color: "#fff",
+          fontSize: 12,
+          fontWeight: 600,
+          cursor: aiLoading ? "not-allowed" : "pointer",
+          opacity: aiLoading ? 0.7 : 1,
+        }}
+      >
+        {aiLoading ? (
+          <Loader2
+            size={13}
+            style={{
+              animation: "spin 1s linear infinite",
+            }}
+          />
+        ) : (
+          <Sparkles size={13} />
+        )}
+
+        {aiLoading ? "Generating..." : "Generate Plan"}
+      </button>
+    </div>
+  </div>
+)}
+
 
             {form.units.map((unit, ui) => (
               <div key={ui} style={{ background: C.inner, border: `1px solid ${C.border}`, borderRadius: 10, marginBottom: 10 }}>
@@ -187,16 +486,21 @@ function PlanModal({ open, onClose, existing, courses, onSaved, user }) {
                 {expandedUnits[ui] && (
                   <div style={{ borderTop: `1px solid ${C.border}`, padding: "10px 12px" }}>
                     {unit.topics.map((topic, ti) => (
-                      <div key={ti} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                        <input style={inp} value={topic.title} onChange={e => setTopic(ui, ti, "title", e.target.value)} placeholder="Topic title" />
-                        <input type="date" style={inp} value={topic.date} onChange={e => setTopic(ui, ti, "date", e.target.value)} />
-                        <select style={inp} value={topic.status} onChange={e => setTopic(ui, ti, "status", e.target.value)}>
-                          <option value="pending">Pending</option>
-                          <option value="in-progress">In Progress</option>
-                          <option value="completed">Completed</option>
-                        </select>
-                        {unit.topics.length > 1 && (
-                          <button onClick={() => delTopic(ui, ti)} style={{ background: "none", border: "none", color: C.danger, cursor: "pointer" }}><X size={13} /></button>
+                      <div key={ti} style={{ marginBottom: 8 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", gap: 8, alignItems: "center" }}>
+                          <input style={inp} value={topic.title} onChange={e => setTopic(ui, ti, "title", e.target.value)} placeholder="Topic title" />
+                          <input type="date" style={inp} value={topic.date} onChange={e => setTopic(ui, ti, "date", e.target.value)} />
+                          <select style={inp} value={topic.status} onChange={e => setTopic(ui, ti, "status", e.target.value)}>
+                            <option value="pending">Pending</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                          </select>
+                          {unit.topics.length > 1 && (
+                            <button onClick={() => delTopic(ui, ti)} style={{ background: "none", border: "none", color: C.danger, cursor: "pointer" }}><X size={13} /></button>
+                          )}
+                        </div>
+                        {topic.description && (
+                          <p style={{ fontSize: 10.5, color: C.muted, marginTop: 4, paddingLeft: 2 }}>{topic.description}</p>
                         )}
                       </div>
                     ))}
@@ -247,7 +551,7 @@ function ViewModal({ open, plan, onClose }) {
               { label: "Pending", value: allTopics.filter(t => t.status === "pending").length, color: C.warn },
             ].map(s => (
               <div key={s.label} style={{ background: C.inner, borderRadius: 8, padding: "10px 14px", textAlign: "center" }}>
-                <p style={{ fontSize: 20, fontWeight: 700, color: "#fff" || C.txt }}>{s.value}</p>
+                <p style={{ fontSize: 20, fontWeight: 700, color: s.color || C.txt }}>{s.value}</p>
                 <p style={{ fontSize: 11, color: C.sub }}>{s.label}</p>
               </div>
             ))}
