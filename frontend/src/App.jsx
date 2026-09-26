@@ -9,6 +9,7 @@ import Topbar         from "./components/Topbar"
 import ProfileSidebar from "./components/ProfileSidebar"
 import NotifPanel     from "./components/NotifPanel"
 import GlobalToast    from "./components/GlobalToast"
+import LoginPage from "./pages/LoginPage"
 
 // ── Existing faculty pages ─────────────────────────────────────────────────
 import Dashboard         from "./pages/Dashboard"
