@@ -15,7 +15,7 @@ export default function WeeklyBarChart() {
   const [data, setData] = useState(fallback);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/dashboard/weekly-activity")
+    fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/weekly-activity`)
       .then(res => res.json())
       .then(d => { if (d?.length) setData(d) })
       .catch(() => {});

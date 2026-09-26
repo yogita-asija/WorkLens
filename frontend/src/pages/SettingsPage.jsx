@@ -6,7 +6,7 @@ import {
 } from '../components/UI'
 import { useTheme } from '../ThemeContext'
 
-const API = 'http://localhost:8000/api'
+const API = `${import.meta.env.VITE_API_URL}/api`
 
 /* ─── Small reusable modal wrapper ─── */
 function SettingsModal({ title, onClose, children }) {

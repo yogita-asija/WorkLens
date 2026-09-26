@@ -31,7 +31,7 @@ function ErrorBanner({ message, onRetry }) {
             Could not connect to server
           </p>
           <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
-            {message || "Make sure the backend is running on localhost:8000"}
+            {message || "Make sure the backend is running "}
           </p>
         </div>
       </div>

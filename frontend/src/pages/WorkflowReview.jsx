@@ -43,7 +43,7 @@ if (selected === "Other" && !otherIssue.trim()) {
 }
     // POST to backend
     try {
-      await fetch("http://localhost:8000/api/workflow/feedback", {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/workflow/feedback`,  {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ category: selected,customIssue: selected === "Other" ? otherIssue : "", message }),

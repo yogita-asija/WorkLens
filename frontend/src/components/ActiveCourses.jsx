@@ -70,7 +70,7 @@ export default function ActiveCourses() {
   const [courses, setCourses] = useState(fallback);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/dashboard/courses")
+    fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/courses`)
       .then(r => r.json())
       .then(d => { if (d?.length) setCourses(d); })
       .catch(() => {});

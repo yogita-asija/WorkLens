@@ -15,7 +15,7 @@ export default function HoursLineChart() {
   const [data, setData] = useState(fallback);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/dashboard/hours")
+    fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/hours`)
       .then(res => res.json())
       .then(d => { if (d?.length) setData(d) })
       .catch(() => {});
