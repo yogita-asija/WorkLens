@@ -8,10 +8,11 @@ exports.loginUser = async (req, res) => {
     return res.status(400).json({ message: "All fields are required" })
   }
 
-  const roleMap = {
-    "Teaching Staff":     "teaching",
-    "Non-Teaching Staff": "non-teaching",
-  }
+ const roleMap = {
+  "Teaching Staff":     "teaching",
+  "Non-Teaching Staff": "non-teaching",
+  "HOD":                "hod",   
+}
   const dbRole = roleMap[role] || role
 
   try {

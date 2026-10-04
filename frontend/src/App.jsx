@@ -10,6 +10,7 @@ import ProfileSidebar from "./components/ProfileSidebar"
 import NotifPanel     from "./components/NotifPanel"
 import GlobalToast    from "./components/GlobalToast"
 import LoginPage from "./pages/LoginPage"
+import HodLayout from "./components/hod/HodLayout"
 
 // ── Existing faculty pages ─────────────────────────────────────────────────
 import Dashboard         from "./pages/Dashboard"
@@ -161,7 +162,7 @@ export default function App() {
     <ThemeProvider>
       <Router>
         <Routes>
-          <Route path="/*" element={<FacultyLayout />} />
+          <Route path="/*" element={user.role === "hod" ? <HodLayout /> : <FacultyLayout />} />
         </Routes>
       </Router>
     </ThemeProvider>

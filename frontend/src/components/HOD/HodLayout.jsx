@@ -1,0 +1,62 @@
+import { Routes, Route, Navigate } from "react-router-dom"
+import useAppStore from "../../store/useAppStore"
+import { useNotifications } from "../../hooks/useData"
+
+import HodSidebar     from "./HodSidebar"
+import Topbar         from "../Topbar"
+import ProfileSidebar from "../ProfileSidebar"
+import NotifPanel     from "../NotifPanel"
+import GlobalToast    from "../GlobalToast"
+
+import HodDashboard from "../../pages/HOD/HodDashboard"
+import SettingsPage from "../../pages/SettingsPage"
+
+function ComingSoon({ title, desc }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 360, gap: 14 }}>
+      <div style={{ width: 52, height: 52, borderRadius: 16, background: "rgba(34,197,94,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🚧</div>
+      <div style={{ textAlign: "center" }}>
+        <p style={{ fontSize: 17, fontWeight: 600, color: "#fff", marginBottom: 6 }}>{title}</p>
+        <p style={{ fontSize: 13, color: "#6b7280", maxWidth: 320, lineHeight: 1.6 }}>{desc || "This page is under construction and will be available soon."}</p>
+      </div>
+    </div>
+  )
+}
+
+export default function HodLayout() {
+  const { user, logout, profileOpen, closeProfile, notifOpen, closeNotif } = useAppStore()
+  useNotifications(user?._id)
+
+  return (
+    <div className="flex h-screen bg-neutral-950 text-white overflow-hidden">
+      <HodSidebar onLogout={logout} />
+
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <Topbar user={user} onLogout={logout} />
+        <main className="flex-1 overflow-y-auto bg-[#0A0A0A]">
+          <div className="p-6">
+            <Routes>
+              <Route path="/"                element={<HodDashboard />} />
+              <Route path="/faculty"         element={<ComingSoon title="Faculty" desc="Department faculty directory, workload and performance." />} />
+              <Route path="/students"        element={<ComingSoon title="Students" desc="Department-wide student overview and escalations." />} />
+              <Route path="/timetable"       element={<ComingSoon title="Timetable" desc="Build and manage the department timetable." />} />
+              <Route path="/approvals"       element={<ComingSoon title="Approvals" desc="Leave, duty and substitution approvals in one place." />} />
+              <Route path="/question-papers" element={<ComingSoon title="Question Papers" desc="Review and approve question papers submitted by faculty." />} />
+              <Route path="/reports"         element={<ComingSoon title="Reports" desc="Department analytics and NBA reports." />} />
+              <Route path="/settings"        element={<SettingsPage user={user} />} />
+              <Route path="*"                element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </main>
+      </div>
+
+      <ProfileSidebar open={profileOpen} onClose={closeProfile} user={user} />
+      {profileOpen && <div className="fixed inset-0 bg-black/50 z-30" onClick={closeProfile} />}
+
+      <NotifPanel open={notifOpen} onClose={closeNotif} />
+      {notifOpen && <div className="fixed inset-0 bg-black/40 z-30" onClick={closeNotif} />}
+
+      <GlobalToast />
+    </div>
+  )
+}

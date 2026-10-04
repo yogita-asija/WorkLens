@@ -29,6 +29,7 @@ app.use("/api/timetable",     require("./routes/timetableRoutes"))
 app.use("/api/messages",       require("./routes/messageRoutes"))
 app.use("/api/lesson-plans",  require("./routes/lessonPlanRoutes"))
 app.use("/api/ai",            require("./routes/aiRoutes"))
+app.use("/api/hod",           require("./routes/HOD/hodRoutes")) 
 
 app.get("/", (req, res) => res.json({ status: "WorkLens API running ✅" }))
 
