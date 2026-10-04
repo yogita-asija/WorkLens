@@ -1,6 +1,6 @@
 const express    = require("express")
 const router     = express.Router()
-const requireHod = require("../../middleware/HOD/requireHod")
+const requireHod = require("../../middleware/hod/requireHod")
 const c          = require("../../controller/HOD/hodController")
 
 router.use(requireHod) // every /api/hod/* route is HOD-only
