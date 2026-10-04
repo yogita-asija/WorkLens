@@ -10,7 +10,7 @@ import ProfileSidebar from "./components/ProfileSidebar"
 import NotifPanel     from "./components/NotifPanel"
 import GlobalToast    from "./components/GlobalToast"
 import LoginPage from "./pages/LoginPage"
-import HodLayout from "./components/hod/HodLayout"
+import HodLayout from "./components/HOD/HodLayout"
 
 // ── Existing faculty pages ─────────────────────────────────────────────────
 import Dashboard         from "./pages/Dashboard"
