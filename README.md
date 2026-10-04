@@ -702,8 +702,3 @@ The current version contains the core student, academic, workflow, communication
 
 ---
 
-## 📄 License
-
-This project is currently intended for educational and development purposes.
-
-Add an appropriate open-source license before publicly permitting reuse.
