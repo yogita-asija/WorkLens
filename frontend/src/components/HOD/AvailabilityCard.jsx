@@ -24,7 +24,7 @@ export default function AvailabilityCard({ availability, pendingSubs, onOpen }) 
       </div>
 
       {/* proportional bar */}
-      <div className="flex h-2 rounded-full overflow-hidden bg-[#2a2a2a] mb-4">
+      <div className="flex h-2 rounded-full overflow-hidden  mb-4">
         {Object.entries(STATUS_META).map(([k, m]) =>
           counts[k] > 0 ? <div key={k} style={{ width: `${(counts[k] / Math.max(total, 1)) * 100}%`, background: m.color }} /> : null)}
       </div>
@@ -33,7 +33,7 @@ export default function AvailabilityCard({ availability, pendingSubs, onOpen }) 
         {Object.entries(STATUS_META).map(([k, m]) => (
           <div key={k} className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-2.5 text-neutral-300">
-              <span className="w-2 h-2 rounded-full" style={{ background: m.color }} />{m.label}
+              <span className="w-2 h-2 rounded-full"  />{m.label}
             </span>
             <span className="font-semibold text-white tabular-nums">{counts[k]}</span>
           </div>

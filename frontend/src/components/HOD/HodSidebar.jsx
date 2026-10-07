@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
 import {
-  LayoutDashboard, Users, ClipboardCheck, Table2, FileCheck2, GraduationCap, BarChart3, Settings, LogOut,
+  LayoutDashboard, FileCheck2, Settings, LogOut, CalendarClock,
 } from "lucide-react"
 
 const menuGroups = [
@@ -9,19 +9,10 @@ const menuGroups = [
   {
     group: "Department",
     items: [
-      { name: "Faculty",     icon: Users,         path: "/faculty"   },
-      { name: "Students",    icon: GraduationCap, path: "/students"  },
-      { name: "Timetable",   icon: Table2,        path: "/timetable" },
+      { name: "Smart Duty Allocation", icon: CalendarClock, path: "/duty-allocation" },
     ],
   },
-  {
-    group: "Approvals",
-    items: [
-      { name: "Approvals",        icon: ClipboardCheck, path: "/approvals"       },
-      { name: "Question Papers",  icon: FileCheck2,     path: "/question-papers" },
-    ],
-  },
-  { group: "Insights", items: [{ name: "Reports", icon: BarChart3, path: "/reports" }] },
+  
   { group: null, items: [{ name: "Settings", icon: Settings, path: "/settings" }] },
 ]
 

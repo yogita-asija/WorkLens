@@ -1,7 +1,8 @@
 const express    = require("express")
 const router     = express.Router()
-const requireHod = require("../../middleware/hod/requireHod")
+const requireHod = require("../../middleware/HOD/requireHod")
 const c          = require("../../controller/HOD/hodController")
+const duty       = require("../../controller/HOD/dutyAllocationController")
 
 router.use(requireHod) // every /api/hod/* route is HOD-only
 
@@ -36,5 +37,13 @@ router.get("/deadlines",               c.getDeadlines)
 router.post("/deadlines",              c.createDeadline)
 router.patch("/deadlines/:id/complete", c.completeDeadline)
 router.delete("/deadlines/:id",        c.deleteDeadline)
+
+
+
+router.post("/duty-allocation/candidates",   duty.previewCandidates)
+router.get("/duty-allocation",               duty.listDuties)
+router.post("/duty-allocation",              duty.createDuty)
+router.put("/duty-allocation/:id/assignees", duty.updateAssignees)
+router.delete("/duty-allocation/:id",        duty.deleteDuty)
 
 module.exports = router

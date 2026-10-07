@@ -4,7 +4,7 @@ import useAppStore from "../../store/useAppStore"
 import * as hod from "../../services/HOD/hodApi"
 import HodModal, { btnPrimary, btnGhost, inputCls } from "./HodModal"
 
-const TYPE_COLOR = { "question-paper": "#a855f7", "internal-marks": "#3b82f6", nba: "#06b6d4", meeting: "#22c55e", task: "#f59e0b", other: "#9ca3af" }
+const TYPE_COLOR = { "question-paper": "#22c55e", "internal-marks": "#22c55e", nba: "#22c55e", meeting: "#22c55e", task: "#22c55e", other: "#22c55e" }
 
 function AddModal({ open, onClose, onSaved }) {
   const { showToast } = useAppStore()
@@ -99,21 +99,21 @@ export default function UpcomingDeadlines({ deadlines, onChanged }) {
       {items.length === 0 ? (
         <p className="text-sm text-neutral-500 py-6 text-center">No upcoming deadlines</p>
       ) : items.map((it) => {
-        const c = it.overdue ? "#ef4444" : it.daysLeft <= 1 ? "#f59e0b" : TYPE_COLOR[it.type] || "#9ca3af"
+        const c = it.overdue ? "#22c55e" : it.daysLeft <= 1 ? "#22c55e" : TYPE_COLOR[it.type] || "#22c55e"
         return (
           <div key={it.kind + it.id}
-               className={`group flex items-center gap-3 py-3 px-2 -mx-2 rounded-lg border-b border-[#2a2a2a] last:border-b-0 ${it.overdue ? "bg-red-500/5" : ""}`}>
+               className={`group flex items-center gap-3 py-3 px-2 -mx-2 rounded-lg border-b border-[#2a2a2a] last:border-b-0 ${it.overdue ? "bg-500/5" : ""}`}>
             <div className="w-1 h-9 rounded-full flex-shrink-0" style={{ background: c }} />
             <div className="flex-1 min-w-0">
-              <p className={`text-sm font-medium truncate ${it.overdue ? "text-red-300" : "text-white"}`}>{it.title}</p>
+              <p className={`text-sm font-medium truncate ${it.overdue ? "text-white-300" : "text-white"}`}>{it.title}</p>
               <p className="text-xs text-neutral-500 mt-0.5 truncate">
                 {new Date(it.dueDate).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}{it.sub ? ` · ${it.sub}` : ""}
               </p>
             </div>
             <span className="text-[11px] px-2 py-1 rounded-full font-semibold whitespace-nowrap" style={{ background: c + "22", color: c }}>{it.label}</span>
             <div className="flex md:hidden md:group-hover:flex items-center gap-1">
-              <button onClick={() => done(it)} title="Mark done" className="p-1.5 rounded-md text-neutral-500 hover:text-green-400 hover:bg-[#2a2a2a]"><Check size={14} /></button>
-              {it.kind === "deadline" && <button onClick={() => remove(it)} title="Delete" className="p-1.5 rounded-md text-neutral-500 hover:text-red-400 hover:bg-[#2a2a2a]"><Trash2 size={14} /></button>}
+              <button onClick={() => done(it)} title="Mark done" className="p-1.5 rounded-md text-neutral-500 hover:text-green-400 hover:bg-[#22c55e]"><Check size={14} /></button>
+              {it.kind === "deadline" && <button onClick={() => remove(it)} title="Delete" className="p-1.5 rounded-md text-neutral-500 hover:text-red-400 hover:bg-[#22c55e]"><Trash2 size={14} /></button>}
             </div>
           </div>
         )

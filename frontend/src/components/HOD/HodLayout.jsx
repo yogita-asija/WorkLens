@@ -9,6 +9,7 @@ import NotifPanel     from "../NotifPanel"
 import GlobalToast    from "../GlobalToast"
 
 import HodDashboard from "../../pages/HOD/HodDashboard"
+import DutyAllocationPage from "../../pages/HOD/DutyAllocationPage"
 import SettingsPage from "../../pages/SettingsPage"
 
 function ComingSoon({ title, desc }) {
@@ -37,12 +38,9 @@ export default function HodLayout() {
           <div className="p-6">
             <Routes>
               <Route path="/"                element={<HodDashboard />} />
-              <Route path="/faculty"         element={<ComingSoon title="Faculty" desc="Department faculty directory, workload and performance." />} />
-              <Route path="/students"        element={<ComingSoon title="Students" desc="Department-wide student overview and escalations." />} />
-              <Route path="/timetable"       element={<ComingSoon title="Timetable" desc="Build and manage the department timetable." />} />
-              <Route path="/approvals"       element={<ComingSoon title="Approvals" desc="Leave, duty and substitution approvals in one place." />} />
-              <Route path="/question-papers" element={<ComingSoon title="Question Papers" desc="Review and approve question papers submitted by faculty." />} />
-              <Route path="/reports"         element={<ComingSoon title="Reports" desc="Department analytics and NBA reports." />} />
+              <Route path="/duty-allocation" element={<DutyAllocationPage />} />
+              
+              
               <Route path="/settings"        element={<SettingsPage user={user} />} />
               <Route path="*"                element={<Navigate to="/" replace />} />
             </Routes>

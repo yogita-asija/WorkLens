@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Users, GraduationCap, BookOpen, ClipboardCheck, AlarmClock, Percent } from "lucide-react"
+import { Users, GraduationCap, BookOpen, AlarmClock } from "lucide-react"
 
 function useCountUp(target, duration = 700) {
   const [val, setVal] = useState(0)
@@ -43,16 +43,13 @@ export default function SnapshotCards({ snapshot, onOpenAction }) {
   return (
     <div>
       <h2 className="text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-3">Department Snapshot</h2>
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <Card title="Total Faculty"     value={s.totalFaculty}     Icon={Users}          accent="#22c55e" />
-        <Card title="Total Students"    value={s.totalStudents}    Icon={GraduationCap}  accent="#3b82f6" />
-        <Card title="Active Courses"    value={s.activeCourses}    Icon={BookOpen}       accent="#a855f7" />
-        <Card title="Pending Approvals" value={s.pendingApprovals} Icon={ClipboardCheck} accent="#f59e0b"
-              note={s.pendingApprovals > 0 ? "Leaves + papers" : null} onClick={s.pendingApprovals > 0 ? () => onOpenAction("leaves") : undefined} />
-        <Card title="Overdue Tasks"     value={s.overdueTasks}     Icon={AlarmClock}     accent="#ef4444"
-              onClick={s.overdueTasks > 0 ? () => onOpenAction("tasks") : undefined} />
-        <Card title="Avg Attendance"    value={s.avgAttendance}    suffix="%" Icon={Percent} accent="#06b6d4" note={s.avgAttendance != null ? "Last 30 days" : "No data yet"} />
-      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+  <Card title="Total Faculty"  value={s.totalFaculty}  Icon={Users}         accent="#22c55e" />
+  <Card title="Total Students" value={s.totalStudents} Icon={GraduationCap} accent="#3b82f6" />
+  <Card title="Active Courses" value={s.activeCourses} Icon={BookOpen}      accent="#a855f7" />
+  <Card title="Overdue Tasks"  value={s.overdueTasks}  Icon={AlarmClock}    accent="#ef4444"
+        onClick={s.overdueTasks > 0 ? () => onOpenAction("tasks") : undefined} />
+</div>
     </div>
   )
 }
