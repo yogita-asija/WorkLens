@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
 import {
-  LayoutDashboard, FileCheck2, Settings, LogOut, CalendarClock,
+  LayoutDashboard, FileCheck2, Settings, LogOut, CalendarClock, Users, CalendarDays,
 } from "lucide-react"
 
 const menuGroups = [
@@ -9,6 +9,8 @@ const menuGroups = [
   {
     group: "Department",
     items: [
+      { name: "Faculty Workload",      icon: Users,         path: "/faculty" },
+      { name: "Leave Management",      icon: CalendarDays,  path: "/leave-management" },
       { name: "Smart Duty Allocation", icon: CalendarClock, path: "/duty-allocation" },
     ],
   },

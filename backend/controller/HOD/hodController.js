@@ -367,6 +367,7 @@ exports.reviewLeave = wrap(async (req, res) => {
   }
   leave.status = status
   leave.adminNote = note
+  leave.decidedAt = new Date()
   leave.updatedAt = new Date()
   await leave.save()
   await notify(
