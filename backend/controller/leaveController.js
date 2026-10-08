@@ -1,5 +1,6 @@
 const { Leave, LeaveBalance, Holiday } = require("../models/Leave")
 const Notification = require("../models/Notification")
+const User = require("../models/User")
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -10,6 +11,19 @@ function calcDays(from, to) {
   const f = new Date(from)
   const t = new Date(to)
   return Math.round((t - f) / (1000 * 60 * 60 * 24)) + 1
+}
+
+/**
+ * Days of approved leave that START in the given calendar year (leave dates are stored as UTC midnight).
+ * Without the year filter, last year's leave was being subtracted from this year's allocation.
+ */
+async function approvedDaysInYear(facultyId, year) {
+  const approved = await Leave.find({
+    facultyId,
+    status: "Approved",
+    fromDate: { $gte: new Date(Date.UTC(year, 0, 1)), $lt: new Date(Date.UTC(year + 1, 0, 1)) },
+  }).select("duration")
+  return approved.reduce((sum, l) => sum + l.duration, 0)
 }
 
 /**
@@ -51,8 +65,7 @@ const getBalance = async (req, res) => {
     const bal = await getOrCreateBalance(facultyId, year)
 
     // Re-compute taken from approved leaves (source of truth)
-    const approved = await Leave.find({ facultyId, status: "Approved" })
-    const taken    = approved.reduce((sum, l) => sum + l.duration, 0)
+    const taken = await approvedDaysInYear(facultyId, year)
 
     // Sync the balance document
     bal.taken = taken
@@ -127,10 +140,9 @@ const applyLeave = async (req, res) => {
     const duration = calcDays(from, to)
 
     // Check balance
-    const year = from.getFullYear()
+    const year = from.getUTCFullYear()
     const bal  = await getOrCreateBalance(facultyId, year)
-    const approved = await Leave.find({ facultyId, status: "Approved" })
-    const takenSoFar = approved.reduce((sum, l) => sum + l.duration, 0)
+    const takenSoFar = await approvedDaysInYear(facultyId, year)
 
     if (takenSoFar + duration > bal.totalLeaves) {
       return res.status(400).json({
@@ -167,7 +179,7 @@ const applyLeave = async (req, res) => {
 }
 
 // ─── PATCH /api/leaves/:id/status ────────────────────────────────────────────
-// Approve or reject a leave (admin action).
+// Approve or reject a leave. HOD only (route is behind requireHod) and only for faculty in the HOD's own department.
 // Body: { status: "Approved" | "Rejected", adminNote? }
 const updateLeaveStatus = async (req, res) => {
   try {
@@ -183,8 +195,19 @@ const updateLeaveStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Leave not found" })
     }
 
+    // the applicant must belong to this HOD's department
+    const applicant = await User.findById(leave.facultyId).select("department")
+    const sameDept = applicant && (applicant.department || "").trim().toLowerCase() === (req.user.department || "").trim().toLowerCase()
+    if (!sameDept) {
+      return res.status(404).json({ success: false, message: "Leave not found in your department" })
+    }
+    if (leave.status !== "Pending") {
+      return res.status(400).json({ success: false, message: `Leave is already ${leave.status.toLowerCase()}` })
+    }
+
     leave.status    = status
     leave.adminNote = adminNote
+    leave.decidedAt = new Date()
     leave.updatedAt = new Date()
     await leave.save()
 
@@ -201,6 +224,9 @@ const deleteLeave = async (req, res) => {
     const leave = await Leave.findById(req.params.id)
     if (!leave) {
       return res.status(404).json({ success: false, message: "Leave not found" })
+    }
+    if (leave.facultyId !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "You can only cancel your own leave" })
     }
     if (leave.status !== "Pending") {
       return res.status(400).json({ success: false, message: "Only Pending leaves can be cancelled" })

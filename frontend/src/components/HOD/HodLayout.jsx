@@ -10,6 +10,8 @@ import GlobalToast    from "../GlobalToast"
 
 import HodDashboard from "../../pages/HOD/HodDashboard"
 import DutyAllocationPage from "../../pages/HOD/DutyAllocationPage"
+import HodFaculty from "../../pages/HOD/HodFaculty"
+import HodLeaveManagement from "../../pages/HOD/Hodleavemanagement"
 import SettingsPage from "../../pages/SettingsPage"
 
 function ComingSoon({ title, desc }) {
@@ -39,8 +41,8 @@ export default function HodLayout() {
             <Routes>
               <Route path="/"                element={<HodDashboard />} />
               <Route path="/duty-allocation" element={<DutyAllocationPage />} />
-              
-              
+              <Route path="/faculty"          element={<HodFaculty />} />
+              <Route path="/leave-management" element={<HodLeaveManagement />} />
               <Route path="/settings"        element={<SettingsPage user={user} />} />
               <Route path="*"                element={<Navigate to="/" replace />} />
             </Routes>

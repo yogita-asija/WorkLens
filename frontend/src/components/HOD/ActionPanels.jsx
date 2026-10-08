@@ -1,8 +1,9 @@
 import { useState } from "react"
-import { Check, X, Bell, CalendarClock, UserCheck, Undo2 } from "lucide-react"
+import { Check, X, Bell, CalendarClock, UserCheck, Undo2, Sparkles } from "lucide-react"
 import useAppStore from "../../store/useAppStore"
 import * as hod from "../../services/HOD/hodApi"
 import { btnPrimary, btnGhost, btnDanger, inputCls, Spinner, EmptyState, ErrorState, useLoad } from "./HodModal"
+import LeaveImpact from "./LeaveImpact";
 
 /* One panel per "Action Required" item. Each panel loads its own list, performs the action,
    removes the item locally and calls onChanged() so the dashboard numbers refresh. */
@@ -41,6 +42,7 @@ export function LeavePanel({ onChanged }) {
   const state = useLoad(hod.getPendingLeaves)
   const { busy, run } = useAct(onChanged)
   const [notes, setNotes] = useState({})
+  const [impactFor, setImpactFor] = useState(null)      // id of the leave whose impact analysis is open
   const drop = (id) => state.setData((d) => d.filter((x) => x._id !== id))
 
   const act = (l, status) => run(l._id + status, async () => {
@@ -62,9 +64,13 @@ export function LeavePanel({ onChanged }) {
           <div className="flex items-center gap-2 mt-3">
             <input className={inputCls} placeholder="Note to faculty (optional)" value={notes[l._id] || ""}
               onChange={(e) => setNotes({ ...notes, [l._id]: e.target.value })} />
+            <button className={btnGhost} disabled={!!busy} onClick={() => setImpactFor(impactFor === l._id ? null : l._id)}><Sparkles size={13} className="inline -mt-0.5 mr-1" />{impactFor === l._id ? "Hide impact" : "Impact & cover"}</button>
             <button className={btnPrimary} disabled={!!busy} onClick={() => act(l, "Approved")}><Check size={13} className="inline -mt-0.5 mr-1" />Approve</button>
             <button className={btnDanger} disabled={!!busy} onClick={() => act(l, "Rejected")}><X size={13} className="inline -mt-0.5 mr-1" />Reject</button>
           </div>
+          {impactFor === l._id && (
+            <LeaveImpact leave={l} note={notes[l._id] || ""} onDone={() => { drop(l._id); setImpactFor(null); onChanged?.() }} />
+          )}
         </Row>
       ))}
     </Shell>

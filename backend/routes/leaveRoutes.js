@@ -1,6 +1,7 @@
 const express      = require("express")
 const router       = express.Router()
 const requireAuth  = require("../middleware/requireAuth")
+const requireHod   = require("../middleware/hod/requireHod")
 
 const {
   getLeaves,
@@ -15,7 +16,7 @@ const {
 // ── Leave applications (requireAuth: reads x-user-id header) ─────────────────
 router.get("/",             requireAuth, getLeaves)          // GET    /api/leaves
 router.post("/",            requireAuth, applyLeave)         // POST   /api/leaves
-router.patch("/:id/status", updateLeaveStatus)               // PATCH  /api/leaves/:id/status  (admin action — no faculty auth needed)
+router.patch("/:id/status", requireHod, updateLeaveStatus)   // PATCH  /api/leaves/:id/status  (HOD only — this used to be completely unauthenticated)
 router.delete("/:id",       requireAuth, deleteLeave)        // DELETE /api/leaves/:id
 
 // ── Stats (requireAuth) ──────────────────────────────────────────────────────
