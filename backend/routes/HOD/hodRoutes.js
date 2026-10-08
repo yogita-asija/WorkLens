@@ -1,6 +1,6 @@
 const express    = require("express")
 const router     = express.Router()
-const requireHod = require("../../middleware/HOD/requireHod")
+const requireHod = require("../../middleware/hod/requireHod")
 const c          = require("../../controller/HOD/hodController")
 const duty       = require("../../controller/HOD/dutyAllocationController")
 
