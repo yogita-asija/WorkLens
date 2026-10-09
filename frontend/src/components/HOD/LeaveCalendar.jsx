@@ -68,7 +68,7 @@ export function CalendarView({ data, selected, onSelect, todayKey }) {
             return (
               <button key={k} onClick={() => onSelect(k)} title={`${fmtDay(k)}: ${away} away`}
                 className={`min-h-[78px] text-left rounded-lg border p-1.5 transition cursor-pointer ${selected === k ? "border-green-500" : k === todayKey ? "border-neutral-500" : "border-[#2a2a2a] hover:border-[#3a3a3a]"} ${sunday ? "opacity-60" : ""}`}
-                style={{ background: tint || "#141414" }}>
+                style={{ background: tint || "var(--bg-141414)" }}>
                 <div className="flex items-center justify-between">
                   <span className={`text-xs ${k === todayKey ? "text-green-400 font-bold" : "text-neutral-300"}`}>{+k.slice(8)}</span>
                   {away > 0 && <span className="text-[9px] text-neutral-400">{away} away</span>}

@@ -19,7 +19,7 @@ function ComingSoon({ title, desc }) {
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 360, gap: 14 }}>
       <div style={{ width: 52, height: 52, borderRadius: 16, background: "rgba(34,197,94,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🚧</div>
       <div style={{ textAlign: "center" }}>
-        <p style={{ fontSize: 17, fontWeight: 600, color: "#fff", marginBottom: 6 }}>{title}</p>
+        <p style={{ fontSize: 17, fontWeight: 600, color: "var(--t-ffffff)", marginBottom: 6 }}>{title}</p>
         <p style={{ fontSize: 13, color: "#6b7280", maxWidth: 320, lineHeight: 1.6 }}>{desc || "This page is under construction and will be available soon."}</p>
       </div>
     </div>

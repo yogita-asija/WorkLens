@@ -30,7 +30,7 @@ function ErrorBanner({ message, onRetry }) {
           <p className="text-sm font-semibold" style={{ color: "#f87171" }}>
             Could not connect to server
           </p>
-          <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+          <p className="text-xs mt-0.5" style={{ color: "var(--t-9ca3af)" }}>
             {message || "Make sure the backend is running "}
           </p>
         </div>
@@ -253,14 +253,14 @@ export default function AttendancePage() {
   return (
     <div
       className="min-h-screen px-4 max-w-[1400px] mx-auto space-y-6"
-      style={{ background: "#0A0A0A" }}
+      style={{ background: "var(--bg-0a0a0a)" }}
     >
       {/* Header */}
       <div>
         <h1 className="font-semibold text-white" style={{ fontSize: "24px", margin: 0 }}>
           Attendance Management
         </h1>
-        <p className="mt-1" style={{ fontSize: "13px", color: "#9CA3AF" }}>
+        <p className="mt-1" style={{ fontSize: "13px", color: "var(--t-9ca3af)" }}>
           Track and manage student attendance for your courses
         </p>
       </div>
@@ -287,7 +287,7 @@ export default function AttendancePage() {
 
       {/* Loading */}
       {loading && (
-        <p style={{ color: "#9CA3AF", textAlign: "center", paddingTop: "40px" }}>
+        <p style={{ color: "var(--t-9ca3af)", textAlign: "center", paddingTop: "40px" }}>
           Loading students...
         </p>
       )}
@@ -306,11 +306,11 @@ export default function AttendancePage() {
           <StatsCards total={total} present={present} absent={absent} late={late} />
 
           <div className="flex items-center gap-4">
-            <div className="flex-1 h-px" style={{ background: "#2D2D2D" }} />
+            <div className="flex-1 h-px" style={{ background: "var(--bg-2d2d2d)" }} />
             <span className="text-xs font-medium whitespace-nowrap" style={{ color: "#6b7280" }}>
               Session · {displayDate}
             </span>
-            <div className="flex-1 h-px" style={{ background: "#2D2D2D" }} />
+            <div className="flex-1 h-px" style={{ background: "var(--bg-2d2d2d)" }} />
           </div>
 
           <AttendanceTable
@@ -326,7 +326,7 @@ export default function AttendancePage() {
             <button
               onClick={handleReset}
               className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
-              style={{ color: "#9CA3AF", border: "1px solid #2D2D2D", background: "transparent" }}
+              style={{ color: "var(--t-9ca3af)", border: "1px solid var(--b-2d2d2d)", background: "transparent" }}
             >
               Reset
             </button>
@@ -358,7 +358,7 @@ export default function AttendancePage() {
           />
           <div
             className="relative w-full max-w-md p-6 rounded-xl"
-            style={{ background: "#111", border: "1px solid #2D2D2D" }}
+            style={{ background: "var(--bg-111111)", border: "1px solid var(--b-2d2d2d)" }}
           >
             <h2 className="text-white font-semibold text-lg mb-3">
               Enter Today's Topic
@@ -370,9 +370,9 @@ export default function AttendancePage() {
               placeholder="e.g. React Hooks, DBMS Normalization..."
               className="w-full px-4 py-2 rounded-lg text-sm"
               style={{
-                background: "#0A0A0A",
-                border:     "1px solid #2D2D2D",
-                color:      "#fff",
+                background: "var(--bg-0a0a0a)",
+                border:     "1px solid var(--b-2d2d2d)",
+                color:      "var(--t-ffffff)",
               }}
             />
             {topicError && (
@@ -384,7 +384,7 @@ export default function AttendancePage() {
               <button
                 onClick={() => setShowModal(false)}
                 className="px-4 py-2 text-sm rounded-lg"
-                style={{ color: "#9CA3AF", border: "1px solid #2D2D2D" }}
+                style={{ color: "var(--t-9ca3af)", border: "1px solid var(--b-2d2d2d)" }}
               >
                 Cancel
               </button>

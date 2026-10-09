@@ -14,18 +14,18 @@ const COURSES_BASE = `${import.meta.env.VITE_API_URL || "http://localhost:8000"}
 
 // ─── Design tokens (matches existing project) ────────────────────────────────
 const T = {
-  bg:     "#0A0A0A",
-  card:   "#141414",
-  card2:  "#1c1c1c",
-  border: "#262626",
+  bg:     'var(--m-bg)',
+  card:   'var(--m-card)',
+  card2:  'var(--m-card2)',
+  border: 'var(--m-border)',
   accent: "#22C55E",
   warn:   "#F59E0B",
   danger: "#EF4444",
   blue:   "#3B82F6",
   purple: "#8B5CF6",
-  txt:    "#FFFFFF",
-  sub:    "#9CA3AF",
-  muted:  "#6B7280",
+  txt:    'var(--m-txt)',
+  sub:    'var(--m-sub)',
+  muted:  'var(--m-muted)',
 }
 
 // ─── Category config ─────────────────────────────────────────────────────────
@@ -285,7 +285,7 @@ function ComposeModal({ open, onClose, onSend, prefill, loading }) {
               ) : batchOptions.length === 0 ? (
                 <p style={{ fontSize: 12, color: T.muted }}>No batches found for this course.</p>
               ) : (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "10px 12px", background: "#0d0d0d", border: `1px solid ${T.border}`, borderRadius: 8 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "10px 12px", background: "var(--bg-0d0d0d)", border: `1px solid ${T.border}`, borderRadius: 8 }}>
                   {batchOptions.map(b => {
                     const active = form.batches.includes(b.batchName)
                     return (
@@ -313,7 +313,7 @@ function ComposeModal({ open, onClose, onSend, prefill, loading }) {
               ) : studentOptions.length === 0 ? (
                 <p style={{ fontSize: 12, color: T.muted }}>No students enrolled in this course.</p>
               ) : (
-                <div style={{ maxHeight: 160, overflow: "auto", display: "flex", flexDirection: "column", gap: 4, padding: "10px 12px", background: "#0d0d0d", border: `1px solid ${T.border}`, borderRadius: 8 }}>
+                <div style={{ maxHeight: 160, overflow: "auto", display: "flex", flexDirection: "column", gap: 4, padding: "10px 12px", background: "var(--bg-0d0d0d)", border: `1px solid ${T.border}`, borderRadius: 8 }}>
                   {studentOptions.map(s => {
                     const active = form.recipients.some(r => r.id === s.id)
                     return (
@@ -428,7 +428,7 @@ function ReplyModal({ open, msg, onClose, onReply, loading }) {
 
         {/* Quoted original */}
         <div style={{
-          background: "#0d0d0d", borderLeft: `3px solid ${T.accent}`,
+          background: "var(--bg-0d0d0d)", borderLeft: `3px solid ${T.accent}`,
           borderRadius: "0 8px 8px 0", padding: "10px 14px", marginBottom: 14,
         }}>
           <p style={{ fontSize: 11, color: T.muted, marginBottom: 4 }}>Re: {msg.subject}</p>
@@ -778,7 +778,7 @@ export default function StudentMessages() {
           }}>
             <div>
               <p style={{ fontSize: 11, color: T.muted, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</p>
-              <p style={{ fontSize: 28, fontWeight: 700,color: "#FFFFFF", lineHeight: 1, margin: 0 }}>{value}</p>
+              <p style={{ fontSize: 28, fontWeight: 700,color: "var(--t-ffffff)", lineHeight: 1, margin: 0 }}>{value}</p>
             </div>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}22`, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Icon size={16} color={color} />
@@ -853,7 +853,7 @@ export default function StudentMessages() {
 
             {/* Filter panel */}
             {filterOpen && (
-              <div style={{ marginTop: 12, padding: "14px 16px", background: "#0d0d0d", borderRadius: 10, border: `1px solid ${T.border}` }}>
+              <div style={{ marginTop: 12, padding: "14px 16px", background: "var(--bg-0d0d0d)", borderRadius: 10, border: `1px solid ${T.border}` }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                   <div>
                     <label style={lbl}>Category</label>
@@ -1013,12 +1013,12 @@ export default function StudentMessages() {
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
 const lbl = {
-  display: "block", fontSize: 11, color: "#9CA3AF",
+  display: "block", fontSize: 11, color: "var(--t-9ca3af)",
   marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em",
 }
 const inp = {
-  width: "100%", background: "#0d0d0d", border: "1px solid #333",
-  borderRadius: 8, padding: "9px 12px", color: "#fff", fontSize: 13,
+  width: "100%", background: "var(--bg-0d0d0d)", border: "1px solid var(--b-333333)",
+  borderRadius: 8, padding: "9px 12px", color: "var(--t-ffffff)", fontSize: 13,
   outline: "none", boxSizing: "border-box",
 }
 const sel = { ...inp, appearance: "none", cursor: "pointer" }
@@ -1031,7 +1031,7 @@ const btnPrimary = {
 const btnGhost = {
   display: "inline-flex", alignItems: "center", gap: 6,
   padding: "8px 14px", borderRadius: 9, cursor: "pointer",
-  background: "transparent", border: "1px solid #333", color: "#9CA3AF", fontSize: 13,
+  background: "transparent", border: "1px solid var(--b-333333)", color: "var(--t-9ca3af)", fontSize: 13,
 }
 function btnSmall(color) {
   return {

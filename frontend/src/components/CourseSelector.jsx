@@ -43,12 +43,12 @@ export default function CourseSelector({
   loading,
 }) {
   return (
-    <div className="rounded-xl p-5" style={{ background: '#1c1c1c', border: '1px solid #2D2D2D' }}>
+    <div className="rounded-xl p-5" style={{ background: 'var(--bg-1c1c1c)', border: '1px solid var(--b-2d2d2d)' }}>
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
 
         {/* Course Dropdown */}
         <div className="flex-1 min-w-0">
-          <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#9CA3AF' }}>
+          <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--t-9ca3af)' }}>
             Select Course
           </label>
           <div className="relative">
@@ -70,7 +70,7 @@ export default function CourseSelector({
 
         {/* Date Picker */}
         <div className="flex-1 min-w-0 sm:max-w-[220px]">
-          <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#9CA3AF' }}>
+          <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--t-9ca3af)' }}>
             Select Date
           </label>
           <div className="relative">
@@ -88,7 +88,7 @@ export default function CourseSelector({
         <div className="flex items-end pb-[10px]">
           <div
             className="flex items-center gap-2 text-sm font-medium transition-opacity duration-300"
-            style={{ color: '#9CA3AF', opacity: loading ? 1 : 0 }}
+            style={{ color: 'var(--t-9ca3af)', opacity: loading ? 1 : 0 }}
           >
             <LoadIcon spinning={true} />
             Loading…

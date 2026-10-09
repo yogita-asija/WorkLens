@@ -4,6 +4,27 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0A0A0A" />
+    <script>
+      /* Apply saved theme before first paint (prevents a flash of the wrong theme) */
+      (function () {
+        try {
+          var p = localStorage.getItem('worklens-theme');
+          if (p !== 'light' && p !== 'dark' && p !== 'system') {
+            var l = localStorage.getItem('worklens-dark-mode');
+            p = l === 'true' ? 'dark' : l === 'false' ? 'light' : 'system';
+          }
+          var t = p === 'system'
+            ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+            : p;
+          var h = document.documentElement;
+          h.classList.add(t); h.dataset.theme = t; h.style.colorScheme = t;
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute('content', t === 'dark' ? '#0A0A0A' : '#F3F4F6');
+        } catch (e) { document.documentElement.classList.add('dark'); }
+      })();
+    </script>
     <title>WorkLens—Attendance</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
