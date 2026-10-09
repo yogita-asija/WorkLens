@@ -9,18 +9,18 @@ export function useC() {
 
 /* ── Design tokens (inline style values — dark mode defaults) ── */
 export const T = {
-  bg:      '#0A0A0A',
-  card:    '#262626',
-  inner:   '#2f2f2f',
-  border:  '#333333',
+  bg:      'var(--k-bg)',
+  card:    'var(--k-card)',
+  inner:   'var(--k-inner)',
+  border:  'var(--k-border)',
   accent:  '#22C55E',
   warn:    '#CA8A04',
   danger:  '#EF4444',
   blue:    '#3B82F6',
   cyan:    '#06B6D4',
-  txt:     '#FFFFFF',
-  sub:     '#9CA3AF',
-  muted:   '#6B7280',
+  txt:     'var(--k-txt)',
+  sub:     'var(--k-sub)',
+  muted:   'var(--k-muted)',
 }
 
 /* ── Card wrapper ── */

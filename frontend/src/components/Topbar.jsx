@@ -1,8 +1,11 @@
-import { Bell } from "lucide-react"
+import { Bell, Sun, Moon } from "lucide-react"
+import { useTheme } from "../ThemeContext"
 import useAppStore from "../store/useAppStore"
 
 export default function Topbar({ user }) {
   const { openProfile, openNotif, unreadCount } = useAppStore()
+  const { resolvedTheme, toggleTheme } = useTheme()
+  const isDark = resolvedTheme === "dark"
 
   const displayName = user?.name || "Dr. Sarah Chen"
   const displayDept = user?.department || "Computer Science"
@@ -15,6 +18,15 @@ export default function Topbar({ user }) {
       </div>
 
       <div className="flex items-center gap-5">
+        <button
+          onClick={toggleTheme}
+          aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+          title={isDark ? "Switch to light theme" : "Switch to dark theme"}
+          className="topbar-bell text-neutral-200 hover:text-white transition cursor-pointer"
+        >
+          {isDark ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+
         <button onClick={openNotif} className="relative cursor-pointer">
           <Bell size={20} className="topbar-bell text-neutral-200 hover:text-white transition" />
           {unreadCount > 0 && (

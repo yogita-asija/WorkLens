@@ -1,6 +1,5 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { Check, X, Bell, CalendarClock, UserCheck, Undo2, Sparkles, ChevronDown } from "lucide-react"
+import { Check, X, Bell, CalendarClock, UserCheck, Undo2, Sparkles } from "lucide-react"
 import useAppStore from "../../store/useAppStore"
 import * as hod from "../../services/HOD/hodApi"
 import { btnPrimary, btnGhost, btnDanger, inputCls, Spinner, EmptyState, ErrorState, useLoad } from "./HodModal"
@@ -39,22 +38,11 @@ function useAct(onChanged) {
 const Row = ({ children }) => <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">{children}</div>
 
 /* ───────────── 1. Leave requests ───────────── */
-// Shown at the bottom of the dashboard's "Leave requests" drawer
-function ManageLeaveLink() {
-  const navigate = useNavigate()
-  return (
-    <button onClick={() => navigate("/leave-management")}
-      className="mt-4 w-full text-xs font-medium rounded-xl border border-[#333] hover:border-green-500/50 hover:text-white text-neutral-400 py-2.5 transition cursor-pointer">
-      Open Leave Management — history, calendar, balances & cover →
-    </button>
-  )
-}
-
-export function LeavePanel({ onChanged, showManageLink = false }) {
+export function LeavePanel({ onChanged }) {
   const state = useLoad(hod.getPendingLeaves)
   const { busy, run } = useAct(onChanged)
   const [notes, setNotes] = useState({})
-  const [open, setOpen] = useState({})          // leave ids whose impact analysis is expanded
+  const [impactFor, setImpactFor] = useState(null)      // id of the leave whose impact analysis is open
   const drop = (id) => state.setData((d) => d.filter((x) => x._id !== id))
 
   const act = (l, status) => run(l._id + status, async () => {
@@ -62,7 +50,6 @@ export function LeavePanel({ onChanged, showManageLink = false }) {
   }, `Leave ${status.toLowerCase()}`)
 
   return (
-    <>
     <Shell state={state} empty="No pending leave requests" emptySub="Everything has been reviewed.">
       {state.data?.map((l) => (
         <Row key={l._id}>
@@ -74,24 +61,19 @@ export function LeavePanel({ onChanged, showManageLink = false }) {
             <Badge color="#3b82f6">{l.type}</Badge>
           </div>
           <p className="text-sm text-neutral-300 mt-2">{l.reason}</p>
-          <button className={`${btnGhost} mt-3 flex items-center gap-1.5`} onClick={() => setOpen({ ...open, [l._id]: !open[l._id] })}>
-            <Sparkles size={13} className="text-green-400" />{open[l._id] ? "Hide impact analysis" : "Impact analysis & suggested cover"}
-            <ChevronDown size={13} className={`transition ${open[l._id] ? "rotate-180" : ""}`} />
-          </button>
-          {open[l._id] && (
-            <LeaveImpact leave={l} note={notes[l._id] || ""} onDone={() => { drop(l._id); onChanged?.() }} />
-          )}
           <div className="flex items-center gap-2 mt-3">
             <input className={inputCls} placeholder="Note to faculty (optional)" value={notes[l._id] || ""}
               onChange={(e) => setNotes({ ...notes, [l._id]: e.target.value })} />
+            <button className={btnGhost} disabled={!!busy} onClick={() => setImpactFor(impactFor === l._id ? null : l._id)}><Sparkles size={13} className="inline -mt-0.5 mr-1" />{impactFor === l._id ? "Hide impact" : "Impact & cover"}</button>
             <button className={btnPrimary} disabled={!!busy} onClick={() => act(l, "Approved")}><Check size={13} className="inline -mt-0.5 mr-1" />Approve</button>
             <button className={btnDanger} disabled={!!busy} onClick={() => act(l, "Rejected")}><X size={13} className="inline -mt-0.5 mr-1" />Reject</button>
           </div>
+          {impactFor === l._id && (
+            <LeaveImpact leave={l} note={notes[l._id] || ""} onDone={() => { drop(l._id); setImpactFor(null); onChanged?.() }} />
+          )}
         </Row>
       ))}
     </Shell>
-    {showManageLink && <ManageLeaveLink />}
-    </>
   )
 }
 

@@ -31,8 +31,8 @@ export default function WeeklyBarChart() {
           <YAxis stroke="#9ca3af" />
           <Tooltip
             cursor={{ fill: "transparent" }}
-            contentStyle={{ backgroundColor: "#2f2f2f", border: "1px solid #333333", color: "#ffffff", borderRadius: "10px" }}
-            labelStyle={{ color: "#9ca3af" }}
+            contentStyle={{ backgroundColor: "var(--bg-2f2f2f)", border: "1px solid var(--b-333333)", color: "var(--t-ffffff)", borderRadius: "10px" }}
+            labelStyle={{ color: "var(--t-9ca3af)" }}
           />
           <Bar dataKey="activities" fill="#22c55e" radius={[6, 6, 0, 0]} />
         </BarChart>

@@ -70,16 +70,16 @@ function NotePopup({ note, onSave, onClose }) {
     <div style={{
       position: 'absolute', bottom: '110%', left: '50%', transform: 'translateX(-50%)',
       zIndex: 50, width: '190px',
-      background: '#1c1c1c', border: '1px solid #3a3a3a', borderRadius: '10px',
+      background: 'var(--bg-1c1c1c)', border: '1px solid var(--b-3a3a3a)', borderRadius: '10px',
       padding: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
     }}>
-      <p style={{ fontSize: '10px', color: '#9CA3AF', marginBottom: '6px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Note</p>
+      <p style={{ fontSize: '10px', color: 'var(--t-9ca3af)', marginBottom: '6px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Note</p>
       <input
         autoFocus value={draft}
         onChange={e => setDraft(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') { onSave(draft); onClose() } if (e.key === 'Escape') onClose() }}
         placeholder="Add a note..."
-        style={{ width: '100%', background: '#111', border: '1px solid #333', borderRadius: '6px', padding: '6px 8px', fontSize: '12px', color: '#fff', outline: 'none', boxSizing: 'border-box' }}
+        style={{ width: '100%', background: 'var(--bg-111111)', border: '1px solid var(--b-333333)', borderRadius: '6px', padding: '6px 8px', fontSize: '12px', color: 'var(--t-ffffff)', outline: 'none', boxSizing: 'border-box' }}
       />
       <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
         <button onClick={() => { onSave(draft); onClose() }}
@@ -112,7 +112,7 @@ function StudentCard({ student, index, onStatusChange, onNoteChange }) {
     <div
       className="animate-fade-in"
       style={{
-        background: '#161616', border: '1px solid #2a2a2a', borderRadius: '12px',
+        background: 'var(--bg-161616)', border: '1px solid var(--b-2a2a2a)', borderRadius: '12px',
         padding: '14px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center',
         gap: '9px', position: 'relative',
         animationDelay: `${index * 30}ms`, animationFillMode: 'both', opacity: 0,
@@ -121,7 +121,7 @@ function StudentCard({ student, index, onStatusChange, onNoteChange }) {
       onMouseEnter={e => { e.currentTarget.style.borderColor = '#3a3a3a'; e.currentTarget.style.transform = 'translateY(-1px)' }}
       onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a2a2a'; e.currentTarget.style.transform = 'translateY(0)' }}
     >
-      <span style={{ position: 'absolute', top: '8px', left: '10px', fontSize: '9px', color: '#4b5563', fontFamily: 'monospace' }}>
+      <span style={{ position: 'absolute', top: '8px', left: '10px', fontSize: '9px', color: 'var(--t-4b5563)', fontFamily: 'monospace' }}>
         {String(index + 1).padStart(2, '0')}
       </span>
 
@@ -130,9 +130,9 @@ function StudentCard({ student, index, onStatusChange, onNoteChange }) {
         title="View student profile"
         style={{
           width: '50px', height: '50px', borderRadius: '50%',
-          background: '#222', border: `2px solid ${cfg.dot}`,
+          background: 'var(--bg-222222)', border: `2px solid ${cfg.dot}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#555', marginTop: '6px', transition: 'border-color 0.3s, opacity 0.2s',
+          color: 'var(--t-555555)', marginTop: '6px', transition: 'border-color 0.3s, opacity 0.2s',
           cursor: 'pointer',
         }}
         onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
@@ -146,7 +146,7 @@ function StudentCard({ student, index, onStatusChange, onNoteChange }) {
           onClick={() => openStudentProfile(student.id)}
           title="View student profile"
           style={{
-            fontSize: '12px', fontWeight: 600, color: '#ffffff', margin: 0, lineHeight: 1.3,
+            fontSize: '12px', fontWeight: 600, color: 'var(--t-ffffff)', margin: 0, lineHeight: 1.3,
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             cursor: 'pointer', transition: 'color 0.15s',
           }}
@@ -179,7 +179,7 @@ function StudentCard({ student, index, onStatusChange, onNoteChange }) {
           onClick={() => setShowNote(!showNote)}
           style={{
             width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px',
-            fontSize: '10px', color: student.notes ? '#a0aec0' : '#4b5563',
+            fontSize: '10px', color: student.notes ? 'var(--t-a0aec0)' : 'var(--t-4b5563)',
             fontStyle: student.notes ? 'normal' : 'italic',
             background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
           }}
@@ -212,14 +212,14 @@ function TableRow({ student, index, onStatusChange, onNoteChange }) {
 
   return (
     <tr
-      style={{ borderBottom: '1px solid #1f1f1f', transition: 'background 0.15s' }}
+      style={{ borderBottom: '1px solid var(--b-1f1f1f)', transition: 'background 0.15s' }}
       onMouseEnter={e => e.currentTarget.style.background = '#161616'}
       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
     >
-      <td style={{ padding: '10px 16px', fontSize: '11px', color: '#4b5563', fontFamily: 'monospace', width: '40px' }}>
+      <td style={{ padding: '10px 16px', fontSize: '11px', color: 'var(--t-4b5563)', fontFamily: 'monospace', width: '40px' }}>
         {String(index + 1).padStart(2, '0')}
       </td>
-      <td style={{ padding: '10px 16px', fontSize: '13px', fontWeight: 600, color: '#fff' }}>
+      <td style={{ padding: '10px 16px', fontSize: '13px', fontWeight: 600, color: 'var(--t-ffffff)' }}>
         <span
           onClick={() => openStudentProfile(student.id)}
           title="View student profile"
@@ -253,7 +253,7 @@ function TableRow({ student, index, onStatusChange, onNoteChange }) {
           onClick={() => setShowNote(!showNote)}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: '4px',
-            fontSize: '11px', color: student.notes ? '#a0aec0' : '#4b5563',
+            fontSize: '11px', color: student.notes ? 'var(--t-a0aec0)' : 'var(--t-4b5563)',
             fontStyle: student.notes ? 'normal' : 'italic',
             background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
             maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -290,13 +290,13 @@ export default function AttendanceTable({ students, onStatusChange, onNoteChange
   )
 
   return (
-    <div style={{ background: '#111111', border: '1px solid #2D2D2D', borderRadius: '14px', overflow: 'hidden' }}>
+    <div style={{ background: 'var(--bg-111111)', border: '1px solid var(--b-2d2d2d)', borderRadius: '14px', overflow: 'hidden' }}>
 
       {/* Header */}
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid #2D2D2D', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--b-2d2d2d)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
         <div>
-          <h2 style={{ fontSize: '15px', fontWeight: 600, color: '#ffffff', margin: 0 }}>Student Attendance</h2>
-          <p style={{ fontSize: '12px', color: '#9CA3AF', margin: '3px 0 0' }}>
+          <h2 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--t-ffffff)', margin: 0 }}>Student Attendance</h2>
+          <p style={{ fontSize: '12px', color: 'var(--t-9ca3af)', margin: '3px 0 0' }}>
             {students.length} students &nbsp;·&nbsp; {attendancePct}% present &nbsp;·&nbsp; click badge to change status
           </p>
         </div>
@@ -311,20 +311,20 @@ export default function AttendanceTable({ students, onStatusChange, onNoteChange
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search student…"
-              style={{ background: '#1c1c1c', border: '1px solid #333', borderRadius: '8px', padding: '7px 10px 7px 26px', fontSize: '12px', color: '#fff', outline: 'none', width: '155px' }}
+              style={{ background: 'var(--bg-1c1c1c)', border: '1px solid var(--b-333333)', borderRadius: '8px', padding: '7px 10px 7px 26px', fontSize: '12px', color: 'var(--t-ffffff)', outline: 'none', width: '155px' }}
             />
           </div>
 
           {/* Grid / Table toggle */}
-          <div style={{ display: 'flex', background: '#1c1c1c', border: '1px solid #2D2D2D', borderRadius: '8px', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', background: 'var(--bg-1c1c1c)', border: '1px solid var(--b-2d2d2d)', borderRadius: '8px', overflow: 'hidden' }}>
             <button
               onClick={() => setViewMode('grid')}
               title="Card grid view"
               style={{
                 display: 'flex', alignItems: 'center', gap: '5px',
                 padding: '7px 12px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: 'none',
-                background: viewMode === 'grid' ? '#2a2a2a' : 'transparent',
-                color: viewMode === 'grid' ? '#ffffff' : '#6b7280',
+                background: viewMode === 'grid' ? 'var(--bg-2a2a2a)' : 'transparent',
+                color: viewMode === 'grid' ? 'var(--t-ffffff)' : '#6b7280',
                 transition: 'all 0.15s',
               }}
             >
@@ -336,8 +336,8 @@ export default function AttendanceTable({ students, onStatusChange, onNoteChange
               style={{
                 display: 'flex', alignItems: 'center', gap: '5px',
                 padding: '7px 12px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: 'none',
-                background: viewMode === 'table' ? '#2a2a2a' : 'transparent',
-                color: viewMode === 'table' ? '#ffffff' : '#6b7280',
+                background: viewMode === 'table' ? 'var(--bg-2a2a2a)' : 'transparent',
+                color: viewMode === 'table' ? 'var(--t-ffffff)' : '#6b7280',
                 transition: 'all 0.15s',
               }}
             >
@@ -383,7 +383,7 @@ export default function AttendanceTable({ students, onStatusChange, onNoteChange
       </div>
 
       {/* Stats bar */}
-      <div style={{ padding: '10px 20px', borderBottom: '1px solid #1f1f1f', display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ padding: '10px 20px', borderBottom: '1px solid var(--b-1f1f1f)', display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
         {[
           { label: 'Present', color: '#9CA3AF', count: presentCount },
           { label: 'Absent',  color: '#9CA3AF', count: absentCount },
@@ -391,7 +391,7 @@ export default function AttendanceTable({ students, onStatusChange, onNoteChange
         ].map(item => (
           <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.color }} />
-            <span style={{ fontSize: '12px', color: '#9CA3AF' }}>{item.label}:</span>
+            <span style={{ fontSize: '12px', color: 'var(--t-9ca3af)' }}>{item.label}:</span>
             <span style={{ fontSize: '13px', fontWeight: 700, color: item.color }}>{item.count}</span>
           </div>
         ))}
@@ -428,7 +428,7 @@ export default function AttendanceTable({ students, onStatusChange, onNoteChange
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid #2D2D2D' }}>
+                <tr style={{ borderBottom: '1px solid var(--b-2d2d2d)' }}>
                   {['#', 'Name', 'ID', 'Status', 'Notes'].map(col => (
                     <th key={col} style={{
                       padding: '10px 16px', textAlign: 'left',
@@ -457,9 +457,9 @@ export default function AttendanceTable({ students, onStatusChange, onNoteChange
       )}
 
       {/* Footer */}
-      <div style={{ padding: '10px 20px', borderTop: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        {/* <p style={{ fontSize: '11px', color: '#4b5563', margin: 0 }}>
-          Click <span style={{ color: '#d1d5db' }}>badge</span> to cycle status &nbsp;·&nbsp; Click <span style={{ color: '#d1d5db' }}>pencil</span> to add note
+      <div style={{ padding: '10px 20px', borderTop: '1px solid var(--b-2d2d2d)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* <p style={{ fontSize: '11px', color: 'var(--t-4b5563)', margin: 0 }}>
+          Click <span style={{ color: 'var(--t-d1d5db)' }}>badge</span> to cycle status &nbsp;·&nbsp; Click <span style={{ color: 'var(--t-d1d5db)' }}>pencil</span> to add note
         </p> */}
         <p style={{ fontSize: '11px', color: '#6b7280', margin: 0 }}>
           {students.length > 0 && `${presentCount}/${students.length} present`}

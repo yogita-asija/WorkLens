@@ -225,7 +225,7 @@ function CourseCard({ course, onView, onStudents, onArchive, onUnarchive }) {
 
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ background: hov ? "#2a2a2a" : T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "16px 18px", transition: "background 0.15s" }}>
+      style={{ background: hov ? "var(--bg-2a2a2a)" : T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "16px 18px", transition: "background 0.15s" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           <span style={{ fontSize: 10, fontWeight: 700, color: T.sub, background: "rgba(156,163,175,0.1)", border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 5 }}>{course.courseCode || course.courseId}</span>
