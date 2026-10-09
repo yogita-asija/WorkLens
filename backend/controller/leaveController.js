@@ -13,17 +13,27 @@ function calcDays(from, to) {
   return Math.round((t - f) / (1000 * 60 * 60 * 24)) + 1
 }
 
-/**
- * Days of approved leave that START in the given calendar year (leave dates are stored as UTC midnight).
- * Without the year filter, last year's leave was being subtracted from this year's allocation.
- */
+// Calendar-year helpers. Dates are compared as UTC YYYY-MM-DD, the same rule the HOD "Balances" tab uses,
+// so the faculty and HOD screens always show the same numbers.
+const dayKey = (d) => new Date(d).toISOString().slice(0, 10)
+const utcMs  = (k) => Date.parse(`${k}T00:00:00Z`)
+
+/** Days of a leave that fall inside one calendar year (inclusive). A leave that spans New Year is split. */
+function daysInYear(leave, year) {
+  const a = `${year}-01-01`, b = `${year}-12-31`
+  const f = dayKey(leave.fromDate) > a ? dayKey(leave.fromDate) : a
+  const t = dayKey(leave.toDate)   < b ? dayKey(leave.toDate)   : b
+  return t < f ? 0 : Math.round((utcMs(t) - utcMs(f)) / 864e5) + 1
+}
+
+/** Approved leave days a faculty member has used in ONE calendar year (not all-time). */
 async function approvedDaysInYear(facultyId, year) {
-  const approved = await Leave.find({
-    facultyId,
-    status: "Approved",
-    fromDate: { $gte: new Date(Date.UTC(year, 0, 1)), $lt: new Date(Date.UTC(year + 1, 0, 1)) },
-  }).select("duration")
-  return approved.reduce((sum, l) => sum + l.duration, 0)
+  const leaves = await Leave.find({
+    facultyId, status: "Approved",
+    fromDate: { $lt: new Date(Date.UTC(year + 1, 0, 1)) },
+    toDate:   { $gte: new Date(Date.UTC(year, 0, 1)) },
+  })
+  return leaves.reduce((sum, l) => sum + daysInYear(l, year), 0)
 }
 
 /**
@@ -64,7 +74,7 @@ const getBalance = async (req, res) => {
 
     const bal = await getOrCreateBalance(facultyId, year)
 
-    // Re-compute taken from approved leaves (source of truth)
+    // Re-compute taken from approved leaves in THIS calendar year (source of truth)
     const taken = await approvedDaysInYear(facultyId, year)
 
     // Sync the balance document
@@ -92,20 +102,21 @@ const getMonthlyStats = async (req, res) => {
     const facultyId = req.user._id.toString()
     const year      = Number(req.query.year) || new Date().getFullYear()
 
-    const from = new Date(year, 0, 1)
-    const to   = new Date(year, 11, 31)
-
+    // Approved leave only (rejected / pending days were never taken), each day counted in its own month
+    const a = `${year}-01-01`, b = `${year}-12-31`
     const leaves = await Leave.find({
-      facultyId,
-      fromDate: { $gte: from, $lte: to },
+      facultyId, status: "Approved",
+      fromDate: { $lt: new Date(Date.UTC(year + 1, 0, 1)) },
+      toDate:   { $gte: new Date(Date.UTC(year, 0, 1)) },
     })
 
     const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
     const monthly    = new Array(12).fill(0)
 
     leaves.forEach(l => {
-      const m = new Date(l.fromDate).getMonth()
-      monthly[m] += l.duration
+      const f = dayKey(l.fromDate) > a ? dayKey(l.fromDate) : a
+      const t = dayKey(l.toDate)   < b ? dayKey(l.toDate)   : b
+      for (let ms = utcMs(f); ms <= utcMs(t); ms += 864e5) monthly[new Date(ms).getUTCMonth()]++
     })
 
     const data = monthNames.map((name, i) => ({ month: name, days: monthly[i] }))
@@ -139,16 +150,18 @@ const applyLeave = async (req, res) => {
 
     const duration = calcDays(from, to)
 
-    // Check balance
-    const year = from.getUTCFullYear()
-    const bal  = await getOrCreateBalance(facultyId, year)
-    const takenSoFar = await approvedDaysInYear(facultyId, year)
-
-    if (takenSoFar + duration > bal.totalLeaves) {
-      return res.status(400).json({
-        success: false,
-        message: `Insufficient leave balance. You have ${bal.totalLeaves - takenSoFar} day(s) remaining.`,
-      })
+    // Check balance year by year - each calendar year has its own allowance, and a leave can span New Year
+    for (let year = from.getUTCFullYear(); year <= to.getUTCFullYear(); year++) {
+      const wanted = daysInYear({ fromDate: from, toDate: to }, year)
+      if (!wanted) continue
+      const bal  = await getOrCreateBalance(facultyId, year)
+      const used = await approvedDaysInYear(facultyId, year)
+      if (used + wanted > bal.totalLeaves) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient leave balance${from.getUTCFullYear() !== to.getUTCFullYear() ? ` for ${year}` : ""}. You have ${Math.max(0, bal.totalLeaves - used)} day(s) remaining.`,
+        })
+      }
     }
 
     const leave = await Leave.create({
@@ -179,7 +192,7 @@ const applyLeave = async (req, res) => {
 }
 
 // ─── PATCH /api/leaves/:id/status ────────────────────────────────────────────
-// Approve or reject a leave. HOD only (route is behind requireHod) and only for faculty in the HOD's own department.
+// Approve or reject a leave (admin action).
 // Body: { status: "Approved" | "Rejected", adminNote? }
 const updateLeaveStatus = async (req, res) => {
   try {
@@ -195,24 +208,28 @@ const updateLeaveStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Leave not found" })
     }
 
-    // the applicant must belong to this HOD's department
-    const applicant = await User.findById(leave.facultyId).select("department")
-    const sameDept = applicant && (applicant.department || "").trim().toLowerCase() === (req.user.department || "").trim().toLowerCase()
-    if (!sameDept) {
-      return res.status(404).json({ success: false, message: "Leave not found in your department" })
+    // Route already guarantees role is hod/admin. Further rules (same as the HOD module):
+    // nobody reviews their own leave, and a HOD only reviews teaching staff of their OWN department.
+    if (leave.facultyId === req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "You cannot review your own leave" })
     }
-    if (leave.status !== "Pending") {
-      return res.status(400).json({ success: false, message: `Leave is already ${leave.status.toLowerCase()}` })
+    if (req.user.role === "hod") {
+      const applicant = await User.findById(leave.facultyId).select("role department")
+      const dept = (req.user.department || "").trim().toLowerCase()
+      const sameDept = applicant && dept && (applicant.department || "").trim().toLowerCase() === dept
+      if (!applicant || applicant.role !== "teaching" || !sameDept) {
+        return res.status(403).json({ success: false, message: "You can only review leaves from your own department" })
+      }
     }
 
     leave.status    = status
     leave.adminNote = adminNote
-    leave.decidedAt = new Date()
     leave.updatedAt = new Date()
     await leave.save()
 
     res.json({ success: true, message: `Leave ${status.toLowerCase()} successfully`, data: leave })
   } catch (err) {
+    if (err.name === "CastError") return res.status(404).json({ success: false, message: "Leave not found" })   // malformed id
     res.status(500).json({ success: false, message: err.message })
   }
 }
@@ -224,9 +241,6 @@ const deleteLeave = async (req, res) => {
     const leave = await Leave.findById(req.params.id)
     if (!leave) {
       return res.status(404).json({ success: false, message: "Leave not found" })
-    }
-    if (leave.facultyId !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: "You can only cancel your own leave" })
     }
     if (leave.status !== "Pending") {
       return res.status(400).json({ success: false, message: "Only Pending leaves can be cancelled" })

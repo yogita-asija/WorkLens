@@ -48,8 +48,8 @@ export default function FacultyBalance({ data, onFocus }) {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
           {stat("Average load", dept.mean, `median ${dept.median} pts`)}
-          {stat("Overloaded", dept.overloaded, "130%+ of average")}
-          {stat("Have capacity", dept.withCapacity, "under 70% of average")}
+          {stat("Overloaded", dept.overloaded, `${Math.round(weights.overloadedAt * 100)}% of average or more`)}
+          {stat("Have capacity", dept.withCapacity, `${Math.round(weights.capacityAt * 100)}% of average or less`)}
           {stat("Most room", dept.mostCapacity ? dept.mostCapacity.name : "—", dept.mostCapacity ? `${dept.mostCapacity.load} pts` : "")}
         </div>
         <button onClick={() => setHow(!how)} className="mt-4 text-xs text-neutral-400 hover:text-white flex items-center gap-1 cursor-pointer">
@@ -65,7 +65,7 @@ export default function FacultyBalance({ data, onFocus }) {
                   {p.key === "cover" && `substitute classes in the last ${weights.coverPastDays} days and next ${weights.coverFutureDays}, averaged per week.`}
                   {p.key === "tasks" && `open tasks — High ${weights.taskPoints.High}, Medium ${weights.taskPoints.Medium}, Low ${weights.taskPoints.Low} pts each, +${weights.overdueTaskExtra} if overdue.`}
                   {p.key === "papers" && `question papers still due — ${weights.paperPoints} pts each, +${weights.overduePaperExtra} if overdue.`}
-                  {p.key === "duty" && `days marked "Other Duty" in Availability (${weights.otherDutyDayPoints} pts each) plus hours of duties from Smart Duty Allocation, averaged per week.`}
+                  {p.key === "duty" && `days you marked "Other Duty" in Availability, ${weights.otherDutyDayPoints} pts per day, averaged per week.`}
                 </li>
               ))}
             </ul>
