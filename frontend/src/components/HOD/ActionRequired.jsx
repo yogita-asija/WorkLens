@@ -1,12 +1,13 @@
+import { useNavigate } from "react-router-dom"
 import { CalendarCheck, UserCog, CalendarX2, AlarmClock, FileCheck2, MessageSquareWarning, CheckCircle2, ChevronRight } from "lucide-react"
 
 const META = {
-  leaves:        { Icon: CalendarCheck,        accent: "#22c55e" },
-  substitutions: { Icon: UserCog,              accent: "#22c55e" },
-  conflicts:     { Icon: CalendarX2,           accent: "#22c55e" },
-  tasks:         { Icon: AlarmClock,           accent: "#22c55e" },
-  papers:        { Icon: FileCheck2,           accent: "#22c55e" },
-  escalations:   { Icon: MessageSquareWarning, accent: "#22c55e" },
+  leaves:        { Icon: CalendarCheck,        accent: "#f59e0b" },
+  substitutions: { Icon: UserCog,              accent: "#3b82f6" },
+  conflicts:     { Icon: CalendarX2,           accent: "#ef4444" },
+  tasks:         { Icon: AlarmClock,           accent: "#ef4444" },
+  papers:        { Icon: FileCheck2,           accent: "#a855f7" },
+  escalations:   { Icon: MessageSquareWarning, accent: "#f97316" },
 }
 const EMPTY = {
   leaves: "No leave requests pending", substitutions: "No substitutions required", conflicts: "No timetable conflicts",
@@ -14,6 +15,7 @@ const EMPTY = {
 }
 
 function Row({ item, onOpen }) {
+  const navigate = useNavigate()
   const { Icon, accent } = META[item.key]
   const clear = item.count === 0
   return (
@@ -33,12 +35,21 @@ function Row({ item, onOpen }) {
         ) : (
           <>
             <p className="text-sm font-medium text-white">
-              <span className="font-bold" style={{ color: "white" }}>{item.count}</span> {item.label}
+              <span className="font-bold" style={{ color: accent }}>{item.count}</span> {item.label}
             </p>
             {item.hint && <p className="text-xs text-neutral-500 mt-0.5 truncate">{item.hint}</p>}
           </>
         )}
       </div>
+
+      {item.key === "leaves" && (
+        <button
+          onClick={(e) => { e.stopPropagation(); navigate("/leave-management") }}
+          className="hidden md:inline text-xs text-neutral-400 hover:text-white hover:underline underline-offset-2 whitespace-nowrap cursor-pointer"
+        >
+          Leave Management
+        </button>
+      )}
 
       {!clear && item.urgent && (
         <span className="hidden sm:inline text-[10px] px-2 py-1 rounded-full font-semibold bg-red-500/15 text-red-400">Urgent</span>
