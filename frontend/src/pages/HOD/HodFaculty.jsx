@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { Search, RefreshCw } from "lucide-react"
 import * as hod from "../../services/HOD/hodApi"
 import FacultyBalance from "../../components/HOD/FacultyBalance"
+import WhatIfPlanner from "../../components/HOD/WhatIfPlanner"
 import FacultyCard from "../../components/HOD/FacultyCard"
 import { Legend, BAND } from "../../components/HOD/FacultyUi"
 import { Card } from "../../components/HOD/LeaveUi"
@@ -74,6 +75,7 @@ export default function HodFaculty() {
         : (
           <>
             <FacultyBalance data={data} onFocus={focus} />
+            <WhatIfPlanner onPick={focus} />
             <Card>
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 <div className="relative flex-1 min-w-[180px]">

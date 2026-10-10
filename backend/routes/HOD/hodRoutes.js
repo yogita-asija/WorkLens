@@ -40,6 +40,7 @@ router.patch("/conflicts/resolve",     c.resolveConflict)
 router.get("/faculty",                 c.getFaculty)
 router.get("/faculty/workload",        workload.getWorkload)
 router.get("/faculty/:id/workload",    workload.getFacultyWorkload)
+router.post("/faculty/what-if",        workload.whatIf)
 
 router.get("/tasks/overdue",           c.getOverdueTasks)
 router.post("/tasks",                  c.createTask)
@@ -65,6 +66,9 @@ router.delete("/duty-allocation/:id",        duty.deleteDuty)
 
 // ── Reports ──
 router.get("/reports/department",      report.getDepartmentReport)
+router.get("/reports/snapshots",       report.listSnapshots)
+router.post("/reports/snapshots",      report.createSnapshot)
+router.get("/reports/snapshots/:id",   report.getSnapshot)
 
 module.exports = router
 router.get("/workflow-insights",                       wf.getInsights)

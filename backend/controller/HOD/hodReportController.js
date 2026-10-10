@@ -1,7 +1,10 @@
 /**
  * HOD · Department Report  (one click -> attendance + leave + workload + syllabus)
  *
- *   GET /api/hod/reports/department?from=YYYY-MM-DD&to=YYYY-MM-DD
+ *   GET  /api/hod/reports/department?from=YYYY-MM-DD&to=YYYY-MM-DD
+ *   GET  /api/hod/reports/snapshots            list saved reports
+ *   POST /api/hod/reports/snapshots            save a report (frozen copy + checksum)
+ *   GET  /api/hod/reports/snapshots/:id        open a saved report (+ checksum verification)
  *
  * Period (from/to) drives attendance and leave. Workload is a "right now" snapshot (same numbers as the
  * Faculty Workload page) and syllabus is cumulative progress to date.
@@ -9,10 +12,13 @@
  * Attendance rule: a student is "attended" if status is present OR late. Students below ATTENDANCE_MIN %
  * (default 75, env REPORT_ATTENDANCE_MIN) are flagged.
  */
-const Attendance = require("../../models/Attendance")
-const Syllabus   = require("../../models/Syllabus")
-const { Leave }  = require("../../models/Leave")
-const H          = require("../../utils/hodHelpers")
+const crypto         = require("crypto")
+const mongoose       = require("mongoose")
+const Attendance     = require("../../models/Attendance")
+const ReportSnapshot = require("../../models/HOD/ReportSnapshot")
+const Syllabus       = require("../../models/Syllabus")
+const { Leave }      = require("../../models/Leave")
+const H              = require("../../utils/hodHelpers")
 const { computeWorkload } = require("./hodWorkloadController")
 
 const wrap = H.wrap("hodReport")
@@ -197,9 +203,9 @@ async function syllabusSection(courses) {
   }
 }
 
-/* ───────────────────────── endpoint ───────────────────────── */
-exports.getDepartmentReport = wrap(async (req, res) => {
-  const period = resolvePeriod(req.query)
+/* ───────────────────────── build ───────────────────────── */
+async function buildReport(req, query) {
+  const period = resolvePeriod(query || {})
   const ctx = await H.loadDept(req)
 
   const [attendance, leave, workload, syllabus] = await Promise.all([
@@ -220,13 +226,47 @@ exports.getDepartmentReport = wrap(async (req, res) => {
   if (syllabus.summary.behind) highlights.push({ level: "warn", section: "Syllabus", text: `${syllabus.summary.behind} course${syllabus.summary.behind === 1 ? " is" : "s are"} behind on syllabus coverage.` })
   insightsFrom(workload).forEach((i) => highlights.push(i))
 
-  res.json({
-    success: true,
-    data: {
-      meta: { department: ctx.dept || "All departments", generatedAt: new Date().toISOString(), generatedBy: req.user.name, period, faculty: ctx.faculty.length, courses: ctx.courses.length },
-      highlights, attendance, leave, workload, syllabus,
-    },
+  return {
+    meta: { department: ctx.dept || "All departments", generatedAt: new Date().toISOString(), generatedBy: req.user.name, period, faculty: ctx.faculty.length, courses: ctx.courses.length },
+    highlights, attendance, leave, workload, syllabus,
+  }
+}
+
+exports.getDepartmentReport = wrap(async (req, res) => {
+  res.json({ success: true, data: await buildReport(req, req.query) })
+})
+
+/* ───────────────────────── saved snapshots (audit trail) ───────────────────────── */
+// JSON with sorted keys, so the same data always gives the same checksum
+const stable = (v) => Array.isArray(v) ? `[${v.map(stable).join(",")}]`
+  : v && typeof v === "object" ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${stable(v[k])}`).join(",")}}`
+  : JSON.stringify(v === undefined ? null : v)
+const checksumOf = (data) => crypto.createHash("sha256").update(stable(data)).digest("hex")
+const mine = (req) => ({ department: req.dept || "" })
+
+exports.createSnapshot = wrap(async (req, res) => {
+  const { title, note } = req.body || {}
+  if (typeof title !== "string" || !title.trim()) return res.status(400).json({ success: false, message: "Give the saved report a title, e.g. \"Semester 5 – attendance review\"." })
+  const data = JSON.parse(JSON.stringify(await buildReport(req, req.body)))   // plain JSON only
+  const snap = await ReportSnapshot.create({
+    ...mine(req), title: title.trim().slice(0, 120), note: typeof note === "string" ? note.trim().slice(0, 500) : "",
+    period: data.meta.period, createdBy: { id: String(req.user._id), name: req.user.name }, data, checksum: checksumOf(data),
   })
+  res.status(201).json({ success: true, data: { _id: snap._id, title: snap.title, checksum: snap.checksum, createdAt: snap.createdAt } })
+})
+
+exports.listSnapshots = wrap(async (req, res) => {
+  const rows = await ReportSnapshot.find(mine(req)).select("title note period createdBy checksum createdAt").sort({ createdAt: -1 }).limit(100).lean()
+  res.json({ success: true, data: rows })
+})
+
+exports.getSnapshot = wrap(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ success: false, message: "Saved report not found" })
+  const snap = await ReportSnapshot.findOne({ _id: req.params.id, ...mine(req) }).lean()
+  if (!snap) return res.status(404).json({ success: false, message: "Saved report not found" })
+  const verified = checksumOf(snap.data) === snap.checksum      // false = the stored numbers were changed after saving
+  const { data, ...meta } = snap
+  res.json({ success: true, data: { snapshot: meta, report: data, verified } })
 })
 
 function insightsFrom(workload) {

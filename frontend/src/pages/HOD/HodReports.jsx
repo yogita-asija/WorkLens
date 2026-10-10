@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { RefreshCw, Printer, Download, AlertTriangle, Info, CheckCircle2 } from "lucide-react"
+import { RefreshCw, Printer, Download, AlertTriangle, Info, CheckCircle2, Save, ShieldCheck, ShieldAlert, ArrowLeft } from "lucide-react"
+import useAppStore from "../../store/useAppStore"
 import * as hod from "../../services/HOD/hodApi"
 import { Card, Bar } from "../../components/HOD/LeaveUi"
 import { btnPrimary, btnGhost, inputCls, Spinner, ErrorState } from "../../components/HOD/HodModal"
@@ -94,13 +95,41 @@ export default function HodReports() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
+  const showToast = useAppStore((s) => s.showToast)
+
+  // saved snapshots (frozen copies with a checksum – the audit trail)
+  const [viewing, setViewing] = useState(null)        // set while a saved report is open
+  const [saved, setSaved] = useState([])
+  const [saveOpen, setSaveOpen] = useState(false)
+  const [form, setForm] = useState({ title: "", note: "" })
+  const [saving, setSaving] = useState(false)
+
   const generate = useCallback(async (f, t) => {
     setLoading(true)
     try { setData(await hod.getDepartmentReport({ from: f, to: t })); setError("") }
     catch (e) { setError(e.message) }
     finally { setLoading(false) }
   }, [])
-  useEffect(() => { generate(from, to) }, [from, to, generate])
+  useEffect(() => { if (!viewing) generate(from, to) }, [from, to, generate, viewing])
+
+    const loadSaved = useCallback(() => hod.listReportSnapshots().then(setSaved).catch(() => {}), [])
+    useEffect(() => { loadSaved() }, [loadSaved])
+  
+    const openSaved = async (id) => {
+      setLoading(true)
+      try { const r = await hod.getReportSnapshot(id); setData(r.report); setViewing({ ...r.snapshot, verified: r.verified }); setError("") }
+      catch (e) { showToast(e.message, "error") }
+      finally { setLoading(false) }
+    }
+    const saveSnapshot = async () => {
+      if (!form.title.trim()) return showToast("Give the saved report a title", "error")
+      setSaving(true)
+      try {
+        await hod.saveReportSnapshot({ title: form.title, note: form.note, from, to })
+        setSaveOpen(false); setForm({ title: "", note: "" }); loadSaved(); showToast("Report saved — it can no longer be edited")
+      } catch (e) { showToast(e.message, "error") }
+      finally { setSaving(false) }
+    }
 
   const pick = (k) => { setPreset(k); setRange(PRESETS[k].range()) }
   const custom = (which, v) => { setPreset("custom"); setRange(which === "from" ? [v, to] : [from, v]) }
@@ -118,13 +147,42 @@ export default function HodReports() {
           <p className="text-sm text-neutral-400 mt-1">One-click department report — attendance, leave, workload and syllabus in a single view.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button className={`${btnGhost} flex items-center gap-1.5`} onClick={() => generate(from, to)} disabled={loading}><RefreshCw size={13} className={loading ? "animate-spin" : ""} />Regenerate</button>
-          <button className={`${btnGhost} flex items-center gap-1.5`} disabled={!data} onClick={() => download(`${fileBase}.csv`, buildCsv(data), "text/csv;charset=utf-8")}><Download size={13} />CSV</button>
+        {viewing
+            ? <button className={`${btnGhost} flex items-center gap-1.5`} onClick={() => setViewing(null)}><ArrowLeft size={13} />Back to live report</button>
+            : <>
+                <button className={`${btnGhost} flex items-center gap-1.5`} onClick={() => generate(from, to)} disabled={loading}><RefreshCw size={13} className={loading ? "animate-spin" : ""} />Regenerate</button>
+                <button className={`${btnGhost} flex items-center gap-1.5`} disabled={!data} onClick={() => setSaveOpen((v) => !v)}><Save size={13} />Save snapshot</button>
+              </>}
+                <button className={`${btnGhost} flex items-center gap-1.5`} disabled={!data} onClick={() => download(`${fileBase}.csv`, buildCsv(data), "text/csv;charset=utf-8")}><Download size={13} />CSV</button>
           <button className={`${btnPrimary} flex items-center gap-1.5`} disabled={!data} onClick={() => window.print()}><Printer size={13} />Print / Save PDF</button>
         </div>
       </div>
 
-      <Card className="rp-noprint">
+      {saveOpen && !viewing && (
+        <Card className="rp-noprint" title="Save this report as a snapshot">
+          <p className="text-xs text-neutral-500 -mt-2 mb-3">A snapshot freezes today's numbers for {fmt(from)} – {fmt(to)}. It cannot be edited or deleted later, and carries a checksum so you can prove it was not changed.</p>
+          <div className="flex flex-wrap gap-3 items-end">
+            <input className={`${inputCls} !w-72`} placeholder="Title, e.g. Semester 5 – attendance review" maxLength={120} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            <input className={`${inputCls} flex-1 min-w-[200px]`} placeholder="Note (optional)" maxLength={500} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+            <button className={btnPrimary} onClick={saveSnapshot} disabled={saving}>{saving ? "Saving…" : "Save"}</button>
+          </div>
+        </Card>
+      )}
+
+      {viewing && (
+        <div className={`rp-noprint flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 text-sm ${viewing.verified ? "border-green-500/40 bg-green-500/5" : "border-red-500/40 bg-red-500/10"}`}>
+          {viewing.verified ? <ShieldCheck size={18} className="text-green-500 shrink-0" /> : <ShieldAlert size={18} className="text-red-400 shrink-0" />}
+          <div className="min-w-0">
+            <p className="font-medium">Saved report: {viewing.title}</p>
+            <p className="text-[11px] text-neutral-400">
+              Saved {new Date(viewing.createdAt).toLocaleString("en-GB")} by {viewing.createdBy?.name}. {viewing.verified ? "Checksum verified — numbers are exactly as saved." : "WARNING: stored numbers do not match the checksum. This report may have been altered."}
+              {viewing.note ? ` Note: ${viewing.note}` : ""}
+            </p>
+          </div>
+        </div>
+      )}
+
+      <Card className={`rp-noprint ${viewing ? "hidden" : ""}`}>
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-wrap gap-2">
             {Object.entries(PRESETS).map(([k, p]) => (
@@ -151,6 +209,7 @@ export default function HodReports() {
               <h2 className="text-2xl font-bold mt-1">{data.meta.department}</h2>
               <p className="text-sm text-neutral-400 mt-1">{fmt(data.meta.period.from)} – {fmt(data.meta.period.to)} ({data.meta.period.days} days) · {data.meta.faculty} faculty · {data.meta.courses} courses</p>
               <p className="text-[11px] text-neutral-600 mt-1">Generated {new Date(data.meta.generatedAt).toLocaleString("en-GB")} by {data.meta.generatedBy}</p>
+              {viewing && <p className="text-[11px] text-neutral-500 mt-1 break-all">Saved report “{viewing.title}” · {viewing.verified ? "checksum verified" : "CHECKSUM MISMATCH"} · SHA-256 {viewing.checksum}</p>}
             </div>
 
             {/* at a glance */}
@@ -258,6 +317,19 @@ export default function HodReports() {
             </Section>
           </div>
         )}
+              <Card className="rp-noprint" title="Saved reports">
+        {saved.length === 0
+          ? <p className="text-sm text-neutral-500">Nothing saved yet. Use “Save snapshot” to keep a permanent, tamper-evident copy of a report.</p>
+          : <div className="divide-y divide-[#2a2a2a]">{saved.map((r) => (
+              <div key={r._id} className="flex flex-wrap items-center gap-3 py-2.5">
+                <div className="flex-1 min-w-[200px]">
+                  <p className="text-sm font-medium">{r.title}</p>
+                  <p className="text-[11px] text-neutral-500">{r.period?.from} → {r.period?.to} · saved {new Date(r.createdAt).toLocaleDateString("en-GB")} by {r.createdBy?.name}{r.note ? ` · ${r.note}` : ""}</p>
+                </div>
+                <span className="text-[10px] text-neutral-600 font-mono">{r.checksum.slice(0, 10)}…</span>
+                <button className={btnGhost} onClick={() => openSaved(r._id)}>Open</button>
+              </div>))}</div>}
+      </Card>
     </div>
   )
 }
