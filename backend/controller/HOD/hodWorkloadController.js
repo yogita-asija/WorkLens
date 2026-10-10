@@ -196,6 +196,16 @@ function buildInsights(rows, dept) {
 
 /* ─────────────────────────── endpoints ─────────────────────────── */
 
+// Same numbers as GET /faculty/workload, reusable by other controllers (e.g. the department report).
+exports.computeWorkload = async (req) => {
+  const ctx = await H.loadDept(req)
+  const build = await gather(ctx)
+  const rows = ctx.faculty.map((f) => build(f).row)
+  const { dept } = fairness(rows)
+  rows.sort((a, b) => b.load - a.load || a.name.localeCompare(b.name))
+  return { dept, insights: buildInsights(rows, dept), faculty: rows }
+}
+
 exports.getWorkload = wrap(async (req, res) => {
   const ctx = await H.loadDept(req)
   const build = await gather(ctx)

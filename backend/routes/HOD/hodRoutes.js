@@ -7,6 +7,7 @@ const duty       = require("../../controller/HOD/dutyAllocationController")
 const wf         = require("../../controller/HOD/workflowInsightsController")
 const leave      = require("../../controller/HOD/hodLeaveController")
 const workload   = require("../../controller/HOD/hodWorkloadController")
+const report     = require("../../controller/HOD/hodReportController")
 
 router.use(requireHod) // every /api/hod/* route is HOD-only
 
@@ -62,6 +63,10 @@ router.post("/duty-allocation",              duty.createDuty)
 router.put("/duty-allocation/:id/assignees", duty.updateAssignees)
 router.delete("/duty-allocation/:id",        duty.deleteDuty)
 
+// ── Reports ──
+router.get("/reports/department",      report.getDepartmentReport)
+
+module.exports = router
 router.get("/workflow-insights",                       wf.getInsights)
 router.post("/workflow-insights/actions",              wf.createAction)
 router.patch("/workflow-insights/actions/:id/resolve", wf.resolveAction)
