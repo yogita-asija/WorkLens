@@ -1,3 +1,4 @@
+const crypto       = require("crypto")
 const ActivityLog  = require("../models/ActivityLog")
 const Course       = require("../models/course")
 const Attendance   = require("../models/Attendance")
@@ -264,6 +265,13 @@ const submitWorkflowFeedback = async (req, res) => {
   try {
     const { category, message, customIssue } = req.body
     if (!category) return res.status(400).json({ message: "Please select a category" })
+
+    // The user's id / name / email are NEVER stored. Only department + a one-way keyed hash.
+    const secret = process.env.WORKFLOW_ANON_SECRET
+    const respondentKey = secret && req.user
+      ? crypto.createHmac("sha256", secret).update(String(req.user._id)).digest("hex")
+      : undefined
+
     await ActivityLog.create({
       type:      "workflow",
       title:     "Workflow feedback submitted",
@@ -272,6 +280,8 @@ const submitWorkflowFeedback = async (req, res) => {
         ? `Issue: ${customIssue}\n\nDescription: ${message}`
         : message,
       timestamp: new Date(),
+      department: req.user ? (req.user.department || "") : "",
+      respondentKey,
     })
     res.json({ success: true, message: "Feedback submitted successfully" })
   } catch (err) {

@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
 import {
-  LayoutDashboard, FileCheck2, Settings, LogOut, CalendarClock,
+  LayoutDashboard, FileCheck2, Settings, LogOut, CalendarClock,ShieldCheck,
 } from "lucide-react"
 
 const menuGroups = [
@@ -12,6 +12,7 @@ const menuGroups = [
       { name: "Smart Duty Allocation", icon: CalendarClock, path: "/duty-allocation" },
     ],
   },
+    { group: "Insights", items: [{ name: "Workflow Insights", icon: ShieldCheck, path: "/workflow-insights" }] },
   
   { group: null, items: [{ name: "Settings", icon: Settings, path: "/settings" }] },
 ]
