@@ -33,7 +33,7 @@ function Row({ item, onOpen }) {
         ) : (
           <>
             <p className="text-sm font-medium text-white">
-              <span className="font-bold" style={{ color: "white" }}>{item.count}</span> {item.label}
+              <span className="font-bold">{item.count}</span> {item.label}
             </p>
             {item.hint && <p className="text-xs text-neutral-500 mt-0.5 truncate">{item.hint}</p>}
           </>

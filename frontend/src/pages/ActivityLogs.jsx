@@ -42,15 +42,15 @@ const TYPE_ICON = {
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
-const card      = { background: "#262626", border: "1px solid #333333", borderRadius: "12px" }
-const innerCard = { background: "#2f2f2f", border: "1px solid #333333", borderRadius: "8px" }
+const card      = { background: "var(--bg-262626)", border: "1px solid var(--b-333333)", borderRadius: "12px" }
+const innerCard = { background: "var(--bg-2f2f2f)", border: "1px solid var(--b-333333)", borderRadius: "8px" }
 const inputStyle = {
-  background: "#2f2f2f", border: "1px solid #333333", borderRadius: "8px",
-  color: "#FFFFFF", fontSize: "13px", padding: "9px 12px 9px 36px", width: "100%", outline: "none",
+  background: "var(--bg-2f2f2f)", border: "1px solid var(--b-333333)", borderRadius: "8px",
+  color: "var(--t-ffffff)", fontSize: "13px", padding: "9px 12px 9px 36px", width: "100%", outline: "none",
 }
 const labelStyle = {
   fontSize: "11px", fontWeight: 600, textTransform: "uppercase",
-  letterSpacing: "0.06em", color: "#9CA3AF", display: "block", marginBottom: "6px",
+  letterSpacing: "0.06em", color: "var(--t-9ca3af)", display: "block", marginBottom: "6px",
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -113,7 +113,7 @@ function FilterBar({ fromDate, toDate, typeFilter, setFromDate, setToDate, setTy
             <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}
               style={{ ...inputStyle, appearance: "none", cursor: "pointer", paddingRight: "32px" }}>
               {ACTIVITY_TYPES.map((t) => (
-                <option key={t.id} value={t.id} style={{ background: "#262626" }}>{t.label}</option>
+                <option key={t.id} value={t.id} style={{ background: "var(--bg-262626)" }}>{t.label}</option>
               ))}
             </select>
             <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "#6B7280", pointerEvents: "none" }}>
@@ -150,16 +150,16 @@ function ActivityItem({ log, isLast }) {
       style={{
         display: "flex", gap: "14px",
         padding: "18px 0",
-        borderBottom: isLast ? "none" : "1px solid #333333",
+        borderBottom: isLast ? "none" : "1px solid var(--b-333333)",
         position: "relative",
       }}
     >
       {/* Icon circle */}
       <div style={{
         flexShrink: 0, width: "34px", height: "34px", borderRadius: "50%",
-        background: "#2f2f2f", border: "1px solid #333333",
+        background: "var(--bg-2f2f2f)", border: "1px solid var(--b-333333)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        color: "#9CA3AF", marginTop: "2px",
+        color: "var(--t-9ca3af)", marginTop: "2px",
       }}>
         {icon}
       </div>
@@ -171,14 +171,14 @@ function ActivityItem({ log, isLast }) {
             {/* Type badge */}
             <span style={{
               fontSize: "10px", fontWeight: 600, padding: "2px 8px",
-              borderRadius: "4px", background: "#2f2f2f", border: "1px solid #444",
-              color: "#9CA3AF", letterSpacing: "0.05em", textTransform: "uppercase",
+              borderRadius: "4px", background: "var(--bg-2f2f2f)", border: "1px solid #444",
+              color: "var(--t-9ca3af)", letterSpacing: "0.05em", textTransform: "uppercase",
               display: "inline-block", marginBottom: "4px",
             }}>
               {meta.label}
             </span>
             <p style={{ fontSize: "14px", color: "#22C55E", fontWeight: 500, margin: "0 0 2px" }}>{log.title}</p>
-            <p style={{ fontSize: "13px", color: "#FFFFFF", fontWeight: 500, margin: "0 0 2px" }}>{log.subject}</p>
+            <p style={{ fontSize: "13px", color: "var(--t-ffffff)", fontWeight: 500, margin: "0 0 2px" }}>{log.subject}</p>
             <p style={{ fontSize: "12px", color: "#6B7280", margin: 0 }}>{log.course}</p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
@@ -186,7 +186,7 @@ function ActivityItem({ log, isLast }) {
               <p style={{ fontSize: "12px", color: "#6B7280", margin: 0, fontVariantNumeric: "tabular-nums" }}>
                 {fmtTimestamp(log.timestamp || log.createdAt)}
               </p>
-              <p style={{ fontSize: "11px", color: "#4b5563", margin: "2px 0 0" }}>
+              <p style={{ fontSize: "11px", color: "var(--t-4b5563)", margin: "2px 0 0" }}>
                 {timeAgo(log.timestamp || log.createdAt)}
               </p>
             </div>
@@ -198,7 +198,7 @@ function ActivityItem({ log, isLast }) {
         {/* Detail pill */}
         {log.detail && (
           <p style={{
-            fontSize: "12px", color: "#9CA3AF", marginTop: "8px",
+            fontSize: "12px", color: "var(--t-9ca3af)", marginTop: "8px",
             padding: "6px 12px", display: "inline-block", ...innerCard,
           }}>
             {log.detail}
@@ -212,12 +212,12 @@ function ActivityItem({ log, isLast }) {
 // ── Skeleton loader ───────────────────────────────────────────────────────────
 function SkeletonRow() {
   return (
-    <div style={{ display: "flex", gap: "14px", padding: "18px 0", borderBottom: "1px solid #333333" }}>
-      <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#333", flexShrink: 0 }} />
+    <div style={{ display: "flex", gap: "14px", padding: "18px 0", borderBottom: "1px solid var(--b-333333)" }}>
+      <div style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--bg-333333)", flexShrink: 0 }} />
       <div style={{ flex: 1 }}>
-        <div style={{ height: 12, width: "30%", background: "#333", borderRadius: 4, marginBottom: 8 }} />
-        <div style={{ height: 14, width: "60%", background: "#333", borderRadius: 4, marginBottom: 6 }} />
-        <div style={{ height: 12, width: "40%", background: "#2a2a2a", borderRadius: 4 }} />
+        <div style={{ height: 12, width: "30%", background: "var(--bg-333333)", borderRadius: 4, marginBottom: 8 }} />
+        <div style={{ height: 14, width: "60%", background: "var(--bg-333333)", borderRadius: 4, marginBottom: 6 }} />
+        <div style={{ height: 12, width: "40%", background: "var(--bg-2a2a2a)", borderRadius: 4 }} />
       </div>
     </div>
   )
@@ -285,7 +285,7 @@ export default function ActivityLogs() {
   
   return (
     <div style={{ minHeight: "100vh",
-    background: "#0A0A0A",
+    background: "var(--bg-0a0a0a)",
     padding: "2px 10px 10px",
     fontFamily: "Inter, sans-serif",
   }}
@@ -293,8 +293,8 @@ export default function ActivityLogs() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
         <div>
-          <h1 style={{ fontSize: "24px", fontWeight: 600, color: "#FFFFFF", margin: 0 }}>Activity Logs</h1>
-          <p style={{ fontSize: "13px", color: "#9CA3AF", margin: "4px 0 0" }}>
+          <h1 style={{ fontSize: "24px", fontWeight: 600, color: "var(--t-ffffff)", margin: 0 }}>Activity Logs</h1>
+          <p style={{ fontSize: "13px", color: "var(--t-9ca3af)", margin: "4px 0 0" }}>
             Track and review all your teaching activities.
           </p>
         </div>
@@ -333,16 +333,16 @@ export default function ActivityLogs() {
         <div style={card}>
                   <div style={{ 
             padding: "20px 24px", 
-            borderBottom: "1px solid #333333",
+            borderBottom: "1px solid var(--b-333333)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center"
           }}>
             <div>
-              <h2 style={{ fontSize: "15px", fontWeight: 600, color: "#FFFFFF", margin: 0 }}>
+              <h2 style={{ fontSize: "15px", fontWeight: 600, color: "var(--t-ffffff)", margin: 0 }}>
                 Activity Timeline
               </h2>
-              <p style={{ fontSize: "13px", color: "#9CA3AF", margin: "3px 0 0" }}>
+              <p style={{ fontSize: "13px", color: "var(--t-9ca3af)", margin: "3px 0 0" }}>
                 {loading ? "Loading..." : `${filteredLogs.length} ${filteredLogs.length === 1 ? "activity" : "activities"} found`}
               </p>
             </div>
@@ -354,10 +354,10 @@ export default function ActivityLogs() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{
-                background: "#2f2f2f",
-                border: "1px solid #333333",
+                background: "var(--bg-2f2f2f)",
+                border: "1px solid var(--b-333333)",
                 borderRadius: "8px",
-                color: "#FFFFFF",
+                color: "var(--t-ffffff)",
                 fontSize: "13px",
                 padding: "8px 12px",
                 width: "220px",
@@ -373,7 +373,7 @@ export default function ActivityLogs() {
             ) : filteredLogs.length === 0 ? (
               <div style={{ padding: "60px 0", textAlign: "center" }}>
                 <p style={{ color: "#6B7280", fontSize: "14px", marginBottom: "8px" }}>No activities found</p>
-                <p style={{ color: "#4b5563", fontSize: "12px" }}>
+                <p style={{ color: "var(--t-4b5563)", fontSize: "12px" }}>
                   {logs.length === 0
                     ? "Activities are logged automatically when you mark attendance, create assignments, etc."
                     : "No activities match your current filters. Try adjusting the date range or type."}
@@ -397,20 +397,20 @@ export default function ActivityLogs() {
           {/* Activity Summary */}
           <div style={card}>
             <div style={{ padding: "20px" }}>
-              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#FFFFFF", margin: "0 0 16px" }}>
+              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "var(--t-ffffff)", margin: "0 0 16px" }}>
                 Activity Summary
               </h3>
 
               {loading ? (
                 <>
-                  <div style={{ height: 32, width: "50%", background: "#333", borderRadius: 4, marginBottom: 8 }} />
-                  <div style={{ height: 12, width: "70%", background: "#2a2a2a", borderRadius: 4 }} />
+                  <div style={{ height: 32, width: "50%", background: "var(--bg-333333)", borderRadius: 4, marginBottom: 8 }} />
+                  <div style={{ height: 12, width: "70%", background: "var(--bg-2a2a2a)", borderRadius: 4 }} />
                 </>
               ) : (
                 <>
                   <div style={{ marginBottom: "16px" }}>
-                    <p style={{ fontSize: "12px", color: "#9CA3AF", margin: "0 0 2px" }}>Total Activities</p>
-                    <p style={{ fontSize: "28px", fontWeight: 700, color: "#FFFFFF", margin: 0, lineHeight: 1.1 }}>
+                    <p style={{ fontSize: "12px", color: "var(--t-9ca3af)", margin: "0 0 2px" }}>Total Activities</p>
+                    <p style={{ fontSize: "28px", fontWeight: 700, color: "var(--t-ffffff)", margin: 0, lineHeight: 1.1 }}>
                       {stats?.total ?? logs.length}
                     </p>
                     <p style={{ fontSize: "12px", color: "#6B7280", margin: "3px 0 0" }}>
@@ -419,9 +419,9 @@ export default function ActivityLogs() {
                   </div>
 
                   {stats?.mostActiveDay && stats.mostActiveDay !== "—" && (
-                    <div style={{ borderTop: "1px solid #333333", paddingTop: "16px" }}>
-                      <p style={{ fontSize: "12px", color: "#9CA3AF", margin: "0 0 2px" }}>Most Active Day</p>
-                      <p style={{ fontSize: "20px", fontWeight: 700, color: "#FFFFFF", margin: 0 }}>
+                    <div style={{ borderTop: "1px solid var(--b-333333)", paddingTop: "16px" }}>
+                      <p style={{ fontSize: "12px", color: "var(--t-9ca3af)", margin: "0 0 2px" }}>Most Active Day</p>
+                      <p style={{ fontSize: "20px", fontWeight: 700, color: "var(--t-ffffff)", margin: 0 }}>
                         {stats.mostActiveDay}
                       </p>
                       <p style={{ fontSize: "12px", color: "#6B7280", margin: "3px 0 0" }}>
@@ -437,12 +437,12 @@ export default function ActivityLogs() {
           {/* Activity Breakdown */}
           <div style={card}>
             <div style={{ padding: "20px" }}>
-              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#FFFFFF", margin: "0 0 16px" }}>
+              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "var(--t-ffffff)", margin: "0 0 16px" }}>
                 Activity Breakdown
               </h3>
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} style={{ height: 28, background: "#2a2a2a", borderRadius: 6, marginBottom: 8 }} />
+                  <div key={i} style={{ height: 28, background: "var(--bg-2a2a2a)", borderRadius: 6, marginBottom: 8 }} />
                 ))
               ) : (stats?.breakdown?.length ?? 0) === 0 ? (
                 <p style={{ fontSize: "12px", color: "#6B7280" }}>No data yet</p>
@@ -451,13 +451,13 @@ export default function ActivityLogs() {
                   {stats.breakdown.map(({ type, count }) => (
                     <div key={type} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <span style={{
-                        fontSize: "12px", fontWeight: 500, color: "#9CA3AF",
-                        background: "#2f2f2f", border: "1px solid #333333",
+                        fontSize: "12px", fontWeight: 500, color: "var(--t-9ca3af)",
+                        background: "var(--bg-2f2f2f)", border: "1px solid var(--b-333333)",
                         borderRadius: "6px", padding: "3px 10px",
                       }}>
                         {TYPE_META[type]?.label ?? type}
                       </span>
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: "#FFFFFF" }}>{count}</span>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--t-ffffff)" }}>{count}</span>
                     </div>
                   ))}
                 </div>
@@ -469,10 +469,10 @@ export default function ActivityLogs() {
           {stats?.mostActiveDay && stats.mostActiveDay !== "—" && (
             <div style={{ ...card, background: "#1a2e22", border: "1px solid #2d4a38" }}>
               <div style={{ padding: "20px" }}>
-                <p style={{ fontSize: "13px", fontWeight: 600, color: "#FFFFFF", margin: "0 0 6px" }}>
+                <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--t-ffffff)", margin: "0 0 6px" }}>
                   Productivity Insight
                 </p>
-                <p style={{ fontSize: "12px", color: "#9CA3AF", margin: 0, lineHeight: 1.6 }}>
+                <p style={{ fontSize: "12px", color: "var(--t-9ca3af)", margin: 0, lineHeight: 1.6 }}>
                   You've been most active on {stats.mostActiveDay}s. Consider scheduling
                   complex tasks on this day for better productivity.
                 </p>
@@ -482,12 +482,12 @@ export default function ActivityLogs() {
 
           {/* Empty state hint */}
           {!loading && logs.length === 0 && !error && (
-            <div style={{ ...card, background: "#1a1a2e", border: "1px solid #2d2d4a" }}>
+            <div style={{ ...card, background: "var(--tip-bg)", border: "1px solid var(--tip-bd)" }}>
               <div style={{ padding: "20px" }}>
-                <p style={{ fontSize: "13px", fontWeight: 600, color: "#FFFFFF", margin: "0 0 8px" }}>
+                <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--t-ffffff)", margin: "0 0 8px" }}>
                   How logs are created
                 </p>
-                <p style={{ fontSize: "12px", color: "#9CA3AF", margin: 0, lineHeight: 1.7 }}>
+                <p style={{ fontSize: "12px", color: "var(--t-9ca3af)", margin: 0, lineHeight: 1.7 }}>
                   ✓ Mark attendance<br />
                   ✓ Save assignment<br />
                   ✓ Delete record <br />

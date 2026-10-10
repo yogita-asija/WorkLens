@@ -81,7 +81,7 @@ export default function HodDashboard() {
 
       {/* Action Required drawer */}
       <HodModal open={!!active} onClose={() => setPanel(null)} title={active?.title} subtitle={active?.subtitle}>
-        {active && <active.Component onChanged={load} />}
+        {active && <active.Component onChanged={load} showManageLink />}
       </HodModal>
 
       {/* Availability / substitution workflow */}

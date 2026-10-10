@@ -35,8 +35,8 @@ function getColor(courseId, colorMap) {
 function StatCard({ icon: Icon, label, value, sub, accent }) {
   return (
     <div style={{
-      background: "rgba(255,255,255,0.03)",
-      border: "1px solid rgba(255,255,255,0.08)",
+      background: "rgb(var(--c-wash) / 0.03)",
+      border: "1px solid rgb(var(--c-wash) / 0.08)",
       borderRadius: 16,
       padding: "20px 22px",
       display: "flex",
@@ -51,8 +51,8 @@ function StatCard({ icon: Icon, label, value, sub, accent }) {
         <Icon size={20} color={accent} />
       </div>
       <div>
-        <p style={{ fontSize: 22, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{value}</p>
-        <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 3 }}>{label}</p>
+        <p style={{ fontSize: 22, fontWeight: 700, color: "var(--t-ffffff)", lineHeight: 1 }}>{value}</p>
+        <p style={{ fontSize: 12, color: "var(--t-9ca3af)", marginTop: 3 }}>{label}</p>
         {sub && <p style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>{sub}</p>}
       </div>
     </div>
@@ -67,15 +67,15 @@ function SlotCell({ slots, isToday, colorMap }) {
         padding: "10px 8px",
         verticalAlign: "top",
         background: isToday ? "rgba(34,197,94,0.03)" : "transparent",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
-        borderRight: "1px solid rgba(255,255,255,0.05)",
+        borderBottom: "1px solid rgb(var(--c-wash) / 0.05)",
+        borderRight: "1px solid rgb(var(--c-wash) / 0.05)",
         minWidth: 130,
       }}>
         <div style={{
           height: 72, display: "flex", alignItems: "center", justifyContent: "center",
-          borderRadius: 10, border: "1px dashed rgba(255,255,255,0.07)",
+          borderRadius: 10, border: "1px dashed rgb(var(--c-wash) / 0.07)",
         }}>
-          <span style={{ fontSize: 11, color: "#4b5563" }}>—</span>
+          <span style={{ fontSize: 11, color: "var(--t-4b5563)" }}>—</span>
         </div>
       </td>
     )
@@ -86,8 +86,8 @@ function SlotCell({ slots, isToday, colorMap }) {
       padding: "8px 8px",
       verticalAlign: "top",
       background: isToday ? "rgba(34,197,94,0.04)" : "transparent",
-      borderBottom: "1px solid rgba(255,255,255,0.05)",
-      borderRight: "1px solid rgba(255,255,255,0.05)",
+      borderBottom: "1px solid rgb(var(--c-wash) / 0.05)",
+      borderRight: "1px solid rgb(var(--c-wash) / 0.05)",
       minWidth: 130,
     }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
@@ -109,13 +109,13 @@ function SlotCell({ slots, isToday, colorMap }) {
                 {slot.courseName}
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 10, color: "#9ca3af", display: "flex", gap: 4, alignItems: "center" }}>
+                <span style={{ fontSize: 10, color: "var(--t-9ca3af)", display: "flex", gap: 4, alignItems: "center" }}>
                   <GraduationCap size={10} /> Sem {slot.sem}
                 </span>
-                <span style={{ fontSize: 10, color: "#9ca3af", display: "flex", gap: 4, alignItems: "center" }}>
+                <span style={{ fontSize: 10, color: "var(--t-9ca3af)", display: "flex", gap: 4, alignItems: "center" }}>
                   <Layers size={10} /> Batch {slot.batch}
                 </span>
-                <span style={{ fontSize: 10, color: "#9ca3af", display: "flex", gap: 4, alignItems: "center" }}>
+                <span style={{ fontSize: 10, color: "var(--t-9ca3af)", display: "flex", gap: 4, alignItems: "center" }}>
                   <MapPin size={10} /> {slot.room}
                 </span>
               </div>
@@ -132,8 +132,8 @@ function TodaySchedule({ classes, todayName, colorMap }) {
   if (!classes || classes.length === 0) {
     return (
       <div style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgb(var(--c-wash) / 0.03)",
+        border: "1px solid rgb(var(--c-wash) / 0.08)",
         borderRadius: 16, padding: 24,
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         gap: 10, minHeight: 120,
@@ -150,7 +150,7 @@ function TodaySchedule({ classes, todayName, colorMap }) {
         const c = getColor(String(slot.courseId), colorMap)
         return (
           <div key={i} style={{
-            background: "rgba(255,255,255,0.03)",
+            background: "rgb(var(--c-wash) / 0.03)",
             border: `1px solid ${c.border}`,
             borderLeft: `3px solid ${c.text}`,
             borderRadius: 12,
@@ -161,20 +161,20 @@ function TodaySchedule({ classes, todayName, colorMap }) {
             alignItems: "center",
           }}>
             <div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: "var(--t-ffffff)", marginBottom: 6 }}>
                 {slot.courseName}
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px" }}>
-                <span style={{ fontSize: 11, color: "#9ca3af", display: "flex", gap: 4, alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: "var(--t-9ca3af)", display: "flex", gap: 4, alignItems: "center" }}>
                   <GraduationCap size={11} /> Sem {slot.sem}
                 </span>
-                <span style={{ fontSize: 11, color: "#9ca3af", display: "flex", gap: 4, alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: "var(--t-9ca3af)", display: "flex", gap: 4, alignItems: "center" }}>
                   <Layers size={11} /> Batch {slot.batch}
                 </span>
-                <span style={{ fontSize: 11, color: "#9ca3af", display: "flex", gap: 4, alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: "var(--t-9ca3af)", display: "flex", gap: 4, alignItems: "center" }}>
                   <MapPin size={11} /> {slot.room}
                 </span>
-                <span style={{ fontSize: 11, color: "#9ca3af", display: "flex", gap: 4, alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: "var(--t-9ca3af)", display: "flex", gap: 4, alignItems: "center" }}>
                   <Users size={11} /> {slot.students} students
                 </span>
               </div>
@@ -255,8 +255,8 @@ export default function TimetablePage() {
         <button
           onClick={fetchData}
           style={{
-            padding: "8px 20px", borderRadius: 99, border: "1px solid rgba(255,255,255,0.1)",
-            background: "transparent", color: "#9ca3af", fontSize: 13, cursor: "pointer",
+            padding: "8px 20px", borderRadius: 99, border: "1px solid rgb(var(--c-wash) / 0.1)",
+            background: "transparent", color: "var(--t-9ca3af)", fontSize: 13, cursor: "pointer",
           }}
         >Retry</button>
       </div>
@@ -272,7 +272,7 @@ export default function TimetablePage() {
       {/* ── Page header ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 3 }}>My Timetable</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--t-ffffff)", marginBottom: 3 }}>My Timetable</h1>
           <p style={{ fontSize: 13, color: "#6b7280" }}>
             Weekly class schedule · {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </p>
@@ -282,9 +282,9 @@ export default function TimetablePage() {
           style={{
             display: "flex", alignItems: "center", gap: 7,
             padding: "8px 16px", borderRadius: 10,
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.04)",
-            color: "#9ca3af", fontSize: 13, cursor: "pointer",
+            border: "1px solid rgb(var(--c-wash) / 0.1)",
+            background: "rgb(var(--c-wash) / 0.04)",
+            color: "var(--t-9ca3af)", fontSize: 13, cursor: "pointer",
           }}
         >
           <RefreshCw size={13} /> Refresh
@@ -325,8 +325,8 @@ export default function TimetablePage() {
 
       {/* ── Today's schedule ── */}
       <div style={{
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgb(var(--c-wash) / 0.02)",
+        border: "1px solid rgb(var(--c-wash) / 0.08)",
         borderRadius: 16, padding: "20px 22px",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
@@ -338,7 +338,7 @@ export default function TimetablePage() {
             <Sun size={16} color="#4ade80" />
           </div>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>Today — {todayName}</p>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "var(--t-ffffff)" }}>Today — {todayName}</p>
             <p style={{ fontSize: 11, color: "#6b7280" }}>
               {stats.todayClassesCount} class{stats.todayClassesCount !== 1 ? "es" : ""} · {stats.teachingHoursToday}h teaching
             </p>
@@ -349,8 +349,8 @@ export default function TimetablePage() {
 
       {/* ── Weekly timetable ── */}
       <div style={{
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgb(var(--c-wash) / 0.02)",
+        border: "1px solid rgb(var(--c-wash) / 0.08)",
         borderRadius: 16, padding: "20px 0 0 0",
         overflow: "hidden",
       }}>
@@ -363,7 +363,7 @@ export default function TimetablePage() {
           }}>
             <Layers size={16} color="#818cf8" />
           </div>
-          <p style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>Weekly Schedule</p>
+          <p style={{ fontSize: 14, fontWeight: 600, color: "var(--t-ffffff)" }}>Weekly Schedule</p>
         </div>
 
         {timeSlots.length === 0 ? (
@@ -385,13 +385,13 @@ export default function TimetablePage() {
                 {DAYS.map(d => <col key={d} style={{ width: 150 }} />)}
               </colgroup>
               <thead>
-                <tr style={{ background: "rgba(255,255,255,0.04)" }}>
+                <tr style={{ background: "rgb(var(--c-wash) / 0.04)" }}>
                   <th style={{
                     padding: "12px 14px", textAlign: "left",
                     fontSize: 11, fontWeight: 600, color: "#6b7280",
                     textTransform: "uppercase", letterSpacing: "0.05em",
-                    borderBottom: "1px solid rgba(255,255,255,0.08)",
-                    borderRight: "1px solid rgba(255,255,255,0.05)",
+                    borderBottom: "1px solid rgb(var(--c-wash) / 0.08)",
+                    borderRight: "1px solid rgb(var(--c-wash) / 0.05)",
                   }}>
                     Time
                   </th>
@@ -403,8 +403,8 @@ export default function TimetablePage() {
                         fontSize: 11, fontWeight: 600,
                         color: isToday ? "#4ade80" : "#6b7280",
                         textTransform: "uppercase", letterSpacing: "0.05em",
-                        borderBottom: "1px solid rgba(255,255,255,0.08)",
-                        borderRight: "1px solid rgba(255,255,255,0.05)",
+                        borderBottom: "1px solid rgb(var(--c-wash) / 0.08)",
+                        borderRight: "1px solid rgb(var(--c-wash) / 0.05)",
                         background: isToday ? "rgba(34,197,94,0.06)" : "transparent",
                         position: "relative",
                       }}>
@@ -421,8 +421,8 @@ export default function TimetablePage() {
                           <span style={{
                             display: "inline-block", marginTop: 4,
                             padding: "1px 7px", borderRadius: 99,
-                            background: isToday ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)",
-                            fontSize: 9, color: isToday ? "#4ade80" : "#9ca3af",
+                            background: isToday ? "rgba(34,197,94,0.2)" : "rgb(var(--c-wash) / 0.07)",
+                            fontSize: 9, color: isToday ? "#4ade80" : "var(--t-9ca3af)",
                             fontWeight: 600,
                           }}>
                             {timetable[day].length} class{timetable[day].length !== 1 ? "es" : ""}
@@ -439,13 +439,13 @@ export default function TimetablePage() {
                     {/* Time column */}
                     <td style={{
                       padding: "10px 14px",
-                      borderBottom: "1px solid rgba(255,255,255,0.05)",
-                      borderRight: "1px solid rgba(255,255,255,0.05)",
+                      borderBottom: "1px solid rgb(var(--c-wash) / 0.05)",
+                      borderRight: "1px solid rgb(var(--c-wash) / 0.05)",
                       verticalAlign: "middle",
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <Clock size={11} color="#4b5563" />
-                        <span style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>
+                        <span style={{ fontSize: 11, color: "var(--t-9ca3af)", whiteSpace: "nowrap" }}>
                           {timeLabel}
                         </span>
                       </div>
@@ -476,19 +476,19 @@ export default function TimetablePage() {
         {timeSlots.length > 0 && (
           <div style={{
             padding: "14px 22px",
-            borderTop: "1px solid rgba(255,255,255,0.06)",
+            borderTop: "1px solid rgb(var(--c-wash) / 0.06)",
             display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center",
           }}>
-            <span style={{ fontSize: 11, color: "#4b5563", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Legend:</span>
+            <span style={{ fontSize: 11, color: "var(--t-4b5563)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Legend:</span>
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#6b7280" }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4ade80", flexShrink: 0 }} />
               Today
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#6b7280" }}>
-              <span style={{ width: 8, height: 8, borderRadius: 2, background: "rgba(255,255,255,0.12)", flexShrink: 0 }} />
+              <span style={{ width: 8, height: 8, borderRadius: 2, background: "rgb(var(--c-wash) / 0.12)", flexShrink: 0 }} />
               No class
             </span>
-            <span style={{ fontSize: 11, color: "#4b5563", marginLeft: "auto" }}>
+            <span style={{ fontSize: 11, color: "var(--t-4b5563)", marginLeft: "auto" }}>
               Each colour = one course
             </span>
           </div>
@@ -510,11 +510,11 @@ export default function TimetablePage() {
         if (uniqueCourses.length === 0) return null
         return (
           <div style={{
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgb(var(--c-wash) / 0.02)",
+            border: "1px solid rgb(var(--c-wash) / 0.08)",
             borderRadius: 16, padding: "18px 22px",
           }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#9ca3af", marginBottom: 12 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--t-9ca3af)", marginBottom: 12 }}>
               Courses in this Schedule
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>

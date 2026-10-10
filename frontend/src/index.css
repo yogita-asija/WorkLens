@@ -9,8 +9,8 @@
   * { box-sizing: border-box; }
 
   body {
-    background-color: #0A0A0A;
-    color: #FFFFFF;
+    background-color: var(--c-page, #0A0A0A);
+    color: var(--c-fg, #FFFFFF);
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -317,3 +317,153 @@ html.light .toggle input:checked + .toggle-slider {
   0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+
+/* ════════════ THEME LAYER (generated) ════════════
+   Dark is the base (:root); html.light overrides. Inline-style colours use these variables. */
+:root{
+  color-scheme:dark;
+  --c-page:#0A0A0A; --c-fg:#FFFFFF; --c-wash:255 255 255;
+  --b-111111:#111111;
+  --b-1a1a1a:#1a1a1a;
+  --b-1f1f1f:#1f1f1f;
+  --b-262626:#262626;
+  --b-2a2a2a:#2a2a2a;
+  --b-2d2d2d:#2d2d2d;
+  --b-333333:#333333;
+  --b-3a3a3a:#3a3a3a;
+  --bg-0a0a0a:#0a0a0a;
+  --bg-0d0d0d:#0d0d0d;
+  --bg-111111:#111111;
+  --bg-141414:#141414;
+  --bg-161616:#161616;
+  --bg-1a1a1a:#1a1a1a;
+  --bg-1c1c1c:#1c1c1c;
+  --bg-1f1f1f:#1f1f1f;
+  --bg-222222:#222222;
+  --bg-262626:#262626;
+  --bg-2a2a2a:#2a2a2a;
+  --bg-2d2d2d:#2d2d2d;
+  --bg-2f2f2f:#2f2f2f;
+  --bg-333333:#333333;
+  --bg-invert:#ffffff;
+  --fg-invert:#000000;
+  --t-4b5563:#4b5563;
+  --t-555555:#555555;
+  --t-9ca3af:#9ca3af;
+  --t-a0aec0:#a0aec0;
+  --t-d1d5db:#d1d5db;
+  --t-e5e7eb:#e5e7eb;
+  --t-ffffff:#ffffff;
+}
+html.light{
+  color-scheme:light;
+  --c-page:#F3F4F6; --c-fg:#111827; --c-wash:0 0 0;
+  --b-111111:#f0f1f3;
+  --b-1a1a1a:#f0f1f3;
+  --b-1f1f1f:#f0f1f3;
+  --b-262626:#e5e7eb;
+  --b-2a2a2a:#e5e7eb;
+  --b-2d2d2d:#e5e7eb;
+  --b-333333:#d8dce1;
+  --b-3a3a3a:#d1d5db;
+  --bg-0a0a0a:#f3f4f6;
+  --bg-0d0d0d:#f9fafb;
+  --bg-111111:#f9fafb;
+  --bg-141414:#f9fafb;
+  --bg-161616:#f9fafb;
+  --bg-1a1a1a:#ffffff;
+  --bg-1c1c1c:#ffffff;
+  --bg-1f1f1f:#ffffff;
+  --bg-222222:#f1f3f5;
+  --bg-262626:#f1f3f5;
+  --bg-2a2a2a:#e9ebef;
+  --bg-2d2d2d:#e9ebef;
+  --bg-2f2f2f:#e9ebef;
+  --bg-333333:#e9ebef;
+  --bg-invert:#111827;
+  --fg-invert:#ffffff;
+  --t-4b5563:#9ca3af;
+  --t-555555:#9ca3af;
+  --t-9ca3af:#6b7280;
+  --t-a0aec0:#6b7280;
+  --t-d1d5db:#374151;
+  --t-e5e7eb:#1f2937;
+  --t-ffffff:#111827;
+}
+html.light .bg-\[\#0A0A0A\]{background-color:#f3f4f6}
+html.light .bg-\[\#101010\]{background-color:#f9fafb}
+html.light .bg-\[\#141414\]{background-color:#f9fafb}
+html.light .bg-\[\#161616\]{background-color:#f9fafb}
+html.light .bg-\[\#1c1c1c\]{background-color:#ffffff}
+html.light .bg-\[\#222\]{background-color:#f1f3f5}
+html.light .bg-\[\#262626\]{background-color:#f1f3f5}
+html.light .bg-\[\#2a2a2a\]{background-color:#e9ebef}
+html.light .bg-black{background-color:#ffffff}
+html.light .bg-gray-700{background-color:#d1d5db}
+html.light .bg-neutral-950{background-color:#f9fafb}
+html.light .border-\[\#242424\]{border-color:#f0f1f3}
+html.light .border-\[\#262626\]{border-color:#e5e7eb}
+html.light .border-\[\#2a2a2a\]{border-color:#e5e7eb}
+html.light .border-\[\#333333\]{border-color:#d8dce1}
+html.light .border-\[\#333\]{border-color:#d8dce1}
+html.light .border-\[\#3a3a3a\]{border-color:#d1d5db}
+html.light .border-black{border-color:#ffffff}
+html.light .border-gray-700{border-color:#d1d5db}
+html.light .border-gray-800{border-color:#e5e7eb}
+html.light .border-neutral-500{border-color:#9ca3af}
+html.light .border-neutral-800{border-color:#e5e7eb}
+html.light .border-white{border-color:#111827}
+html.light .divide-\[\#2a2a2a\]>:not([hidden])~:not([hidden]){border-color:#e5e7eb}
+html.light .focus\:border-neutral-500:focus{border-color:#9ca3af}
+html.light .group:hover .group-hover\:text-white{color:#111827}
+html.light .hover\:bg-\[\#202020\]:hover{background-color:#f1f3f5}
+html.light .hover\:bg-\[\#222222\]:hover{background-color:#f1f3f5}
+html.light .hover\:bg-\[\#222\]:hover{background-color:#f1f3f5}
+html.light .hover\:bg-\[\#252525\]:hover{background-color:#f1f3f5}
+html.light .hover\:bg-\[\#2a2a2a\]:hover{background-color:#e9ebef}
+html.light .hover\:bg-neutral-800:hover{background-color:#e5e7eb}
+html.light .hover\:bg-neutral-900:hover{background-color:#f9fafb}
+html.light .hover\:border-\[\#3a3a3a\]:hover{border-color:#d1d5db}
+html.light .hover\:text-green-400:hover{color:#15803d}
+html.light .hover\:text-red-400:hover{color:#dc2626}
+html.light .hover\:text-white:hover{color:#111827}
+html.light .placeholder-neutral-500{color:#6b7280}
+html.light .placeholder-neutral-600{color:#9ca3af}
+html.light .text-amber-400{color:#b45309}
+html.light .text-blue-400{color:#2563eb}
+html.light .text-gray-400{color:#6b7280}
+html.light .text-gray-500{color:#6b7280}
+html.light .text-green-400{color:#15803d}
+html.light .text-green-500{color:#16a34a}
+html.light .text-neutral-200{color:#1f2937}
+html.light .text-neutral-300{color:#4b5563}
+html.light .text-neutral-400{color:#6b7280}
+html.light .text-neutral-500{color:#6b7280}
+html.light .text-neutral-600{color:#9ca3af}
+html.light .text-neutral-700{color:#d1d5db}
+html.light .text-red-300{color:#b91c1c}
+html.light .text-red-400{color:#dc2626}
+html.light .text-slate-400{color:#6b7280}
+html.light .text-white{color:#111827}
+html.light .text-yellow-400{color:#a16207}
+
+/* special cases */
+html.light .bg-white.text-black{background-color:#111827;color:#fff}
+html.light :is(.bg-red-500,.bg-red-600,.bg-green-500,.bg-green-600,.bg-green-700,.bg-blue-500,.bg-yellow-500,.bg-amber-500).text-white{color:#fff}
+html.light .border-black{border-color:#fff}
+html.light .bg-black\/60,html.light .bg-black\/50,html.light .bg-black\/40{background-color:rgb(17 24 39 / .45)}
+
+/* smooth cross-fade only while the user is switching */
+html.theme-switching, html.theme-switching *, html.theme-switching *::before, html.theme-switching *::after{
+  transition: background-color .3s ease, border-color .3s ease, color .3s ease, fill .3s ease, stroke .3s ease, box-shadow .3s ease !important;
+}
+@media (prefers-reduced-motion: reduce){
+  html.theme-switching, html.theme-switching *, html.theme-switching *::before, html.theme-switching *::after{transition:none !important}
+}
+
+/* static palette objects (T in UI.jsx / StudentMessages) */
+:root{--k-bg:#0A0A0A; --k-card:#262626; --k-inner:#2f2f2f; --k-border:#333333; --k-txt:#FFFFFF; --k-sub:#9CA3AF; --k-muted:#6B7280;--m-bg:#0A0A0A; --m-card:#141414; --m-card2:#1c1c1c; --m-border:#262626; --m-txt:#FFFFFF; --m-sub:#9CA3AF; --m-muted:#6B7280;}
+html.light{--k-bg:#f3f4f6; --k-card:#ffffff; --k-inner:#f4f5f7; --k-border:#e5e7eb; --k-txt:#111827; --k-sub:#6b7280; --k-muted:#9ca3af;--m-bg:#f3f4f6; --m-card:#ffffff; --m-card2:#f9fafb; --m-border:#e5e7eb; --m-txt:#111827; --m-sub:#6b7280; --m-muted:#9ca3af;}
+
+:root{--tip-bg:#1a1a2e;--tip-bd:#2d2d4a}
+html.light{--tip-bg:#eef2ff;--tip-bd:#c7d2fe}

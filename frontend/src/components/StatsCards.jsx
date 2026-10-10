@@ -53,7 +53,7 @@ function StatCard({ icon, label, value, suffix, subLabel, delay, accentColor }) 
       <div className="flex items-start justify-between mb-4">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,0.06)', color: accentColor || '#9CA3AF' }}
+          style={{ background: 'rgb(var(--c-wash) / 0.06)', color: accentColor || 'var(--t-9ca3af)' }}
         >
           {icon}
         </div>
@@ -62,9 +62,9 @@ function StatCard({ icon, label, value, suffix, subLabel, delay, accentColor }) 
         <span className="text-3xl font-bold text-white tracking-tight">
           {typeof value === 'number' ? animated : value}
         </span>
-        {suffix && <span className="text-lg font-semibold mb-0.5" style={{ color: accentColor || '#9CA3AF' }}>{suffix}</span>}
+        {suffix && <span className="text-lg font-semibold mb-0.5" style={{ color: accentColor || 'var(--t-9ca3af)' }}>{suffix}</span>}
       </div>
-      <p className="text-sm mt-1 font-medium" style={{ color: '#9CA3AF' }}>{label}</p>
+      <p className="text-sm mt-1 font-medium" style={{ color: 'var(--t-9ca3af)' }}>{label}</p>
       {subLabel && <p className="text-xs mt-2 font-medium" style={{ color: '#6b7280' }}>{subLabel}</p>}
     </div>
   )

@@ -46,15 +46,15 @@ export default function LoginPage({ onLogin }) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0A0A0A',
+      background: 'var(--bg-0a0a0a)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: 24,
     }}>
       <div style={{
-        background: '#262626',
-        border: '1px solid #333333',
+        background: 'var(--bg-262626)',
+        border: '1px solid var(--b-333333)',
         borderRadius: 16,
         padding: '48px 40px',
         width: '100%',
@@ -72,18 +72,18 @@ export default function LoginPage({ onLogin }) {
                 <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
               </svg>
             </div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#FFFFFF', letterSpacing: '-0.3px' }}>WorkLensEdu</h1>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--t-ffffff)', letterSpacing: '-0.3px' }}>WorkLensEdu</h1>
           </div>
           <p style={{ fontSize: 13, color: '#6B7280' }}>University Staff Management System</p>
         </div>
 
-        <h2 style={{ fontSize: 16, fontWeight: 600, color: '#9CA3AF', textAlign: 'center', marginBottom: 20 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--t-9ca3af)', textAlign: 'center', marginBottom: 20 }}>
           Sign in to your account
         </h2>
 
         {/* Role Tabs */}
         <div style={{
-          display: 'flex', background: '#1a1a1a',
+          display: 'flex', background: 'var(--bg-1a1a1a)',
           borderRadius: 10, padding: 4, marginBottom: 24, gap: 2,
         }}>
           {ROLES.map(r => (
@@ -110,8 +110,8 @@ export default function LoginPage({ onLogin }) {
             type="email" placeholder="you@university.edu"
             value={email} onChange={e => setEmail(e.target.value)} required
             style={{
-              background: '#1a1a1a', border: '1px solid #333333',
-              borderRadius: 10, padding: '14px 16px', fontSize: 14, color: '#FFFFFF', width: '100%',
+              background: 'var(--bg-1a1a1a)', border: '1px solid var(--b-333333)',
+              borderRadius: 10, padding: '14px 16px', fontSize: 14, color: 'var(--t-ffffff)', width: '100%',
             }}
             onFocus={e => (e.target.style.borderColor = '#22C55E')}
             onBlur={e => (e.target.style.borderColor = '#333333')}
@@ -123,8 +123,8 @@ export default function LoginPage({ onLogin }) {
               placeholder="Enter your password"
               value={password} onChange={e => setPassword(e.target.value)} required
               style={{
-                background: '#1a1a1a', border: '1px solid #333333',
-                borderRadius: 10, padding: '14px 44px 14px 16px', fontSize: 14, color: '#FFFFFF', width: '100%',
+                background: 'var(--bg-1a1a1a)', border: '1px solid var(--b-333333)',
+                borderRadius: 10, padding: '14px 44px 14px 16px', fontSize: 14, color: 'var(--t-ffffff)', width: '100%',
               }}
               onFocus={e => (e.target.style.borderColor = '#22C55E')}
               onBlur={e => (e.target.style.borderColor = '#333333')}
@@ -138,7 +138,7 @@ export default function LoginPage({ onLogin }) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#9CA3AF' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--t-9ca3af)' }}>
               <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}
                 style={{ width: 16, height: 16, accentColor: '#22C55E', cursor: 'pointer' }} />
               Remember me
@@ -160,7 +160,7 @@ export default function LoginPage({ onLogin }) {
           </button>
         </form>
 
-        <p style={{ fontSize: 11, color: '#4B5563', textAlign: 'center', marginTop: 20 }}>
+        <p style={{ fontSize: 11, color: 'var(--t-4b5563)', textAlign: 'center', marginTop: 20 }}>
           Demo: teaching@gmail.com / 123456
         </p>
       </div>

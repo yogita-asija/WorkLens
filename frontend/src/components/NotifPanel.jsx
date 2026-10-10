@@ -53,26 +53,26 @@ export default function NotifPanel({ open, onClose }) {
   return (
     <aside style={{
       position: "fixed", top: 0, right: 0, height: "100vh", width: 360,
-      background: "#0a0a0a", borderLeft: "1px solid #262626",
+      background: "var(--bg-0a0a0a)", borderLeft: "1px solid var(--b-262626)",
       zIndex: 40, overflowY: "auto",
       transform: open ? "translateX(0)" : "translateX(100%)",
       transition: "transform 0.28s cubic-bezier(.4,0,.2,1)",
     }}>
-      <div style={{ padding: "18px 20px", borderBottom: "1px solid #1f1f1f", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--b-1f1f1f)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Bell size={15} color="#fff" />
-          <p style={{ fontSize: 13, fontWeight: 600, color: "#fff", margin: 0 }}>Notifications</p>
+          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--t-ffffff)", margin: 0 }}>Notifications</p>
           {unreadCount > 0 && (
             <span style={{ background: "#ef4444", color: "#fff", fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 10 }}>{unreadCount}</span>
           )}
         </div>
         <div style={{ display: "flex", gap: 6 }}>
           {unreadCount > 0 && (
-            <button onClick={handleReadAll} title="Mark all read" style={{ background: "#1c1c1c", border: "1px solid #333", borderRadius: 8, padding: 6, cursor: "pointer", color: "#9ca3af", display: "flex" }}>
+            <button onClick={handleReadAll} title="Mark all read" style={{ background: "var(--bg-1c1c1c)", border: "1px solid var(--b-333333)", borderRadius: 8, padding: 6, cursor: "pointer", color: "var(--t-9ca3af)", display: "flex" }}>
               <CheckCheck size={14} />
             </button>
           )}
-          <button onClick={onClose} style={{ background: "#1c1c1c", border: "1px solid #333", borderRadius: 8, padding: 6, cursor: "pointer", color: "#9ca3af", display: "flex" }}
+          <button onClick={onClose} style={{ background: "var(--bg-1c1c1c)", border: "1px solid var(--b-333333)", borderRadius: 8, padding: 6, cursor: "pointer", color: "var(--t-9ca3af)", display: "flex" }}
           onMouseEnter={(e) => {
     e.currentTarget.style.color = "#ef4444"
     e.currentTarget.style.opacity = "1"
@@ -99,14 +99,14 @@ export default function NotifPanel({ open, onClose }) {
               onClick={() => !n.read && handleRead(n._id)}
               style={{
                 padding: "14px 20px",
-                borderBottom: "1px solid #111",
+                borderBottom: "1px solid var(--b-111111)",
                 background: n.read ? "transparent" : "#0d1a0d",
                 cursor: n.read ? "default" : "pointer",
                 transition: "background 0.15s",
               }}
             >
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: n.read ? "#333" : typeColor(n.type), flexShrink: 0, marginTop: 5 }} />
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: n.read ? "var(--bg-333333)" : typeColor(n.type), flexShrink: 0, marginTop: 5 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
   <div
     style={{
@@ -119,7 +119,7 @@ export default function NotifPanel({ open, onClose }) {
       style={{
         fontSize: 12,
         fontWeight: 600,
-        color: n.read ? "#9ca3af" : "#fff",
+        color: n.read ? "var(--t-9ca3af)" : "var(--t-ffffff)",
         margin: 0,
       }}
     >
@@ -149,9 +149,9 @@ export default function NotifPanel({ open, onClose }) {
   <X size={14} />
 </button>
   </div>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: n.read ? "#9ca3af" : "#fff", margin: 0 }}>{n.title}</p>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: n.read ? "var(--t-9ca3af)" : "var(--t-ffffff)", margin: 0 }}>{n.title}</p>
                   <p style={{ fontSize: 11, color: "#6b7280", margin: "3px 0 0", lineHeight: 1.4 }}>{n.message}</p>
-                  <p style={{ fontSize: 10, color: "#4b5563", margin: "5px 0 0" }}>
+                  <p style={{ fontSize: 10, color: "var(--t-4b5563)", margin: "5px 0 0" }}>
                     {new Date(n.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>

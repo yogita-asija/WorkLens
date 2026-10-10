@@ -4,9 +4,62 @@ import {
   Card, SectionHeader, InputField, Toggle, ToggleRow,
   SidebarRow, PageHeader, ErrorBanner, ExtraIcons,
 } from '../components/UI'
+import { Sun, Moon, Monitor } from 'lucide-react'
 import { useTheme } from '../ThemeContext'
 
 const API = `${import.meta.env.VITE_API_URL}/api`
+
+/* ─── Theme selector: Light / Dark / System ─── */
+function ThemeSelector() {
+  const C = useC()
+  const { theme, resolvedTheme, setTheme } = useTheme()
+  const opts = [
+    { v: 'light',  label: 'Light',  Icon: Sun,     hint: 'Bright interface' },
+    { v: 'dark',   label: 'Dark',   Icon: Moon,    hint: 'Easier on the eyes' },
+    { v: 'system', label: 'System', Icon: Monitor, hint: 'Match your device' },
+  ]
+  const onKey = (e, i) => {
+    if (!['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'].includes(e.key)) return
+    e.preventDefault()
+    const d = (e.key === 'ArrowRight' || e.key === 'ArrowDown') ? 1 : -1
+    const n = opts[(i + d + opts.length) % opts.length]
+    setTheme(n.v)
+    document.getElementById('theme-opt-' + n.v)?.focus()
+  }
+  return (
+    <div style={{ background: C.inner, borderRadius: 10, padding: '14px 16px', border: `1px solid ${C.border}` }}>
+      <p style={{ fontSize: 13, fontWeight: 600, color: C.txt }}>Theme</p>
+      <p style={{ fontSize: 11, color: C.muted, marginTop: 2, marginBottom: 12 }}>
+        {theme === 'system'
+          ? `Following your device — currently ${resolvedTheme}`
+          : `Using ${theme} theme on this browser`}
+      </p>
+      <div role="radiogroup" aria-label="Theme" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+        {opts.map(({ v, label, Icon, hint }, i) => {
+          const active = theme === v
+          return (
+            <button
+              key={v} id={'theme-opt-' + v} type="button" role="radio" aria-checked={active}
+              tabIndex={active ? 0 : -1}
+              onClick={() => setTheme(v)} onKeyDown={e => onKey(e, i)}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                padding: '12px 8px', borderRadius: 10, cursor: 'pointer',
+                background: active ? `${C.accent}1f` : C.card,
+                border: `1.5px solid ${active ? C.accent : C.border}`,
+                color: active ? C.accent : C.txt, transition: 'all 0.2s',
+              }}
+            >
+              <Icon size={20} />
+              <span style={{ fontSize: 12, fontWeight: 600 }}>{label}</span>
+              <span style={{ fontSize: 10, color: C.muted }}>{hint}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 /* ─── Small reusable modal wrapper ─── */
 function SettingsModal({ title, onClose, children }) {
@@ -570,7 +623,7 @@ function PrivacyPolicyModal({ onClose }) {
 ══════════════════════════════════════════════════════ */
 export default function SettingsPage({ user }) {
   const C = useC()
-  const { darkMode, setDarkMode } = useTheme()
+  const { darkMode } = useTheme()
 
   const [fullName,    setFullName]    = useState('')
   const [email,       setEmail]       = useState('')
@@ -741,31 +794,7 @@ export default function SettingsPage({ user }) {
           {/* System Settings */}
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, transition: 'background 0.25s, border-color 0.25s' }}>
             <SectionHeader icon={<ExtraIcons.Cog />} title="System Settings" subtitle="Configure application preferences" />
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: C.inner, borderRadius: 10, padding: '14px 16px',
-              border: `1px solid ${C.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 8,
-                  background: darkMode ? '#1e293b' : '#fef9c3',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: `1px solid ${C.border}`,
-                }}>
-                  {darkMode ? <ExtraIcons.Moon /> : <ExtraIcons.Sun />}
-                </div>
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: C.txt }}>
-                    {darkMode ? 'Dark Mode' : 'Light Mode'}
-                  </p>
-                  <p style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-                    {darkMode ? 'Switch to light theme for a brighter look' : 'Switch to dark theme for reduced eye strain'}
-                  </p>
-                </div>
-              </div>
-              <Toggle checked={darkMode} onChange={() => setDarkMode(!darkMode)} />
-            </div>
+            <ThemeSelector />
           </div>
         </div>
 

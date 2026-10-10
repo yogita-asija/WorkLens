@@ -65,7 +65,7 @@ export default function FacultyBalance({ data, onFocus }) {
                   {p.key === "cover" && `substitute classes in the last ${weights.coverPastDays} days and next ${weights.coverFutureDays}, averaged per week.`}
                   {p.key === "tasks" && `open tasks — High ${weights.taskPoints.High}, Medium ${weights.taskPoints.Medium}, Low ${weights.taskPoints.Low} pts each, +${weights.overdueTaskExtra} if overdue.`}
                   {p.key === "papers" && `question papers still due — ${weights.paperPoints} pts each, +${weights.overduePaperExtra} if overdue.`}
-                  {p.key === "duty" && `days you marked "Other Duty" in Availability, ${weights.otherDutyDayPoints} pts per day, averaged per week.`}
+                  {p.key === "duty" && `days marked "Other Duty" in Availability (${weights.otherDutyDayPoints} pts each) plus hours of duties from Smart Duty Allocation, averaged per week.`}
                 </li>
               ))}
             </ul>

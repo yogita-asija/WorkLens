@@ -11,6 +11,8 @@ import GlobalToast    from "../GlobalToast"
 import HodDashboard from "../../pages/HOD/HodDashboard"
 import DutyAllocationPage from "../../pages/HOD/DutyAllocationPage"
 import WorkflowInsightsPage from "../../pages/HOD/WorkflowInsightsPage"
+import HodFaculty from "../../pages/HOD/HodFaculty"
+import HodLeaveManagement from "../../pages/HOD/Hodleavemanagement"
 import SettingsPage from "../../pages/SettingsPage"
 
 function ComingSoon({ title, desc }) {
@@ -18,7 +20,7 @@ function ComingSoon({ title, desc }) {
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 360, gap: 14 }}>
       <div style={{ width: 52, height: 52, borderRadius: 16, background: "rgba(34,197,94,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🚧</div>
       <div style={{ textAlign: "center" }}>
-        <p style={{ fontSize: 17, fontWeight: 600, color: "#fff", marginBottom: 6 }}>{title}</p>
+        <p style={{ fontSize: 17, fontWeight: 600, color: "var(--t-ffffff)", marginBottom: 6 }}>{title}</p>
         <p style={{ fontSize: 13, color: "#6b7280", maxWidth: 320, lineHeight: 1.6 }}>{desc || "This page is under construction and will be available soon."}</p>
       </div>
     </div>
@@ -43,6 +45,8 @@ export default function HodLayout() {
               <Route path="/workflow-insights" element={<WorkflowInsightsPage />} />
               
               
+              <Route path="/faculty"          element={<HodFaculty />} />
+              <Route path="/leave-management" element={<HodLeaveManagement />} />
               <Route path="/settings"        element={<SettingsPage user={user} />} />
               <Route path="*"                element={<Navigate to="/" replace />} />
             </Routes>

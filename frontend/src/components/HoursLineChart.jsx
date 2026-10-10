@@ -30,8 +30,8 @@ export default function HoursLineChart() {
           <XAxis dataKey="day" stroke="#9ca3af" />
           <YAxis stroke="#9ca3af" />
           <Tooltip
-            contentStyle={{ backgroundColor: "#2f2f2f", border: "1px solid #333333", color: "#ffffff", borderRadius: "10px" }}
-            labelStyle={{ color: "#9ca3af" }}
+            contentStyle={{ backgroundColor: "var(--bg-2f2f2f)", border: "1px solid var(--b-333333)", color: "var(--t-ffffff)", borderRadius: "10px" }}
+            labelStyle={{ color: "var(--t-9ca3af)" }}
           />
           <Line type="monotone" dataKey="hours" stroke="#22c55e" strokeWidth={3} dot={{ r: 4, fill: "#22c55e" }} />
         </LineChart>

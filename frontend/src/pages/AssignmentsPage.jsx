@@ -441,7 +441,7 @@ export default function AssignmentsPage() {
                       }[s.status] || { label: s.status, color: T.muted, bg: T.inner }
 
                       return (
-                        <div key={s.id} style={{ display: "grid", gridTemplateColumns: "10px 2fr 120px 100px 3fr", gap: 50, padding: "10px 12px", background: idx % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)", borderRadius: 6, alignItems: "center", marginBottom: 2 ,textAlign:"center"}}>
+                        <div key={s.id} style={{ display: "grid", gridTemplateColumns: "10px 2fr 120px 100px 3fr", gap: 50, padding: "10px 12px", background: idx % 2 === 0 ? "transparent" : "rgb(var(--c-wash) / 0.02)", borderRadius: 6, alignItems: "center", marginBottom: 2 ,textAlign:"center"}}>
                           {/* # */}
                           <span style={{ fontSize: 11, color: T.muted, fontWeight: 500 }}>{idx + 1}</span>
 
@@ -546,7 +546,7 @@ function AssignmentRow({ a, courses, onView, onEdit, onDelete, onToggle, onStude
 
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ background: hov ? "#2a2a2a" : T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 18px", transition: "background 0.15s", position: "relative" }}>
+      style={{ background: hov ? "var(--bg-2a2a2a)" : T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 18px", transition: "background 0.15s", position: "relative" }}>
 
       {/* Students/Marks button — top left */}
       {a.courseId && (
