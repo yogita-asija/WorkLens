@@ -95,3 +95,8 @@ export const getHodDeadlines      = ()        => req("/deadlines").then(r => r.d
 export const createDeadline       = (b)       => req("/deadlines", body("POST", b))
 export const completeDeadline     = (id)      => req(`/deadlines/${id}/complete`, body("PATCH", {}))
 export const deleteDeadline       = (id)      => req(`/deadlines/${id}`, { method: "DELETE" })
+
+// Reports
+export const getDepartmentReport = (f = {}) => req(`/reports/department${qs(f)}`).then(r => r.data)
+
+

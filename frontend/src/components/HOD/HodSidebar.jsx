@@ -1,17 +1,21 @@
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
 import {
-  LayoutDashboard, FileCheck2, Settings, LogOut, CalendarClock, Users, CalendarDays,
+  LayoutDashboard, FileCheck2, Settings, LogOut, CalendarClock, Users, CalendarDays, FileBarChart,
 } from "lucide-react"
 
 const menuGroups = [
-  { group: null, items: [{ name: "Dashboard", icon: LayoutDashboard, path: "/" }] },
+  { group: null, items: [
+    { name: "Dashboard", icon: LayoutDashboard, path: "/" },
+    { name: "Approvals", icon: FileCheck2,      path: "/approvals" },
+  ] },
   {
     group: "Department",
     items: [
       { name: "Faculty Workload",      icon: Users,         path: "/faculty" },
       { name: "Leave Management",      icon: CalendarDays,  path: "/leave-management" },
       { name: "Smart Duty Allocation", icon: CalendarClock, path: "/duty-allocation" },
+      { name: "Reports",               icon: FileBarChart,  path: "/reports" },
     ],
   },
   
