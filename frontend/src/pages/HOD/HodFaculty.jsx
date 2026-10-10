@@ -27,10 +27,11 @@ export default function HodFaculty() {
   const [band, setBand] = useState("all")
   const [sort, setSort] = useState("load-desc")
   const [open, setOpen] = useState(null)
+  const [version, setVersion] = useState(0)          // bumped on every successful load so an open card re-fetches its breakdown
 
   const load = useCallback(async () => {
     setLoading(true)
-    try { setData(await hod.getWorkload()); setError("") }
+    try { setData(await hod.getWorkload()); setError(""); setVersion((v) => v + 1) }
     catch (e) { setError(e.message) }
     finally { setLoading(false) }
   }, [])
@@ -62,7 +63,7 @@ export default function HodFaculty() {
     <div className="space-y-6 text-white font-sans">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Faculty Workload</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Faculty</h1>
           <p className="text-sm text-neutral-400 mt-1">See who is carrying how much work, and who has room, before you assign the next task, class or substitute.</p>
         </div>
         <button className={`${btnGhost} flex items-center gap-1.5`} onClick={load} disabled={loading}><RefreshCw size={13} className={loading ? "animate-spin" : ""} />Refresh</button>
@@ -95,7 +96,7 @@ export default function HodFaculty() {
               {visible.length === 0 ? <p className="py-10 text-center text-sm text-neutral-500">No faculty match these filters.</p> : (
                 <div className="space-y-2">
                   {visible.map((f) => (
-                    <FacultyCard key={f._id} f={f} max={max} open={open === f._id}
+                    <FacultyCard key={f._id} f={f} max={max} version={version} open={open === f._id}
                       onToggle={() => setOpen(open === f._id ? null : f._id)}
                       onViewLeaves={(id) => navigate(`/leave-management?tab=history&faculty=${id}`)} />
                   ))}

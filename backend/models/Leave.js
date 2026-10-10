@@ -28,6 +28,7 @@ const LeaveSchema = new mongoose.Schema({
   adminNote: { type: String, default: "" },
 
   appliedAt:  { type: Date, default: Date.now },
+  decidedAt:  { type: Date },                  // set when the HOD approves / rejects (used by HOD history + insights)
   updatedAt:  { type: Date, default: Date.now },
 })
 

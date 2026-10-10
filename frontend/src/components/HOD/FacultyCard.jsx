@@ -3,11 +3,12 @@ import * as hod from "../../services/HOD/hodApi"
 import { btnGhost, Spinner, ErrorState, useLoad } from "./HodModal"
 import { Badge, Bar, fmtDay, fmtRange } from "./LeaveUi"
 import { Avatar, BAND, FACULTY_STATUS_COLOR, Legend, PARTS, StackedBar } from "./FacultyUi"
+
 /* One faculty member: the load bar at a glance, and the full breakdown when opened. */
 
 const PRIORITY_COLOR = { High: "#ef4444", Medium: "#f59e0b", Low: "#9ca3af" }
 
-export default function FacultyCard({ f, max, open, onToggle, onViewLeaves }) {
+export default function FacultyCard({ f, max, version = 0, open, onToggle, onViewLeaves }) {
   const band = BAND[f.band]
   return (
     <div id={`fac-${f._id}`} className={`bg-[#141414] border rounded-xl transition ${open ? "border-[#3a3a3a]" : "border-[#2a2a2a]"}`}>
@@ -38,7 +39,7 @@ export default function FacultyCard({ f, max, open, onToggle, onViewLeaves }) {
           <ChevronDown size={15} className={`text-neutral-500 transition flex-shrink-0 ${open ? "rotate-180" : ""}`} />
         </div>
       </button>
-      {open && <div className="px-4 pb-4 pt-1 border-t border-[#2a2a2a]"><FacultyDetail id={f._id} onViewLeaves={onViewLeaves} /></div>}
+      {open && <div className="px-4 pb-4 pt-1 border-t border-[#2a2a2a]"><FacultyDetail key={version} id={f._id} onViewLeaves={onViewLeaves} /></div>}
     </div>
   )
 }

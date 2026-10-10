@@ -358,7 +358,7 @@ function CourseCard({ course, onClick }) {
   return (
     <div onClick={onClick}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ background: hov ? "#2a2a2a" : T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px", cursor: "pointer", transition: "background 0.15s" }}>
+      style={{ background: hov ? "var(--bg-2a2a2a)" : T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px", cursor: "pointer", transition: "background 0.15s" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Video size={18} color="#22C55E" />

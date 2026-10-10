@@ -88,9 +88,9 @@ function PieChart({ slices, size = 160, label, sublabel }) {
   // slices: [{value, color, name}]
   const total = slices.reduce((s, sl) => s + sl.value, 0)
   if (total === 0) return (
-    <div style={{ width: size, height: size, borderRadius: "50%", background: "#2a2a2a",
+    <div style={{ width: size, height: size, borderRadius: "50%", background: "var(--bg-2a2a2a)",
       display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-      <span style={{ fontSize: "12px", color: "#4b5563" }}>No data</span>
+      <span style={{ fontSize: "12px", color: "var(--t-4b5563)" }}>No data</span>
     </div>
   )
 
@@ -143,7 +143,7 @@ function PieChart({ slices, size = 160, label, sublabel }) {
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
           pointerEvents: "none",
         }}>
-          {label   && <span style={{ fontSize: "18px", fontWeight: 800, color: "#fff",    lineHeight: 1 }}>{label}</span>}
+          {label   && <span style={{ fontSize: "18px", fontWeight: 800, color: "var(--t-ffffff)",    lineHeight: 1 }}>{label}</span>}
           {sublabel && <span style={{ fontSize: "10px", color: "#6b7280", marginTop: "2px" }}>{sublabel}</span>}
         </div>
       </div>
@@ -154,11 +154,11 @@ function PieChart({ slices, size = 160, label, sublabel }) {
           <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
               <span style={{ width: "10px", height: "10px", borderRadius: "3px", background: p.color, flexShrink: 0 }} />
-              <span style={{ fontSize: "12px", color: "#9CA3AF" }}>{p.name}</span>
+              <span style={{ fontSize: "12px", color: "var(--t-9ca3af)" }}>{p.name}</span>
             </div>
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               <span style={{ fontSize: "12px", fontWeight: 700, color: p.color }}>{p.value}</span>
-              <span style={{ fontSize: "11px", color: "#4b5563", minWidth: "32px", textAlign: "right" }}>{p.pct}%</span>
+              <span style={{ fontSize: "11px", color: "var(--t-4b5563)", minWidth: "32px", textAlign: "right" }}>{p.pct}%</span>
             </div>
           </div>
         ))}
@@ -188,14 +188,14 @@ function LogTab({ history, courses }) {
       {/* Controls */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginBottom: "18px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontSize: "13px", color: "#9CA3AF", fontWeight: 500 }}>Show:</span>
+          <span style={{ fontSize: "13px", color: "var(--t-9ca3af)", fontWeight: 500 }}>Show:</span>
           {["absent", "present", "both"].map(opt => (
             <label key={opt} style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
               <div
                 onClick={() => setShowFilter(opt)}
                 style={{
                   width: "16px", height: "16px", borderRadius: "50%",
-                  border: `2px solid ${showFilter === opt ? "#22C55E" : "#3a3a3a"}`,
+                  border: `2px solid ${showFilter === opt ? "#22C55E" : "var(--b-3a3a3a)"}`,
                   background: showFilter === opt ? "#22C55E" : "transparent",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   cursor: "pointer", transition: "all 0.15s", flexShrink: 0,
@@ -209,7 +209,7 @@ function LogTab({ history, courses }) {
                 onClick={() => setShowFilter(opt)}
                 style={{
                   fontSize: "13px", fontWeight: 500, cursor: "pointer",
-                  color: showFilter === opt ? "#fff" : "#9CA3AF",
+                  color: showFilter === opt ? "var(--t-ffffff)" : "var(--t-9ca3af)",
                   textTransform: "capitalize",
                 }}
               >
@@ -225,7 +225,7 @@ function LogTab({ history, courses }) {
             style={{
               display: "flex", alignItems: "center", gap: "8px",
               padding: "8px 14px", borderRadius: "10px", cursor: "pointer",
-              background: "#161616", border: "1px solid #2D2D2D", color: "#d1d5db",
+              background: "var(--bg-161616)", border: "1px solid var(--b-2d2d2d)", color: "var(--t-d1d5db)",
               fontSize: "13px", fontWeight: 500, minWidth: "240px", justifyContent: "space-between",
               transition: "border-color 0.15s",
             }}
@@ -240,7 +240,7 @@ function LogTab({ history, courses }) {
           {courseDropdownOpen && (
             <div style={{
               position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 100,
-              background: "#161616", border: "1px solid #2D2D2D", borderRadius: "10px",
+              background: "var(--bg-161616)", border: "1px solid var(--b-2d2d2d)", borderRadius: "10px",
               overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
               minWidth: "240px",
             }}>
@@ -251,9 +251,9 @@ function LogTab({ history, courses }) {
                   style={{
                     width: "100%", textAlign: "left", padding: "10px 14px",
                     background: selectedCourse === c.courseId ? "#1e1e1e" : "transparent",
-                    border: "none", color: selectedCourse === c.courseId ? "#22C55E" : "#d1d5db",
+                    border: "none", color: selectedCourse === c.courseId ? "#22C55E" : "var(--t-d1d5db)",
                     fontSize: "13px", cursor: "pointer", transition: "background 0.1s",
-                    borderBottom: "1px solid #1f1f1f",
+                    borderBottom: "1px solid var(--b-1f1f1f)",
                   }}
                   onMouseEnter={e => { if (selectedCourse !== c.courseId) e.currentTarget.style.background = "#1a1a1a" }}
                   onMouseLeave={e => { if (selectedCourse !== c.courseId) e.currentTarget.style.background = "transparent" }}
@@ -267,16 +267,16 @@ function LogTab({ history, courses }) {
       </div>
 
       {/* Log table */}
-      <div style={{ background: "#111", border: "1px solid #2D2D2D", borderRadius: "14px", overflow: "hidden" }}>
+      <div style={{ background: "var(--bg-111111)", border: "1px solid var(--b-2d2d2d)", borderRadius: "14px", overflow: "hidden" }}>
         {filtered.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "48px 0", color: "#4b5563", fontSize: "13px" }}>
+          <div style={{ textAlign: "center", padding: "48px 0", color: "var(--t-4b5563)", fontSize: "13px" }}>
             No records match the selected filter
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #2D2D2D", background: "#0f1a14" }}>
+                <tr style={{ borderBottom: "1px solid var(--b-2d2d2d)", background: "#0f1a14" }}>
                   {["Date", "Course", "Status", "Notes"].map(col => (
                     <th key={col} style={{
                       padding: "12px 18px", textAlign: "left",
@@ -292,18 +292,18 @@ function LogTab({ history, courses }) {
                 {filtered.map((h, i) => (
                   <tr
                     key={i}
-                    style={{ borderBottom: "1px solid #1a1a1a", transition: "background 0.15s" }}
+                    style={{ borderBottom: "1px solid var(--b-1a1a1a)", transition: "background 0.15s" }}
                     onMouseEnter={e => e.currentTarget.style.background = "#161616"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                   >
                     <td style={{ padding: "13px 18px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                        <CalendarIcon style={{ color: "#4b5563" }} />
-                        <span style={{ fontSize: "13px", color: "#d1d5db" }}>{formatDate(h.date)}</span>
+                        <CalendarIcon style={{ color: "var(--t-4b5563)" }} />
+                        <span style={{ fontSize: "13px", color: "var(--t-d1d5db)" }}>{formatDate(h.date)}</span>
                       </div>
                     </td>
                     <td style={{ padding: "13px 18px" }}>
-                      <div style={{ fontSize: "12px", fontWeight: 600, color: "#fff" }}>{h.courseId}</div>
+                      <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--t-ffffff)" }}>{h.courseId}</div>
                       <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>
                         {(h.courseName || "").replace(h.courseId + " — ", "").replace(h.courseId, "") || h.courseName}
                       </div>
@@ -313,7 +313,7 @@ function LogTab({ history, courses }) {
                     </td>
                     <td style={{ padding: "13px 18px" }}>
                       {h.notes ? (
-                        <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: "#9CA3AF" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: "var(--t-9ca3af)" }}>
                           <NoteIcon /> {h.notes}
                         </div>
                       ) : (
@@ -327,7 +327,7 @@ function LogTab({ history, courses }) {
           </div>
         )}
       </div>
-      <div style={{ marginTop: "8px", fontSize: "11px", color: "#4b5563", textAlign: "right" }}>
+      <div style={{ marginTop: "8px", fontSize: "11px", color: "var(--t-4b5563)", textAlign: "right" }}>
         Showing {filtered.length} record{filtered.length !== 1 ? "s" : ""}
       </div>
     </div>
@@ -351,7 +351,7 @@ function MonthlyTab({ history }) {
   const months = Object.entries(monthMap)
 
   if (!months.length) return (
-    <div style={{ textAlign: "center", padding: "48px 0", color: "#4b5563", fontSize: "13px" }}>
+    <div style={{ textAlign: "center", padding: "48px 0", color: "var(--t-4b5563)", fontSize: "13px" }}>
       No attendance records for this month
     </div>
   )
@@ -367,11 +367,11 @@ function MonthlyTab({ history }) {
         ]
         return (
           <div key={key} style={{
-            background: "#161616", border: "1px solid #2a2a2a", borderRadius: "14px",
+            background: "var(--bg-161616)", border: "1px solid var(--b-2a2a2a)", borderRadius: "14px",
             padding: "20px 24px",
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-              <div style={{ fontSize: "15px", fontWeight: 700, color: "#fff" }}>{m.label}</div>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--t-ffffff)" }}>{m.label}</div>
               <span style={{
                 fontSize: "13px", fontWeight: 700, color: "#22C55E",
                 background: "rgba(34,197,94,0.12)", padding: "3px 12px", borderRadius: "20px",
@@ -413,7 +413,7 @@ function OverallTab({ data }) {
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       {/* Pie chart card */}
       <div style={{
-        background: "#161616", border: "1px solid #2a2a2a", borderRadius: "16px",
+        background: "var(--bg-161616)", border: "1px solid var(--b-2a2a2a)", borderRadius: "16px",
         padding: "28px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: "20px",
       }}>
         <PieChart
@@ -424,10 +424,10 @@ function OverallTab({ data }) {
         />
 
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "6px" }}>
+          <div style={{ fontSize: "18px", fontWeight: 700, color: "var(--t-ffffff)", marginBottom: "6px" }}>
             Overall Attendance
           </div>
-          <div style={{ fontSize: "13px", color: "#9CA3AF", marginBottom: "10px" }}>
+          <div style={{ fontSize: "13px", color: "var(--t-9ca3af)", marginBottom: "10px" }}>
             {summary.present} present out of {summary.total} total sessions
           </div>
           {/* <div style={{
@@ -451,12 +451,12 @@ function OverallTab({ data }) {
           const pct = summary.total > 0 ? Math.round((item.value / summary.total) * 100) : 0
           return (
             <div key={item.label} style={{
-              background: "#161616", border: "1px solid #2a2a2a", borderRadius: "12px",
+              background: "var(--bg-161616)", border: "1px solid var(--b-2a2a2a)", borderRadius: "12px",
               padding: "18px", display: "flex", flexDirection: "column", gap: "8px",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
                 <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: item.dot }} />
-                <span style={{ fontSize: "11px", color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <span style={{ fontSize: "11px", color: "var(--t-9ca3af)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   {item.label}
                 </span>
               </div>
@@ -502,7 +502,7 @@ export default function StudentProfile({ studentId, onClose }) {
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 9999,
-      background: "#0A0A0A",
+      background: "var(--bg-0a0a0a)",
       overflowY: "auto",
     }}>
       {/* Top bar */}
@@ -510,7 +510,7 @@ export default function StudentProfile({ studentId, onClose }) {
         position: "sticky", top: 0, zIndex: 10,
         background: "rgba(10,10,10,0.95)",
         backdropFilter: "blur(12px)",
-        borderBottom: "1px solid #2D2D2D",
+        borderBottom: "1px solid var(--b-2d2d2d)",
         padding: "14px 24px",
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
@@ -518,8 +518,8 @@ export default function StudentProfile({ studentId, onClose }) {
           onClick={onClose}
           style={{
             display: "flex", alignItems: "center", gap: "8px",
-            fontSize: "13px", fontWeight: 600, color: "#9CA3AF",
-            background: "none", border: "1px solid #2D2D2D", cursor: "pointer", padding: "6px 12px",
+            fontSize: "13px", fontWeight: 600, color: "var(--t-9ca3af)",
+            background: "none", border: "1px solid var(--b-2d2d2d)", cursor: "pointer", padding: "6px 12px",
             borderRadius: "8px", transition: "all 0.15s",
           }}
           onMouseEnter={e => { e.currentTarget.style.background = "#1c1c1c"; e.currentTarget.style.color = "#fff" }}
@@ -528,7 +528,7 @@ export default function StudentProfile({ studentId, onClose }) {
           <BackIcon /> Back to Attendance
         </button>
 
-        <div style={{ fontSize: "13px", color: "#4b5563", fontFamily: "monospace" }}>
+        <div style={{ fontSize: "13px", color: "var(--t-4b5563)", fontFamily: "monospace" }}>
           Student Attendance Profile
         </div>
 
@@ -537,7 +537,7 @@ export default function StudentProfile({ studentId, onClose }) {
           style={{
             display: "flex", alignItems: "center", justifyContent: "center",
             width: "32px", height: "32px", borderRadius: "8px",
-            background: "none", border: "1px solid #2D2D2D", color: "#6b7280",
+            background: "none", border: "1px solid var(--b-2d2d2d)", color: "#6b7280",
             cursor: "pointer", transition: "all 0.15s",
           }}
           onMouseEnter={e => { e.currentTarget.style.background = "#1c1c1c"; e.currentTarget.style.color = "#fff" }}
@@ -566,30 +566,30 @@ export default function StudentProfile({ studentId, onClose }) {
           <>
             {/* ── Student Profile Card ── */}
             <div style={{
-              background: "#111", border: "1px solid #2D2D2D", borderRadius: "16px",
+              background: "var(--bg-111111)", border: "1px solid var(--b-2d2d2d)", borderRadius: "16px",
               padding: "20px 24px",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: "18px", marginBottom: "20px" }}>
                 {/* Avatar */}
                 <div style={{
                   width: "72px", height: "72px", borderRadius: "50%",
-                  background: "#1c1c1c", border: `3px solid ${healthColor}`,
+                  background: "var(--bg-1c1c1c)", border: `3px solid ${healthColor}`,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "#555", flexShrink: 0,
+                  color: "var(--t-555555)", flexShrink: 0,
                 }}>
                   <UserIcon />
                 </div>
 
                 {/* Name + ID */}
                 <div style={{ flex: 1 }}>
-                  <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#fff", margin: "0 0 3px" }}>
+                  <h1 style={{ fontSize: "20px", fontWeight: 700, color: "var(--t-ffffff)", margin: "0 0 3px" }}>
                     {data.studentName || studentId}
                   </h1>
                   
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                     <span style={{
                       fontSize: "12px", color: "#6b7280", fontFamily: "monospace",
-                      background: "#1c1c1c", border: "1px solid #2a2a2a",
+                      background: "var(--bg-1c1c1c)", border: "1px solid var(--b-2a2a2a)",
                       padding: "2px 10px", borderRadius: "6px",
                     }}>
                       {studentId}
@@ -619,9 +619,9 @@ export default function StudentProfile({ studentId, onClose }) {
 
               {/* Section heading */}
               <div style={{
-                marginBottom: "16px", paddingBottom: "16px", borderBottom: "1px solid #2D2D2D",
+                marginBottom: "16px", paddingBottom: "16px", borderBottom: "1px solid var(--b-2d2d2d)",
               }}>
-                <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff" }}>
+                <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--t-ffffff)" }}>
                   Attendance %
                   {/* <span style={{ fontSize: "13px", fontWeight: 400, color: "#6b7280", marginLeft: "8px" }}>
                     / All Time
@@ -630,7 +630,7 @@ export default function StudentProfile({ studentId, onClose }) {
               </div>
 
               {/* Tabs — Log | Monthly | Over all */}
-              <div style={{ display: "flex", gap: "0", borderBottom: "1px solid #2D2D2D" }}>
+              <div style={{ display: "flex", gap: "0", borderBottom: "1px solid var(--b-2d2d2d)" }}>
                 {tabs.map(tab => (
                   <button
                     key={tab.id}
@@ -638,7 +638,7 @@ export default function StudentProfile({ studentId, onClose }) {
                     style={{
                       padding: "10px 18px", fontSize: "13px", fontWeight: 600,
                       background: "none", border: "none", cursor: "pointer",
-                      color: activeTab === tab.id ? "#22C55E" : "#9CA3AF",
+                      color: activeTab === tab.id ? "#22C55E" : "var(--t-9ca3af)",
                       borderBottom: activeTab === tab.id ? "2px solid #22C55E" : "2px solid transparent",
                       marginBottom: "-1px",
                       transition: "color 0.15s",

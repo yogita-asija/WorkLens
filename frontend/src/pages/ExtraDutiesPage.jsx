@@ -150,7 +150,7 @@ export default function ExtraDutiesPage() {
                       <span style={{
                         fontSize: 11, fontWeight: 600,
                         padding: '3px 10px', borderRadius: 6,
-                        background: sc.bg, color: "#FFFFFF",
+                        background: sc.bg, color: "var(--t-ffffff)",
                         border: `1px solid ${sc.border}`,
                         display: 'inline-flex', alignItems: 'center', gap: 4,
                       }}>
@@ -228,7 +228,7 @@ function FilterSelect({ value, onChange, options }) {
         }}
       >
         {options.map(o => (
-          <option key={o} value={o} style={{ background: '#1a1a1a' }}>{o}</option>
+          <option key={o} value={o} style={{ background: 'var(--bg-1a1a1a)' }}>{o}</option>
         ))}
       </select>
       <span style={{
