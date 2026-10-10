@@ -99,4 +99,10 @@ export const deleteDeadline       = (id)      => req(`/deadlines/${id}`, { metho
 // Reports
 export const getDepartmentReport = (f = {}) => req(`/reports/department${qs(f)}`).then(r => r.data)
 
+// What-if assignment planner
+export const whatIfAssignment = (b) => req("/faculty/what-if", body("POST", b)).then(r => r.data)
 
+// Saved reports (tamper-evident snapshots)
+export const saveReportSnapshot  = (b)  => req("/reports/snapshots", body("POST", b)).then(r => r.data)
+export const listReportSnapshots = ()   => req("/reports/snapshots").then(r => r.data)
+export const getReportSnapshot   = (id) => req(`/reports/snapshots/${id}`).then(r => r.data)   // { snapshot, report, verified }

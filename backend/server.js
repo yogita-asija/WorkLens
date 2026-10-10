@@ -6,11 +6,14 @@ const connectDB = require("./config/db")
 const app = express()
 connectDB()
 
-app.use(cors())
+const allowed = (process.env.CORS_ORIGIN || "").split(",").map((s) => s.trim()).filter(Boolean)
+app.use(cors(allowed.length ? { origin: allowed } : undefined))   // set CORS_ORIGIN=https://your-site.com in production
 app.use(express.json({ limit: "50mb" }))
 app.use(express.urlencoded({ extended: true, limit: "50mb" }))
 
 app.use("/api/auth",           require("./routes/authRoutes"))
+const { authenticate } = require("./middleware/auth")
+app.use("/api", authenticate)   // everything below this line now requires a valid login token
 app.use("/api/settings",       require("./routes/settingsRoutes"))
 // app.use("/api/analytics",      require("./routes/analyticsRoutes"))
 app.use("/api/dashboard",      require("./routes/dashboardRoutes"))

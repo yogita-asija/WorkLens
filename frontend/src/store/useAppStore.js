@@ -1,10 +1,11 @@
 import { create } from "zustand"
+import { setToken } from "../services/authFetch"
 
 const useAppStore = create((set) => ({
   // ── Auth ──────────────────────────────────────────────────────────────
   user: (() => { try { return JSON.parse(localStorage.getItem("worklens_user")) } catch { return null } })(),
   setUser: (u) => { localStorage.setItem("worklens_user", JSON.stringify(u)); set({ user: u }) },
-  logout: () => { localStorage.removeItem("worklens_user"); set({ user: null }) },
+  logout: () => { localStorage.removeItem("worklens_user"); setToken(null); set({ user: null }) },
 
   // ── Profile sidebar ───────────────────────────────────────────────────
   profileOpen: false,

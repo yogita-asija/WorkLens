@@ -1,3 +1,4 @@
+import { setToken } from '../services/authFetch'
 import React, { useState } from 'react'
 
 const API = `${import.meta.env.VITE_API_URL}/api`
@@ -33,6 +34,7 @@ export default function LoginPage({ onLogin }) {
       if (!res.ok) {
         setError(data.message || 'Login failed')
       } else {
+        setToken(data.token)
         if (remember) localStorage.setItem('worklens_user', JSON.stringify(data.user))
         if (onLogin) onLogin(data.user)
       }

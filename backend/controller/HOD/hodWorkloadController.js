@@ -206,6 +206,60 @@ exports.computeWorkload = async (req) => {
   return { dept, insights: buildInsights(rows, dept), faculty: rows }
 }
 
+/* ───────── what-if: "if I give this to X, what happens?" ─────────
+   POST /api/hod/faculty/what-if   { type: "task"|"paper"|"duty"|"cover"|"teaching", priority?, hours?, count? }
+   Points use exactly the same weights as the live load index, so the numbers match the Workload page. */
+function whatIfPoints(a) {
+  const count = Math.max(1, Math.min(20, Math.round(Number(a.count) || 1)))
+  const hours = Math.max(0, Math.min(80, Number(a.hours) || 0))
+  switch (a.type) {
+    case "task": {
+      const p = WEIGHTS.taskPoints[a.priority] ? a.priority : "Medium"
+      return { points: WEIGHTS.taskPoints[p] * count, label: `${count} ${p}-priority task${count > 1 ? "s" : ""}`, key: "tasks" }
+    }
+    case "paper":    return { points: WEIGHTS.paperPoints * count, label: `${count} question paper${count > 1 ? "s" : ""}`, key: "papers" }
+    case "duty":     return { points: round1((hours * count) / WEEKS_IN_WINDOW), label: `${count} duty × ${hours} h`, key: "duty" }
+    case "cover":    return { points: round1((hours * count) / WEEKS_IN_WINDOW), label: `${count} substitute class${count > 1 ? "es" : ""} × ${hours} h`, key: "cover" }
+    case "teaching": return { points: round1(hours * count), label: `${round1(hours * count)} extra teaching h/week`, key: "teaching" }
+    default: return null
+  }
+}
+
+exports.whatIf = wrap(async (req, res) => {
+  const act = whatIfPoints(req.body || {})
+  if (!act || !(act.points > 0)) return res.status(400).json({ success: false, message: "Choose what is being assigned and how big it is (hours / priority / count)." })
+
+  const ctx = await H.loadDept(req)
+  const build = await gather(ctx)
+  const rows = ctx.faculty.map((f) => build(f).row)
+  if (!rows.length) return res.json({ success: true, data: { action: { ...act }, before: null, options: [], recommendedId: null } })
+
+  const base = rows.map((r) => ({ ...r }))
+  const before = fairness(base).dept          // also fills ratio + band on `base`
+  const options = base.map((r) => {
+    const after = base.map((x) => (x._id === r._id ? { ...x, load: round1(x.load + act.points) } : { ...x }))
+    const d = fairness(after).dept
+    const me = after.find((x) => x._id === r._id)
+    const warnings = []
+    if (r.status === "On Leave") warnings.push("On leave today")
+    if (r.awayNext14 >= 3) warnings.push(`Away ${r.awayNext14} days in the next two weeks`)
+    if (me.band === "overloaded" && r.band !== "overloaded") warnings.push("Would become overloaded")
+    else if (r.band === "overloaded") warnings.push("Already overloaded")
+    if (act.key === "teaching" && r.teachingHours + act.points > TEACHING_NORM_HOURS) warnings.push(`Over the ${TEACHING_NORM_HOURS} h/week teaching norm`)
+    return {
+      facultyId: r._id, name: r.name, status: r.status,
+      load: r.load, newLoad: me.load, ratio: r.ratio, newRatio: me.ratio, band: r.band, newBand: me.band,
+      balanceAfter: d.balanceScore, balanceDelta: d.balanceScore == null || before.balanceScore == null ? null : d.balanceScore - before.balanceScore,
+      overloadedAfter: d.overloaded, warnings,
+    }
+  })
+  // best = highest resulting balance score, then lowest resulting load; never someone on leave or pushed into overload if avoidable
+  const rank = (o) => [o.status === "On Leave" ? 1 : 0, o.newBand === "overloaded" ? 1 : 0, -(o.balanceAfter ?? 0), o.newLoad]
+  options.sort((a, b) => { const x = rank(a), y = rank(b); for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i]; return a.name.localeCompare(b.name) })
+  const best = options[0] && options[0].status !== "On Leave" ? options[0] : null
+  res.json({ success: true, data: { action: act, before, options, recommendedId: best ? best.facultyId : null } })
+})
+
 exports.getWorkload = wrap(async (req, res) => {
   const ctx = await H.loadDept(req)
   const build = await gather(ctx)
