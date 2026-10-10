@@ -1,7 +1,9 @@
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
 import {
-  LayoutDashboard, FileCheck2, Settings, LogOut, CalendarClock, Users, CalendarDays, FileBarChart,
+  LayoutDashboard, FileCheck2, Settings, LogOut, CalendarClock, Users, CalendarDays, FileBarChart,ShieldCheck,
+
+  
 } from "lucide-react"
 
 const menuGroups = [
@@ -18,6 +20,7 @@ const menuGroups = [
       { name: "Reports",               icon: FileBarChart,  path: "/reports" },
     ],
   },
+    { group: "Insights", items: [{ name: "Workflow Insights", icon: ShieldCheck, path: "/workflow-insights" }] },
   
   { group: null, items: [{ name: "Settings", icon: Settings, path: "/settings" }] },
 ]

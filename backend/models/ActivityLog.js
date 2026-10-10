@@ -8,6 +8,9 @@ const ActivityLogSchema = new mongoose.Schema({
   course:    String,   // example: "CS401 — Advanced Algorithms"
   detail:    String,   // example: "Uploaded materials and set deadline for Feb 28"
   timestamp: Date,     // when this activity happened
+    // Used only by anonymous workflow feedback (type "workflow")
+  department:    String,
+  respondentKey: { type: String, select: false },   // keyed hash, never returned by any API
 
 }, { timestamps: true })
 

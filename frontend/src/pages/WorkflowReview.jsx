@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { MessageSquare, Clock, Users, BarChart, FileText,Edit3 } from "lucide-react";
+import useAppStore from "../store/useAppStore";
 
 export default function WorkflowReview() {
   const [view, setView] = useState("faculty");
@@ -45,7 +46,7 @@ if (selected === "Other" && !otherIssue.trim()) {
     try {
       await fetch(`${import.meta.env.VITE_API_URL}/api/workflow/feedback`,  {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", "x-user-id": useAppStore.getState().user?._id || "" },
         body: JSON.stringify({ category: selected,customIssue: selected === "Other" ? otherIssue : "", message }),
       });
     } catch (err) {

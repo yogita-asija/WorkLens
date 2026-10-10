@@ -10,6 +10,7 @@ import GlobalToast    from "../GlobalToast"
 
 import HodDashboard from "../../pages/HOD/HodDashboard"
 import DutyAllocationPage from "../../pages/HOD/DutyAllocationPage"
+import WorkflowInsightsPage from "../../pages/HOD/WorkflowInsightsPage"
 import HodFaculty from "../../pages/HOD/HodFaculty"
 import HodLeaveManagement from "../../pages/HOD/Hodleavemanagement"
 import HodApprovals from "../../pages/HOD/HodApprovals"
@@ -44,6 +45,9 @@ export default function HodLayout() {
               <Route path="/"                element={<HodDashboard />} />
               <Route path="/approvals"        element={<HodApprovals />} />
               <Route path="/duty-allocation" element={<DutyAllocationPage />} />
+              <Route path="/workflow-insights" element={<WorkflowInsightsPage />} />
+              
+              
               <Route path="/faculty"          element={<HodFaculty />} />
               <Route path="/leave-management" element={<HodLeaveManagement />} />
               <Route path="/reports"         element={<HodReports />} />

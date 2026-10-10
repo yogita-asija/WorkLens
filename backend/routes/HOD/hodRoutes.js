@@ -4,6 +4,7 @@ const router     = express.Router()
 const requireHod = require("../../middleware/hod/requireHod")
 const c          = require("../../controller/HOD/hodController")
 const duty       = require("../../controller/HOD/dutyAllocationController")
+const wf         = require("../../controller/HOD/workflowInsightsController")
 const leave      = require("../../controller/HOD/hodLeaveController")
 const workload   = require("../../controller/HOD/hodWorkloadController")
 const report     = require("../../controller/HOD/hodReportController")
@@ -64,5 +65,11 @@ router.delete("/duty-allocation/:id",        duty.deleteDuty)
 
 // ── Reports ──
 router.get("/reports/department",      report.getDepartmentReport)
+
+module.exports = router
+router.get("/workflow-insights",                       wf.getInsights)
+router.post("/workflow-insights/actions",              wf.createAction)
+router.patch("/workflow-insights/actions/:id/resolve", wf.resolveAction)
+router.delete("/workflow-insights/actions/:id",        wf.deleteAction)
 
 module.exports = router
