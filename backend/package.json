@@ -10,7 +10,9 @@
     "seed:leaves": "node scripts/seedLeaves.js",
     "seed:users": "node scripts/seedUsers.js",
     "seed:all": "node scripts/seed.js && node scripts/seedLeaves.js && node scripts/seedUsers.js && node scripts/seedNotifications.js",
-    "seed:notifications": "node scripts/seedNotifications.js"
+    "seed:notifications": "node scripts/seedNotifications.js",
+    "seed:hod": "node scripts/HOD/seedHod.js",
+    "test:dept-messages": "node scripts/HOD/testDeptMessages.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -19,9 +21,11 @@
     "dotenv": "^16.4.5",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^8.3.4"
+    "mongoose": "^8.3.4",
+    "socket.io": "^4.8.4"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "nodemon": "^3.1.0",
+    "socket.io-client": "^4.8.4"
   }
 }

@@ -1,7 +1,9 @@
 require("dotenv").config()
+const http      = require("http")
 const express   = require("express")
 const cors      = require("cors")
 const connectDB = require("./config/db")
+const { initSocket } = require("./utils/HOD/socket")
 
 const app = express()
 connectDB()
@@ -33,6 +35,7 @@ app.use("/api/messages",       require("./routes/messageRoutes"))
 app.use("/api/lesson-plans",  require("./routes/lessonPlanRoutes"))
 app.use("/api/ai",            require("./routes/aiRoutes"))
 app.use("/api/hod",           require("./routes/HOD/hodRoutes")) 
+app.use("/api/dept-messages", require("./routes/HOD/deptMessageRoutes"))   // HOD <-> Faculty messaging
 
 app.get("/", (req, res) => res.json({ status: "WorkLens API running ✅" }))
 
@@ -43,4 +46,7 @@ app.use((err, req, res, next) => {
 })
 
 const PORT = process.env.PORT || 8000
-app.listen(PORT, () => console.log(`✅ Server on http://localhost:${PORT}`))
+// http.Server (not app.listen) so Socket.IO can share the same port
+const server = http.createServer(app)
+initSocket(server)
+server.listen(PORT, () => console.log(`✅ Server on http://localhost:${PORT} (REST + realtime)`))

@@ -20,6 +20,7 @@ if (!SECRET) {
 }
 const EXPIRES_IN = process.env.JWT_EXPIRES_IN || "8h"
 
+const verifyToken = (token) => jwt.verify(token, SECRET)   // used by the realtime (Socket.IO) handshake
 const signToken = (user) => jwt.sign({ sub: String(user._id), role: user.role }, SECRET, { expiresIn: EXPIRES_IN })
 
 async function authenticate(req, res, next) {
@@ -51,4 +52,4 @@ const requireRole = (...roles) => (req, res, next) => {
   next()
 }
 
-module.exports = { signToken, authenticate, requireRole }
+module.exports = { signToken, verifyToken, authenticate, requireRole }
