@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
+import { useDeptUnread } from "../services/HOD/deptMessagesApi"
 import {
   LayoutDashboard,
   CheckSquare, BookMarked, BarChart2, BookOpen, FileUp, Video, Target,
@@ -30,12 +31,13 @@ const menuGroups = [
     ],
   },
   {
-    group: "Students",
+    group: "Messages",
     items: [
       // { name: "Attendance Reports",icon: PieChart,       path: "/student-attendance" },
       // { name: "Performance Reports",icon: Users,         path: "/student-performance"},
       // { name: "At-Risk Students",  icon: AlertTriangle,  path: "/at-risk"            },
       { name: "Student Messages",  icon: MessageSquare,  path: "/student-messages"   },
+      { name: "HOD Messages",      icon: MessageSquare,  path: "/hod-messages"       },
     ],
   },
   {
@@ -60,6 +62,7 @@ const menuGroups = [
 
 export default function Sidebar({ onLogout }) {
   const [showLogout, setShowLogout] = useState(false)
+  const deptUnread = useDeptUnread()   // live unread badge for HOD Messages
 
   return (
     <>
@@ -97,7 +100,10 @@ export default function Sidebar({ onLogout }) {
                       }
                     >
                       <Icon size={16} />
-                      <span>{name}</span>
+                      <span className="flex-1">{name}</span>
+                      {path === "/hod-messages" && deptUnread > 0 && (
+                        <span className="bg-green-500 text-black text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none">{deptUnread}</span>
+                      )}
                     </NavLink>
                   </li>
                 ))}
