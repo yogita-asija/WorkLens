@@ -110,7 +110,7 @@ flowchart LR
 
 1. The user signs in on the login page by choosing a role tab (Teaching Staff, Non-Teaching Staff, or HOD) and submitting email and password to `POST /api/auth/login`.
 2. The returned user object is stored in the Zustand store (and in `localStorage` under `worklens_user`).
-3. `App.jsx` renders `HodLayout` when `user.role === "hod"`, otherwise `FacultyLayout`.
+3. `src/app/App.jsx` renders `HodLayout` (`src/portals/hod/layouts`) when `user.role === "hod"`, otherwise `FacultyLayout` (`src/portals/teaching/layouts`).
 4. Protected requests send the user's ID in an `x-user-id` header. The `requireAuth` and `requireHod` middleware look the user up in MongoDB.
 
 ---
@@ -139,16 +139,20 @@ WorkLens/
     ├── vite.config.js
     ├── tailwind.config.js
     └── src/
-        ├── App.jsx            # Role-based layout and routing
-        ├── main.jsx
-        ├── pages/             # Faculty pages
-        │   └── HOD/           # HOD pages
-        ├── components/        # Shared UI components
-        │   └── HOD/           # HOD layout, sidebar, cards, panels
-        ├── services/          # API clients (api.js, HOD/hodApi.js, HOD/dutyAllocationApi.js)
-        ├── store/useAppStore.js  # Zustand store (user, notifications, courses, toast)
-        ├── hooks/useData.js
-        └── ThemeContext.jsx
+        ├── app/
+        │   ├── main.jsx       # Entry point
+        │   ├── App.jsx        # Role-based portal selection
+        │   └── providers/ThemeContext.jsx
+        ├── portals/
+        │   ├── teaching/      # Faculty portal: pages, components, layouts, hooks, services (teachingApi.js)
+        │   └── hod/           # HOD portal: pages, components, layouts, services (hodApi.js, ...)
+        ├── shared/            # Used by more than one portal
+        │   ├── components/    # Topbar, ProfileSidebar, NotifPanel, GlobalToast, UI
+        │   ├── pages/         # LoginPage, SettingsPage, DeptMessages (HOD <-> Faculty chat)
+        │   ├── hooks/         # useNotifications
+        │   ├── services/      # httpClient, api.js (auth/settings/notifications), authFetch, deptMessagesApi
+        │   └── styles/index.css
+        └── store/useAppStore.js  # Zustand store (user, notifications, courses, toast)
 ```
 
 ---
@@ -363,7 +367,7 @@ x-user-id: <user _id returned by login>
 | | `PATCH /api/leaves/:id/status` | HOD |
 | | `GET /api/leaves/holidays` | None |
 
-> The syllabus API exists on the backend, but its page is commented out in `frontend/src/App.jsx`, so it is not reachable from the UI.
+> The syllabus API exists on the backend, but its page is commented out in `frontend/src/portals/teaching/layouts/FacultyLayout.jsx`, so it is not reachable from the UI.
 
 ### HOD endpoints (all require HOD)
 
@@ -474,7 +478,7 @@ General notes derived from the code:
 - No automated tests, CI, `.env.example` files, license, or deployment configuration.
 - Students are stored as embedded data inside courses. There is no student login or student portal; the app serves staff and HODs only.
 - The Syllabus page is commented out in the frontend router, and `/performance` renders a "Coming Soon" placeholder.
-- `/lesson-plans` and `/online-classes` are each declared twice in `App.jsx`, with a "Coming Soon" placeholder after the real route. React Router uses the first match, so the real pages load, but the duplicates should be cleaned up.
+- `/lesson-plans` and `/online-classes` are each declared twice in `FacultyLayout.jsx`, with a "Coming Soon" placeholder after the real route. React Router uses the first match, so the real pages load, but the duplicates should be cleaned up.
 - `seedLeaves.js` seeds leave balance data under a placeholder faculty ID (`faculty_001`), which does not correspond to a seeded user.
 - The `admin` role exists in the `User` schema, but there is no admin portal or login tab for it.
 - Real-time features (live notifications, chat) are not implemented; data is fetched over HTTP.

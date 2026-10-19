@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { setToken } from "../services/authFetch"
+import { setToken } from "../shared/services/authFetch"
 
 const useAppStore = create((set) => ({
   // ── Auth ──────────────────────────────────────────────────────────────
