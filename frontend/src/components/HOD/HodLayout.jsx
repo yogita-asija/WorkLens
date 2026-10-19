@@ -16,6 +16,7 @@ import HodLeaveManagement from "../../pages/HOD/Hodleavemanagement"
 import HodApprovals from "../../pages/HOD/HodApprovals"
 import SettingsPage from "../../pages/SettingsPage"
 import HodReports from "../../pages/HOD/HodReports"
+import PageBoundary from "./PageBoundary"
 import DeptMessages from "../../pages/HOD/DeptMessages"
 
 function ComingSoon({ title, desc }) {
@@ -52,6 +53,7 @@ export default function HodLayout() {
               <Route path="/faculty"          element={<HodFaculty />} />
               <Route path="/leave-management" element={<HodLeaveManagement />} />
               <Route path="/reports"         element={<HodReports />} />
+              <Route path="/reports"         element={<PageBoundary><HodReports /></PageBoundary>} />
               <Route path="/faculty-messages" element={<DeptMessages />} />
               <Route path="/settings"        element={<SettingsPage user={user} />} />
               <Route path="*"                element={<Navigate to="/" replace />} />

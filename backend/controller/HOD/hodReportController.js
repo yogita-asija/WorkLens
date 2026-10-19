@@ -273,3 +273,89 @@ function insightsFrom(workload) {
   return (workload.insights || []).filter((i) => i.level === "warn").slice(0, 3)
     .map((i) => ({ level: "warn", section: "Workload", text: i.text }))
 }
+
+// ───────── Compare two saved reports ─────────
+const isNum = (v) => typeof v === "number" && Number.isFinite(v);
+const LABEL_KEYS = ["name", "title", "code", "course", "faculty", "facultyName", "subject", "email"];
+const LOWER_BETTER = /overdue|pending|absent|overload|late|rejected|backlog|shortage|leave/i;
+const HIGHER_BETTER = /attend|present|progress|complet|balance|score|covered|submitted/i;
+const POINT_LIKE = /percent|pct|rate|attend|progress|score/i;
+
+// Snapshot ke data me jitne bhi numbers hain, sab ko "path › path" key ke saath nikalta hai.
+function flatten(node, path, out) {
+  if (isNum(node)) { out[path.join(" › ")] = node; return; }
+  if (Array.isArray(node)) {
+    node.forEach((item, i) => {
+      let key = String(i + 1);
+      if (item && typeof item === "object") {
+        for (const k of LABEL_KEYS) {
+          if (typeof item[k] === "string" && item[k]) { key = item[k]; break; }
+        }
+      }
+      flatten(item, [...path, key], out);
+    });
+    return;
+  }
+  if (node && typeof node === "object") {
+    for (const [k, v] of Object.entries(node)) {
+      if (k === "_id" || k === "id" || k === "__v") continue;
+      flatten(v, [...path, k], out);
+    }
+  }
+}
+
+const periodDays = (p) => {
+  if (!p || !p.from || !p.to) return null;
+  const d = (new Date(p.to) - new Date(p.from)) / 86400000;
+  return Number.isFinite(d) ? Math.round(d) + 1 : null;
+};
+
+const round1 = (n) => Math.round(n * 10) / 10;
+
+function diffMetric(path, before, after) {
+  const last = path.split(" › ").pop();
+  const delta = round1(after - before);
+  const pct = before !== 0 ? round1(((after - before) / Math.abs(before)) * 100) : null;
+  const pointLike = POINT_LIKE.test(last) && before <= 100 && after <= 100;
+
+  let direction = null; // "higher" = zyada accha, "lower" = kam accha
+  if (LOWER_BETTER.test(last) || LOWER_BETTER.test(path)) direction = "lower";
+  else if (HIGHER_BETTER.test(last)) direction = "higher";
+
+  let verdict = "neutral";
+  if (direction === "higher") verdict = delta > 0 ? "better" : "worse";
+  if (direction === "lower") verdict = delta < 0 ? "better" : "worse";
+
+  // flag threshold: percentage metrics me 5 points, baaki me 15% (aur kam se kam 1 ka farak)
+  let flagged = false;
+  if (pointLike) flagged = Math.abs(delta) >= 5;
+  else if (pct === null) flagged = delta !== 0; // pehle 0 tha, ab kuch aaya
+  else flagged = Math.abs(pct) >= 15 && Math.abs(delta) >= 1;
+
+  const size = pointLike ? `${Math.abs(delta)} pts` : pct === null ? `${Math.abs(delta)}` : `${Math.abs(pct)}%`;
+  const label = path;
+  const message = `${label}: ${before} → ${after} (${size} ${delta < 0 ? "gira" : "badha"})`;
+  return { path, before, after, delta, pct, pointLike, verdict, flagged, message };
+}
+
+exports.compareSnapshots = async (req, res) => {
+  // teeno error responses:
+return res.status(400).json({ success: false, message: "Two valid report ids are required" });
+return res.status(400).json({ success: false, message: "Pick two different reports" });
+if (docs.length !== 2) return res.status(404).json({ success: false, message: "Report not found" });
+
+// final success response:
+res.json({
+  success: true,
+  data: {
+    from: pack(older),
+    to: pack(newer),
+    warnings,
+    summary: { /* jaisa hai waisa hi */ },
+    changes: changes.slice(0, 300),
+  },
+});
+
+// catch me:
+res.status(500).json({ success: false, message: e.message || "Compare failed" });
+};

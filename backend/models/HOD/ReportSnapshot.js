@@ -13,7 +13,7 @@ const ReportSnapshotSchema = new mongoose.Schema({
   createdBy:  { id: String, name: String },
   data:       { type: mongoose.Schema.Types.Mixed, required: true },
   checksum:   { type: String, required: true },
-}, { timestamps: { createdAt: true, updatedAt: false } })
+}, { timestamps: { createdAt: true, updatedAt: false }, minimize: false })
 
 const readOnly = function (next) { next(new Error("Saved reports are read-only")) }
 ReportSnapshotSchema.pre(["updateOne", "updateMany", "findOneAndUpdate", "replaceOne"], readOnly)
