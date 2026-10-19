@@ -69,8 +69,9 @@ router.get("/reports/department",      report.getDepartmentReport)
 router.get("/reports/snapshots",       report.listSnapshots)
 router.post("/reports/snapshots",      report.createSnapshot)
 router.get("/reports/snapshots/:id",   report.getSnapshot)
+router.get("/reports/compare", report.compareSnapshots);
 
-module.exports = router
+
 router.get("/workflow-insights",                       wf.getInsights)
 router.post("/workflow-insights/actions",              wf.createAction)
 router.patch("/workflow-insights/actions/:id/resolve", wf.resolveAction)

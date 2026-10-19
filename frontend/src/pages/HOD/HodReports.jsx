@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
+import ReportCompare from "../../components/HOD/ReportCompare";
 import { RefreshCw, Printer, Download, AlertTriangle, Info, CheckCircle2, Save, ShieldCheck, ShieldAlert, ArrowLeft } from "lucide-react"
 import useAppStore from "../../store/useAppStore"
 import * as hod from "../../services/HOD/hodApi"
 import { Card, Bar } from "../../components/HOD/LeaveUi"
 import { btnPrimary, btnGhost, inputCls, Spinner, ErrorState } from "../../components/HOD/HodModal"
+
 
 /* Reports: one-click department report (attendance · leave · workload · syllabus).
    All numbers are computed on the server (GET /api/hod/reports/department); this page only displays,
@@ -117,8 +119,15 @@ export default function HodReports() {
   
     const openSaved = async (id) => {
       setLoading(true)
-      try { const r = await hod.getReportSnapshot(id); setData(r.report); setViewing({ ...r.snapshot, verified: r.verified }); setError("") }
-      catch (e) { showToast(e.message, "error") }
+      try {
+        const r = await hod.getReportSnapshot(id)
+        const report = r.report || r.data || r.snapshot?.data
+        const ok = report && report.meta && report.attendance && report.leave && report.workload && report.syllabus
+        if (!ok) throw new Error("This saved report is in an old or unreadable format. Save a new snapshot instead.")
+        setData(report)
+        setViewing({ ...(r.snapshot || r), verified: r.verified })
+        setError("")
+      } catch (e) { showToast(e.message, "error") }
       finally { setLoading(false) }
     }
     const saveSnapshot = async () => {
@@ -264,8 +273,8 @@ export default function HodReports() {
                 <Stat label="Rejected" value={L.summary.rejected} />
                 <Stat label="Absence rate" value={dash(L.summary.absenceRate, "%")} sub="approved days ÷ working days" />
               </div>
-              {Object.keys(L.summary.byType).length > 0 && (
-                <p className="text-xs text-neutral-400">Approved days by type: {Object.entries(L.summary.byType).map(([t, n]) => `${t} ${n}`).join(" · ")}</p>)}
+              {Object.keys(L.summary.byType || {}).length > 0 && (
+                 <p className="text-xs text-neutral-400">Approved days by type: {Object.entries(L.summary.byType || {}).map(([t, n]) => `${t} ${n}`).join(" · ")}</p>)}
               {L.summary.onLeaveToday.length > 0 && <p className="text-xs text-neutral-400">On leave today: {L.summary.onLeaveToday.join(", ")}</p>}
               <Card>
                 <Table head={<><Th>Faculty</Th><Th right>Applications</Th><Th right>Approved days</Th><Th right>Pending</Th><Th right>Rejected</Th></>} empty={L.faculty.length === 0 ? "No faculty found." : ""}>
@@ -317,7 +326,7 @@ export default function HodReports() {
             </Section>
           </div>
         )}
-              <Card className="rp-noprint" title="Saved reports">
+        <Card className="rp-noprint" title="Saved reports">
         {saved.length === 0
           ? <p className="text-sm text-neutral-500">Nothing saved yet. Use “Save snapshot” to keep a permanent, tamper-evident copy of a report.</p>
           : <div className="divide-y divide-[#2a2a2a]">{saved.map((r) => (
@@ -330,6 +339,7 @@ export default function HodReports() {
                 <button className={btnGhost} onClick={() => openSaved(r._id)}>Open</button>
               </div>))}</div>}
       </Card>
+      <ReportCompare saved={saved} />
     </div>
   )
 }

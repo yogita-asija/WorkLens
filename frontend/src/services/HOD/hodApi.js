@@ -106,3 +106,5 @@ export const whatIfAssignment = (b) => req("/faculty/what-if", body("POST", b)).
 export const saveReportSnapshot  = (b)  => req("/reports/snapshots", body("POST", b)).then(r => r.data)
 export const listReportSnapshots = ()   => req("/reports/snapshots").then(r => r.data)
 export const getReportSnapshot   = (id) => req(`/reports/snapshots/${id}`).then(r => r.data)   // { snapshot, report, verified }
+export const compareReportSnapshots = (a, b) =>
+  request(`/reports/compare?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`)
