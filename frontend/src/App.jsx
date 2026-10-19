@@ -29,6 +29,7 @@ import StudyMaterialsPage from "./pages/StudyMaterialsPage"
 import OnlineClassesPage from "./pages/OnlineClassesPage"
 import TimetablePage     from "./pages/TimetablePage"
 import StudentMessages    from "./pages/StudentMessages"
+import DeptMessages       from "./pages/HOD/DeptMessages"   // HOD <-> Faculty chat
 import { useNotifications } from "./hooks/useData"
 
 // ── Coming soon placeholder ────────────────────────────────────────────────
@@ -116,6 +117,7 @@ function FacultyLayout() {
               {/* <Route path="/student-performance" element={<ComingSoon title="Performance Reports" desc="Detailed performance breakdown per student." />} />
               <Route path="/at-risk"             element={<ComingSoon title="At-Risk Students" desc="Students flagged for low attendance or poor performance — act before it's too late." />} /> */}
               <Route path="/student-messages"    element={<StudentMessages />} />
+              <Route path="/hod-messages"        element={<DeptMessages />} />
               {/* ── Self-Service group ── */}
               <Route path="/leave-management" element={<LeaveManagement />} />
               <Route path="/timetable"        element={<TimetablePage />} />

@@ -244,7 +244,7 @@ function measure(action, catRows, now) {
   const W = Math.min(sinceDays, MAX_MEASURE_DAYS)
   const before = inRange(catRows, started - W * DAY, started).length
   const after  = inRange(catRows, resolved, resolved + W * DAY).length
-  if (before < MIN_REPORTS) return { state: "insufficient", before, after, windowDays: W }
+  if (before < 1) return { state: "insufficient", before, after, windowDays: W }
   const changePct = Math.round(((after - before) / before) * 100)
   const state = changePct <= -CHANGE_THRESHOLD ? "improved" : changePct >= CHANGE_THRESHOLD ? "worse" : "no-change"
   return { state, before, after, windowDays: W, changePct }
@@ -285,6 +285,7 @@ function buildInsights({ rows, actionDocs, days, now, dept }) {
     const previous = (prevBy[name] || []).length
     const identified = count >= MIN_REPORTS
     const actions = (actionsBy[name] || []).map((a) => shapeAction(a, allBy[name] || [], now))   // newest first
+    const canAct = count > 0 || actions.length > 0       // any report, even one, can be acted on
 
     let details = null
     let suggestion = null
@@ -301,13 +302,13 @@ function buildInsights({ rows, actionDocs, days, now, dept }) {
         themes,
         themesNote: themes.length ? "" : `No single concern was raised in ${MIN_REPORTS} or more reports, so none is shown.`,
       }
-      suggestion = configFor(name).suggestion
     }
+    if (canAct) suggestion = configFor(name).suggestion
     return { name, count, previous, identified, details, suggestion, actions }
   }).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
 
   const resolvedIssues = categories.filter((c) => c.actions[0] && c.actions[0].status === "Resolved").length
-  const issuesIdentified = categories.filter((c) => c.identified || c.actions.length).length
+  const issuesIdentified = categories.filter((c) => c.count > 0 || c.actions.length).length
 
   return {
     department: dept,

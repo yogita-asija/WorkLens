@@ -176,8 +176,29 @@ function ActionForm({ cat, onBack, onSaved }) {
   )
 }
 
+function SuggestionCard({ cat, inProgress, onStart }) {
+  if (!cat.suggestion) return null
+  return (
+    <div className="bg-green-500/5 border border-green-500/30 rounded-xl p-4">
+      <div className="flex items-start gap-3">
+        <Lightbulb size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="text-[11px] uppercase tracking-wider text-green-400 mb-1">Suggested action</p>
+          <p className="text-sm font-semibold text-white">{cat.suggestion.headline}</p>
+          <p className="text-xs text-neutral-400 mt-1">{cat.suggestion.why}</p>
+          {inProgress
+            ? <p className="text-xs text-blue-400 mt-3">An improvement action is already in progress for this issue.</p>
+            : <button className={`${btnPrimary} mt-3 !px-4 !py-2`} onClick={onStart}>
+                {cat.actions.length ? "Start another improvement action" : "Start Improvement Action"}
+              </button>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ───────────── detail view for one problem category ───────────── */
-function CategoryDetail({ cat, days, onStart, onResolve, onDelete }) {
+function CategoryDetail({ cat, days, minReports, onStart, onResolve, onDelete }) {
   const d = cat.details
   const inProgress = cat.actions.find((a) => a.status === "In Progress")
 
@@ -185,8 +206,9 @@ function CategoryDetail({ cat, days, onStart, onResolve, onDelete }) {
     return (
       <>
         <p className="text-sm text-neutral-400">
-          Fewer than 3 reports in this period — details are hidden so no individual can be singled out.
+          Fewer than {minReports} reports in this period — concerns, trend and impact are hidden so no individual can be singled out. You can still act on this issue.
         </p>
+        <SuggestionCard cat={cat} inProgress={inProgress} onStart={onStart} />
         {cat.actions.length > 0 && <ActionList cat={cat} onResolve={onResolve} onDelete={onDelete} />}
       </>
     )
@@ -238,23 +260,7 @@ function CategoryDetail({ cat, days, onStart, onResolve, onDelete }) {
         <p className="text-[11px] text-neutral-600 mt-2">Concerns are grouped automatically from anonymous reports. Individual reports are never shown.</p>
       </div>
 
-      {cat.suggestion && (
-        <div className="bg-green-500/5 border border-green-500/30 rounded-xl p-4">
-          <div className="flex items-start gap-3">
-            <Lightbulb size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-[11px] uppercase tracking-wider text-green-400 mb-1">Suggested action</p>
-              <p className="text-sm font-semibold text-white">{cat.suggestion.headline}</p>
-              <p className="text-xs text-neutral-400 mt-1">{cat.suggestion.why}</p>
-              {inProgress
-                ? <p className="text-xs text-blue-400 mt-3">An improvement action is already in progress for this issue.</p>
-                : <button className={`${btnPrimary} mt-3 !px-4 !py-2`} onClick={onStart}>
-                    {cat.actions.length ? "Start another improvement action" : "Start Improvement Action"}
-                  </button>}
-            </div>
-          </div>
-        </div>
-      )}
+      <SuggestionCard cat={cat} inProgress={inProgress} onStart={onStart} />
 
       {cat.actions.length > 0 && <ActionList cat={cat} onResolve={onResolve} onDelete={onDelete} />}
     </div>
@@ -355,7 +361,7 @@ export default function WorkflowInsightsPage() {
   const s = data.summary
 
   return (
-    <div className="space-y-6 text-white font-sans max-w-4xl">
+    <div className="space-y-6 text-white font-sans ">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Workflow Insights</h1>
@@ -371,15 +377,7 @@ export default function WorkflowInsightsPage() {
         </div>
       </div>
 
-      <div className="flex items-start gap-3 bg-green-500/5 border border-green-500/30 rounded-xl px-4 py-3">
-        <Lock size={16} className="text-green-400 flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm text-green-300 font-medium">All feedback is anonymized and shown only in aggregated form.</p>
-          <p className="text-xs text-neutral-500 mt-0.5">
-            Concerns, trends and percentages appear only when at least {data.privacy.minReports} reports exist; percentages need {data.privacy.minRespondents}+ respondents and are rounded.
-          </p>
-        </div>
-      </div>
+      
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-[#1c1c1c] border border-[#2a2a2a] rounded-2xl p-5">
@@ -390,7 +388,7 @@ export default function WorkflowInsightsPage() {
         <div className="bg-[#1c1c1c] border border-[#2a2a2a] rounded-2xl p-5">
           <p className="text-xs text-neutral-400">Issues Identified</p>
           <p className="text-3xl font-bold mt-2">{s.issuesIdentified}</p>
-          <p className="text-[11px] text-neutral-500 mt-2">{data.privacy.minReports}+ reports, or under action</p>
+          <p className="text-[11px] text-neutral-500 mt-2">Any report can be acted on</p>
         </div>
         <div className="bg-[#1c1c1c] border border-[#2a2a2a] rounded-2xl p-5">
           <p className="text-xs text-neutral-400">Resolved Issues</p>
@@ -448,7 +446,7 @@ export default function WorkflowInsightsPage() {
         title={cat?.name} subtitle={cat ? `${cat.count} anonymous ${plural(cat.count, "report", "reports")} · last ${PERIODS.find((p) => p.days === days).label}` : ""}>
         {cat && (showForm
           ? <ActionForm cat={cat} onBack={() => setShowForm(false)} onSaved={() => { setShowForm(false); load() }} />
-          : <CategoryDetail cat={cat} days={days} onStart={() => setShowForm(true)} onResolve={onResolve} onDelete={onDelete} />)}
+          : <CategoryDetail cat={cat} days={days} minReports={data.privacy.minReports} onStart={() => setShowForm(true)} onResolve={onResolve} onDelete={onDelete} />)}
       </HodModal>
 
       {dialog?.type === "resolve" && <ResolveDialog action={dialog.action} onClose={() => setDialog(null)} onDone={dialogDone} />}

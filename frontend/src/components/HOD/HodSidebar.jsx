@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
+import { useDeptUnread } from "../../services/HOD/deptMessagesApi"
 import {
-  LayoutDashboard, FileCheck2, Settings, LogOut, CalendarClock, Users, CalendarDays, FileBarChart,ShieldCheck,
+  LayoutDashboard, FileCheck2, Settings, LogOut, CalendarClock, Users, CalendarDays, FileBarChart, ShieldCheck, MessageSquare,
 
   
 } from "lucide-react"
@@ -21,12 +22,14 @@ const menuGroups = [
     ],
   },
     { group: "Insights", items: [{ name: "Workflow Insights", icon: ShieldCheck, path: "/workflow-insights" }] },
+  { group: "Communication", items: [{ name: "Faculty Messages", icon: MessageSquare, path: "/faculty-messages" }] },
   
   { group: null, items: [{ name: "Settings", icon: Settings, path: "/settings" }] },
 ]
 
 export default function HodSidebar({ onLogout }) {
   const [showLogout, setShowLogout] = useState(false)
+  const deptUnread = useDeptUnread()   // live unread badge for Faculty Messages
 
   return (
     <>
@@ -54,7 +57,10 @@ export default function HodSidebar({ onLogout }) {
                       }
                     >
                       <Icon size={16} />
-                      <span>{name}</span>
+                      <span className="flex-1">{name}</span>
+                      {path === "/faculty-messages" && deptUnread > 0 && (
+                        <span className="bg-green-500 text-black text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none">{deptUnread}</span>
+                      )}
                     </NavLink>
                   </li>
                 ))}
