@@ -2,7 +2,7 @@ import { useState } from "react"
 import { NavLink } from "react-router-dom"
 import { useDeptUnread } from "../../../shared/services/deptMessagesApi"
 import {
-  LayoutDashboard, FileCheck2, Settings, LogOut, CalendarClock, Users, CalendarDays, FileBarChart, ShieldCheck, MessageSquare,
+  LayoutDashboard, FileCheck2, Settings, LogOut, CalendarClock, Users, CalendarDays, FileBarChart, ShieldCheck, MessageSquare, GraduationCap,
 
   
 } from "lucide-react"
@@ -18,6 +18,7 @@ const menuGroups = [
       { name: "Faculty Workload",      icon: Users,         path: "/faculty" },
       { name: "Leave Management",      icon: CalendarDays,  path: "/leave-management" },
       { name: "Smart Duty Allocation", icon: CalendarClock, path: "/duty-allocation" },
+      { name: "Course Allocation",     icon: GraduationCap, path: "/course-allocation" },
       { name: "Reports",               icon: FileBarChart,  path: "/reports" },
     ],
   },

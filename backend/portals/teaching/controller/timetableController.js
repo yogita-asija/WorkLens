@@ -63,7 +63,8 @@ function parseTime(timeStr) {
 // Returns the full weekly timetable for the authenticated faculty's courses
 exports.getTimetable = async (req, res) => {
   try {
-    const { teacherId } = req.query
+    // Teaching staff only ever see their own timetable, whatever ?teacherId= says (privacy)
+    const teacherId = req.user && req.user.role === "teaching" ? String(req.user._id) : req.query.teacherId
 
     // Build filter — if teacherId provided, filter by teacher
     const filter = { status: { $ne: "archived" } }

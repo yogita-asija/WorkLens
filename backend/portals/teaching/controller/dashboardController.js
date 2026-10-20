@@ -192,7 +192,11 @@ const getRecentActivity = async (req, res) => {
 // GET /api/dashboard/courses
 const getCourses = async (req, res) => {
   try {
-    const courses = await Course.find()
+    // Teaching staff only see the courses assigned to them (privacy); other roles keep the full list
+    const filter = req.user && req.user.role === "teaching"
+      ? { $or: [{ "teacher.id": String(req.user._id) }, { "batches.teacher.id": String(req.user._id) }] }
+      : {}
+    const courses = await Course.find(filter)
     const data = courses.map(c => ({
       code:     c.courseId,
       name:     c.label,

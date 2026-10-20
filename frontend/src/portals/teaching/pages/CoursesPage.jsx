@@ -231,6 +231,7 @@ function CourseCard({ course, onView, onStudents, onArchive, onUnarchive }) {
           <span style={{ fontSize: 10, fontWeight: 700, color: T.sub, background: "rgba(156,163,175,0.1)", border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 5 }}>{course.courseCode || course.courseId}</span>
           {course.sem && course.sem !== "N/A" && <span style={{ fontSize: 10, color: "#4ade80", background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.2)", padding: "2px 8px", borderRadius: 5 }}>{course.sem}</span>}
           <span style={{ fontSize: 10, color: tc.color, background: tc.bg, padding: "2px 8px", borderRadius: 5 }}>{course.status || "active"}</span>
+          {course.allocation?.term && <span title="Assigned to you by your HOD" style={{ fontSize: 10, color: "#4ade80", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", padding: "2px 8px", borderRadius: 5 }}>{course.allocation.term}</span>}
         </div>
         <div style={{ display: "flex", gap: 4 }}>
          
@@ -285,6 +286,7 @@ function CourseViewModal({ course, assignments, onClose }) {
          
           { label: "Schedule", value: [course.schedule?.days, course.schedule?.time, course.schedule?.room].filter(Boolean).join(" · ") || "Not set" },
           { label: "Status",   value: course.status || "active" },
+          ...(course.allocation?.term ? [{ label: "Assigned for", value: course.allocation.term }] : []),
         ].map(({ label, value }) => (
           <div key={label} style={{ background: T.inner, borderRadius: 8, padding: "10px 12px", border: `1px solid ${T.border}` }}>
             <p style={{ fontSize: 10, color: T.muted, margin: "0 0 3px" }}>{label}</p>
