@@ -116,21 +116,88 @@ function courseDeptState(ctx, course) {
   return depts.some(Boolean) ? "other" : "unclaimed"
 }
 
-function resolveTarget(course, batchId) {
-  if (batchId) {
-    const b = (course.batches || []).find((x) => String(x._id) === String(batchId))
-    if (!b) throw new AllocationError(404, "Batch not found on this course")
+/* ═══════════════════════════ what the HOD typed ═══════════════════════════ */
+
+/**
+ * body = {
+ *   course:  { courseId?, courseCode, courseName, credits },
+ *   batches: { total, from, to, schedule: { days, time } },   // total = 1 → whole course; batches from..to meet together
+ *   term, startDate, endDate }
+ * Credits and schedule are always entered by the HOD. Batch i of a course is its i-th batch (created as
+ * "Batch i" if it does not exist yet); the teacher gets batches from..to, which have class together (one schedule).
+ */
+function parseCourseInput(body) {
+  const errors = []
+  const c = (body && body.course) || {}
+  const b = (body && body.batches) || {}
+  const courseCode = String(c.courseCode || "").trim().slice(0, 30)
+  const courseName = String(c.courseName || "").trim().slice(0, 120)
+  const credits = Number(c.credits)
+  if (!courseCode) errors.push("Course code is required")
+  if (!courseName) errors.push("Course name is required")
+  if (!(credits > 0 && credits <= 20)) errors.push("Credits must be between 0.5 and 20")
+
+  const total = parseInt(b.total, 10) || 1
+  if (!(total >= 1 && total <= 30)) errors.push("Number of batches must be between 1 and 30")
+  const whole = total === 1
+  const from = whole ? 1 : parseInt(b.from, 10)
+  const to = whole ? 1 : parseInt(b.to, 10)
+  if (!whole && !(from >= 1 && to >= from && to <= total)) errors.push("Choose a valid batch range")
+
+  // The selected batches meet TOGETHER: one weekly schedule for the whole selection.
+  const raw = b.schedule || (Array.isArray(b.schedules) ? b.schedules[0] : null) || {}
+  const days = String(raw.days || "").trim(); const time = String(raw.time || "").trim()
+  const parts = []
+  if (!errors.length) {
+    const label = whole ? "the course" : (from === to ? `Batch ${from}` : `Batches ${from}–${to}`)
+    const t = E.parseTimeSpec(time)
+    if (!E.parseDays(days).length) errors.push(`Select the class days for ${label}`)
+    else if (t.start == null || t.end == null) errors.push(`Enter a start and end time for ${label}`)
+    else for (let i = whole ? 0 : from; i <= (whole ? 0 : to); i++) parts.push({ index: i, schedule: { days, time } })
+  }
+  return { errors, value: { courseId: isId(c.courseId) ? String(c.courseId) : "", courseCode, courseName, credits, total, whole, from, to, parts } }
+}
+
+/** The course as typed: an existing Course (matched by id, else by code) with the HOD's values laid over it, or a new one. */
+function resolveCourse(ctx, input) {
+  let existing = input.courseId ? ctx.courseById[input.courseId] : null
+  if (!existing) existing = ctx.courses.find((c) => sameStr(c.courseCode, input.courseCode) || sameStr(c.courseId, input.courseCode)) || null
+  if (existing) {
+    const state = courseDeptState(ctx, existing)
+    if (state === "other") throw new AllocationError(403, "A course with this code belongs to another department")
+    if (existing.status === "archived") throw new AllocationError(400, "This course is archived and cannot be allocated")
+  }
+  const key = existing ? String(existing._id) : `new:${input.courseCode.toLowerCase()}`
+  const course = {
+    ...(existing || { status: "active", teacher: {}, batches: [], schedule: {}, department: "" }),
+    _id: existing ? existing._id : key, courseCode: input.courseCode, courseName: input.courseName, credits: input.credits,
+  }
+  return { existing, course, key, state: existing ? courseDeptState(ctx, existing) : "unclaimed" }
+}
+
+const teacherOfDoc = (t) => ({ id: sid(t && t.id), name: (t && t.name) || "" })
+
+/** Parts = the main course, or batches from..to (existing batch i, else a not-yet-created "Batch i"). */
+function buildTarget(course, input) {
+  const code = course.courseCode
+  if (input.whole) {
     return {
-      scope: "batch", batchId: String(b._id), batchName: b.batchName, targetKey: String(b._id),
-      schedule: b.schedule || {}, teacher: { id: sid(b.teacher && b.teacher.id), name: (b.teacher && b.teacher.name) || "" },
-      label: `${course.courseCode || course.courseId} · ${b.batchName}`,
+      scope: "course", label: code,
+      parts: [{ index: 0, batchId: "", name: "", targetKey: "main", schedule: input.parts[0].schedule, teacher: teacherOfDoc(course.teacher) }],
     }
   }
-  return {
-    scope: "course", batchId: "", batchName: "", targetKey: "main",
-    schedule: course.schedule || {}, teacher: { id: sid(course.teacher && course.teacher.id), name: (course.teacher && course.teacher.name) || "" },
-    label: `${course.courseCode || course.courseId}`,
-  }
+  const parts = input.parts.map((p) => {
+    const b = (course.batches || [])[p.index - 1]
+    return { index: p.index, batchId: b ? String(b._id) : "", name: b ? b.batchName : `Batch ${p.index}`, targetKey: b ? String(b._id) : `new:${p.index}`, schedule: p.schedule, teacher: teacherOfDoc(b && b.teacher) }
+  })
+  const first = parts[0].index; const last = parts[parts.length - 1].index
+  return { scope: "batch", label: `${code} · ${first === last ? `Batch ${first}` : `Batches ${first}–${last}`}`, parts }
+}
+
+const targetTeachers = (t) => {
+  const seen = new Map()
+  t.parts.forEach((p) => { if (p.teacher.id) seen.set(p.teacher.id, p.teacher) })
+  return [...seen.values()]
 }
 
 /* ═══════════════════════════ per-candidate facts ═══════════════════════════ */
@@ -144,28 +211,41 @@ const matchesCourse = (code, name, course) => {
   return false
 }
 
-/** The faculty member's other (non-archived-or-archived) teaching + current load. */
+/** The faculty member's other teaching: active classes (load + clashes) and everything ever taught. */
 function facultyLoad(ctx, course, target, facultyId, tentative) {
-  const existing = []      // active classes, for load + clashes
-  const everTaught = []    // any status, for "previous teaching"
+  const existing = []
+  const everTaught = []
+  const ownBatch = new Set(target.parts.map((p) => p.batchId).filter(Boolean))
   for (const c of ctx.courses) {
     const cid = String(c._id)
-    const add = (schedule, label, isTarget, batchLabel) => {
+    const sameCourse = cid === String(course._id)
+    const add = (schedule, batchLabel, isTarget) => {
       const info = E.scheduleInfo(schedule, c.credits)
-      const row = { courseId: cid, course: c, label: batchLabel ? `${c.courseCode || c.courseId} · ${batchLabel}` : `${c.courseCode || c.courseId}`, info }
+      const row = { courseId: cid, course: c, batch: batchLabel, joint: batchLabel ? `${(schedule && schedule.days) || ""}|${(schedule && schedule.time) || ""}` : "", label: batchLabel ? `${c.courseCode || c.courseId} · ${batchLabel}` : `${c.courseCode || c.courseId}`, info }
       everTaught.push(row)
       if (c.status === "active" && !isTarget) existing.push(row)
     }
-    if (sid(c.teacher && c.teacher.id) === facultyId) add(c.schedule, null, cid === String(course._id) && target.scope === "course")
+    if (sid(c.teacher && c.teacher.id) === facultyId) add(c.schedule, "", sameCourse && target.scope === "course")
     for (const b of c.batches || []) {
-      if (sid(b.teacher && b.teacher.id) === facultyId) add(b.schedule, null, cid === String(course._id) && target.scope === "batch" && String(b._id) === target.batchId, b.batchName)
+      if (sid(b.teacher && b.teacher.id) === facultyId) add(b.schedule, b.batchName, sameCourse && target.scope === "batch" && ownBatch.has(String(b._id)))
     }
   }
   for (const t of tentative || []) {
     if (t.facultyId !== facultyId || t.courseId === String(course._id)) continue
     existing.push({ courseId: t.courseId, label: t.label, info: t.info })
   }
-  return { existing, everTaught }
+  // batches of one course that meet at the same time are ONE class (not several): count their hours once
+  const merged = []
+  const byKey = new Map()
+  for (const r of existing) {
+    const key = r.joint ? `${r.courseId}|${r.joint}` : ""
+    if (key && byKey.has(key)) { const m = byKey.get(key); m.labels.push(r.batch); continue }
+    const row = { ...r, labels: r.batch ? [r.batch] : [] }
+    if (key) byKey.set(key, row)
+    merged.push(row)
+  }
+  for (const r of merged) if (r.labels.length > 1) r.label = `${r.course.courseCode || r.course.courseId} · ${r.labels.join(", ")}`
+  return { existing: merged, everTaught }
 }
 
 function buildCandidateInput(ctx, course, target, topics, requirement, fac, tentative) {
@@ -174,15 +254,17 @@ function buildCandidateInput(ctx, course, target, topics, requirement, fac, tent
   const settings = ctx.settings
   const { existing, everTaught } = facultyLoad(ctx, course, target, id, tentative)
 
-  /* course schedule vs existing classes */
-  const ci = E.scheduleInfo(target.schedule, course.credits)
+  /* the new classes (every selected batch) vs the faculty's existing classes */
+  const infos = [{ part: target.parts[0], info: E.scheduleInfo(target.parts[0].schedule, course.credits) }]   // joint class: counted once
+  const newSessions = infos[0].info.sessions
+  const newHours = infos[0].info.hours
   const existingSessions = []
   const conflicts = []; const uncertain = []
   const seen = new Set()
   for (const row of existing) {
     for (const s of row.info.sessions) {
       existingSessions.push({ ...s, label: row.label })
-      for (const cs of ci.sessions) {
+      for (const cs of newSessions) {
         const rel = E.sessionRelation(cs, s)
         if (rel === "none") continue
         const k = `${rel}|${row.label}|${s.day}`
@@ -198,8 +280,8 @@ function buildCandidateInput(ctx, course, target, topics, requirement, fac, tent
   const courseIds = new Set(existing.map((r) => r.courseId))
   const projectedIds = new Set([...courseIds, String(course._id)])
   const workload = {
-    currentHours, projectedHours: currentHours + ci.hours, maxHours: settings.limits.maxWeeklyHours,
-    estimated: ci.estimated || existing.some((r) => r.info.estimated),
+    currentHours, projectedHours: currentHours + newHours, maxHours: settings.limits.maxWeeklyHours,
+    estimated: infos.some((x) => x.info.estimated) || existing.some((r) => r.info.estimated),
     currentCourses: courseIds.size, projectedCourses: projectedIds.size,
   }
 
@@ -217,7 +299,8 @@ function buildCandidateInput(ctx, course, target, topics, requirement, fac, tent
   const manual = (profile && profile.teachingHistory) || []
   const manualExact = manual.filter((h) => matchesCourse(h.courseCode, h.courseName, course))
   const manualTerms = manualExact.reduce((a, h) => a + (Number(h.terms) || 1), 0)
-  const currentlyTeaching = target.teacher.id === id
+  const sameCourseRows = existing.filter((r) => r.courseId === String(course._id))
+  const currentlyTeaching = target.parts.some((p) => p.teacher.id === id) || sameCourseRows.length > 0
   const exactTerms = allocTerms.size + manualTerms + (currentlyTeaching && allocTerms.size === 0 ? 1 : 0)
 
   const touches = (name) => topics.tags.some((t) => [...t.tokens].some((tok) => E.stems(name).has(tok)))
@@ -232,7 +315,7 @@ function buildCandidateInput(ctx, course, target, topics, requirement, fac, tent
   /* continuity */
   const prior = thisCourseAllocs.filter((a) => a.term !== ctx.term.name)
     .sort((a, b) => String(b.endDate).localeCompare(String(a.endDate)) || new Date(b.createdAt) - new Date(a.createdAt))
-  const courseHasHistory = prior.length > 0 || !!target.teacher.id || thisCourseAllocs.length > 0
+  const courseHasHistory = prior.length > 0 || targetTeachers(target).length > 0 || thisCourseAllocs.length > 0
     || Object.values(ctx.profileById).some((p) => (p.teachingHistory || []).some((h) => matchesCourse(h.courseCode, h.courseName, course)))
   const continuity = {
     courseHasHistory,
@@ -243,10 +326,11 @@ function buildCandidateInput(ctx, course, target, topics, requirement, fac, tent
 
   return {
     faculty: fac, profile, topics, requirement, settings,
+    alsoTeaches: sameCourseRows.flatMap((r) => r.labels || []).filter(Boolean),   // other batches of THIS course they already have
     profileComplete: isComplete(profile),
     sameDepartment: true,
-    alreadyAssigned: currentlyTeaching,
-    timetable: { scheduleKnown: ci.known, conflicts, uncertain, courseSessions: ci.sessions, existingSessions },
+    alreadyAssigned: target.parts.every((p) => p.teacher.id === id),
+    timetable: { scheduleKnown: infos.every((x) => x.info.known), conflicts, uncertain, courseSessions: newSessions, existingSessions },
     workload, leave,
     teaching: { exactTerms, similarCourses: similarIds.size + manualSimilar, hasRecords },
     continuity,
@@ -256,13 +340,16 @@ function buildCandidateInput(ctx, course, target, topics, requirement, fac, tent
 /* ═══════════════════════════ evaluation ═══════════════════════════ */
 
 /**
- * Rank all department faculty for one course/batch.
- * `ctx.term.name` must be set (it is only used to ignore the CURRENT term when reading history).
+ * Rank all department faculty for one course (or a range of its batches).
+ * `ctx.term.name` must be set (only used to ignore the CURRENT term when reading history).
  */
 function evaluateTarget(ctx, course, target, { tentative } = {}) {
   const requirement = ctx.requirementByCourse[String(course._id)] || null
   const topics = E.courseTopics(course, requirement)
-  const evaluated = ctx.faculty.map((f) => E.evaluateCandidate(buildCandidateInput(ctx, course, target, topics, requirement, f, tentative)))
+  const evaluated = ctx.faculty.map((f) => {
+    const input = buildCandidateInput(ctx, course, target, topics, requirement, f, tentative)
+    return { ...E.evaluateCandidate(input), alsoTeaches: input.alsoTeaches }
+  })
   return {
     topics: { source: topics.source, tags: topics.tags.map((t) => t.label) },
     requirement: requirement
@@ -272,61 +359,50 @@ function evaluateTarget(ctx, course, target, { tentative } = {}) {
   }
 }
 
-/** One evaluateTarget() per (course, batch) — the input a department-wide optimiser would consume. */
-function buildEvaluationMatrix(ctx, targets, opts) {
-  return targets.map(({ course, batchId }) => {
-    const target = resolveTarget(course, batchId)
-    return { courseId: String(course._id), targetKey: target.targetKey, ...evaluateTarget(ctx, course, target, opts) }
-  })
+/** evaluateTarget() for many prepared { course, target } pairs — the input a department-wide optimiser would consume. */
+function buildEvaluationMatrix(ctx, items, opts) {
+  return items.map(({ course, target }) => ({ courseId: String(course._id), label: target.label, ...evaluateTarget(ctx, course, target, opts) }))
 }
 
 const shapeSettings = (s) => ({ weights: s.weights, limits: s.limits, unknownPolicy: s.unknownPolicy, blockOnUnknownQualification: s.blockOnUnknownQualification })
 
+const activeAllocationFor = (ctx, course, part, term) =>
+  ctx.allocations.find((a) => a.status === "active" && String(a.courseRef) === String(course._id) && a.targetKey === part.targetKey && a.term === term) || null
+
 /* ═══════════════════════════ handlers' building blocks ═══════════════════════════ */
 
-function activeAllocationFor(ctx, course, target, term) {
-  return ctx.allocations.find((a) => a.status === "active" && String(a.courseRef) === String(course._id) && a.targetKey === target.targetKey && a.term === term) || null
+function prepare(ctx, body) {
+  const ci = parseCourseInput(body)
+  if (ci.errors.length) throw new AllocationError(400, ci.errors.join(". "))
+  const { existing, course, state } = resolveCourse(ctx, ci.value)
+  return { input: ci.value, existing, course, state, target: buildTarget(course, ci.value) }
 }
 
 async function recommend(dept, body) {
   const { errors, value } = parseTermInput(body)
   if (errors.length) throw new AllocationError(400, errors.join(". "))
-  if (!isId(body.courseId)) throw new AllocationError(400, "Select a course")
-
   const ctx = await loadContext(dept, value)
   ctx.term.name = value.term
-  const course = ctx.courseById[String(body.courseId)]
-  if (!course) throw new AllocationError(404, "Course not found")
-  const state = courseDeptState(ctx, course)
-  if (state === "other") throw new AllocationError(403, "This course belongs to another department")
-  if (course.status === "archived") throw new AllocationError(400, "Archived courses cannot be allocated")
-  const target = resolveTarget(course, body.batchId)
+  const { input, existing, course, state, target } = prepare(ctx, body)
 
   const result = evaluateTarget(ctx, course, target)
-  const ci = E.scheduleInfo(target.schedule, course.credits)
-  const active = activeAllocationFor(ctx, course, target, value.term)
-
-  const notices = []
-  if (!ctx.faculty.length) notices.push("No teaching faculty are registered in your department.")
-  if (!ci.known) notices.push("This course has no readable days/time, so timetable clashes cannot be checked for anyone.")
-  if (ci.estimated) notices.push("Weekly hours for this course are estimated from its credits because the class time is incomplete.")
-  const incomplete = ctx.faculty.filter((f) => !isComplete(ctx.profileById[f.id])).length
-  if (incomplete) notices.push(`${incomplete} of ${ctx.faculty.length} faculty have not completed their academic profile (Settings → Academic Profile), so parts of their score are unknown. You can send them a reminder under "Faculty profiles".`)
-  if (result.topics.source === "derived") notices.push("No subject tags are set for this course, so its topics were taken from the course title. Set tags under \"Course requirements\" for a sharper match.")
-  if (state === "unclaimed") notices.push(`This course has no department yet. Confirming an assignment will set it to "${ctx.dept}".`)
-
+  const active = target.parts.map((p) => activeAllocationFor(ctx, course, p, value.term)).find(Boolean)
   return {
-    course: courseCard(ctx, course, state),
-    target: { scope: target.scope, batchId: target.batchId, batchName: target.batchName, label: target.label, currentTeacher: target.teacher.id ? target.teacher : null },
+    course: {
+      _id: existing ? String(existing._id) : "", isNew: !existing, courseCode: course.courseCode, courseName: course.courseName,
+      credits: course.credits, departmentState: state,
+    },
+    target: {
+      scope: target.scope, label: target.label,
+      batches: target.parts.filter((p) => p.index).map((p) => ({ index: p.index, name: p.name, currentTeacher: p.teacher.id ? p.teacher : null })),
+      total: input.total,
+      currentTeachers: targetTeachers(target),
+    },
     term: value,
     settings: shapeSettings(ctx.settings),
     ...result,
     activeAllocation: active ? { id: String(active._id), facultyName: active.facultyName, term: active.term } : null,
-    notices,
-    totals: {
-      faculty: result.candidates.length,
-      eligible: result.candidates.filter((c) => c.eligibility.status !== "ineligible").length,
-    },
+    totals: { faculty: result.candidates.length, eligible: result.candidates.filter((c) => c.eligibility.status !== "ineligible").length },
   }
 }
 
@@ -349,6 +425,7 @@ function courseCard(ctx, c, state) {
   }
 }
 
+/** Existing courses of the department — only used to suggest / pre-fill while the HOD types. */
 async function listCourses(dept) {
   const ctx = await loadContext(dept)
   return ctx.courses
@@ -362,7 +439,7 @@ async function listCourses(dept) {
 /* ═══════════════════════════ confirm ═══════════════════════════ */
 
 const allocationShape = (a) => ({
-  id: String(a._id),
+  id: String(a._id), groupId: a.groupId || "", batchIndex: a.batchIndex || 0,
   courseRef: String(a.courseRef), courseId: a.courseId, courseCode: a.courseCode, courseName: a.courseName, courseSem: a.courseSem,
   scope: a.scope, batchId: a.batchId, batchName: a.batchName,
   term: a.term, startDate: a.startDate, endDate: a.endDate,
@@ -384,40 +461,40 @@ const notify = async (userId, title, message, meta = {}) => {
   try { await Notification.create({ userId, type: "course", title, message, link: "/courses", meta }) } catch { /* never block the assignment */ }
 }
 
+const batchWord = (parts) => {
+  const idx = parts.filter((p) => p.index).map((p) => p.index)
+  if (!idx.length) return ""
+  return idx.length === 1 ? ` (Batch ${idx[0]})` : ` (Batches ${idx[0]}–${idx[idx.length - 1]})`
+}
+
 async function confirmAllocation(req, body) {
   const dept = req.dept
   const { errors, value } = parseTermInput(body)
   if (errors.length) throw new AllocationError(400, errors.join(". "))
-  if (!isId(body.courseId)) throw new AllocationError(400, "Select a course")
   if (!isId(body.facultyId)) throw new AllocationError(400, "Select a faculty member")
   const note = String(body.note || "").trim().slice(0, 500)
 
-  // Everything is recomputed here from the database — nothing the browser sent about scores or
-  // eligibility is trusted.
+  // Everything is recomputed from the database — nothing the browser sent about scores or eligibility is trusted.
   const ctx = await loadContext(dept, value)
   ctx.term.name = value.term
-  const course = ctx.courseById[String(body.courseId)]
-  if (!course) throw new AllocationError(404, "Course not found")
-  const state = courseDeptState(ctx, course)
-  if (state === "other") throw new AllocationError(403, "This course belongs to another department")
-  if (course.status === "archived") throw new AllocationError(400, "Archived courses cannot be allocated")
-  const target = resolveTarget(course, body.batchId)
+  const { input, existing, course, target } = prepare(ctx, body)
 
-  const dup = activeAllocationFor(ctx, course, target, value.term)
-  if (dup) {
-    throw new AllocationError(409, `${target.label} is already allocated to ${dup.facultyName} for "${value.term}". Cancel that allocation in the history first if you want to change it.`, { code: "DUPLICATE" })
+  for (const p of target.parts) {
+    const dup = activeAllocationFor(ctx, course, p, value.term)
+    if (dup) {
+      throw new AllocationError(409, `${target.label} is already allocated to ${dup.facultyName} for "${value.term}". Cancel that allocation in the history first if you want to change it.`, { code: "DUPLICATE" })
+    }
   }
 
   const result = evaluateTarget(ctx, course, target)
   const cand = result.candidates.find((c) => c.facultyId === String(body.facultyId))
   if (!cand) throw new AllocationError(400, "That person is not teaching faculty of your department", { code: "NOT_IN_DEPARTMENT" })
-
   if (cand.eligibility.status === "ineligible") {
     throw new AllocationError(409, `${cand.name} can no longer be assigned: ${cand.eligibility.blockers.join(" | ")}`, { code: "INELIGIBLE", blockers: cand.eligibility.blockers })
   }
-  const prev = target.teacher
-  if (prev.id && prev.id !== cand.facultyId && !body.replaceExisting) {
-    throw new AllocationError(409, `${target.label} is currently taught by ${prev.name || "another faculty member"}. Confirm that you want to replace them.`, { code: "REPLACES_EXISTING", currentTeacher: prev })
+  const others = targetTeachers(target).filter((t) => t.id !== cand.facultyId)
+  if (others.length && !body.replaceExisting) {
+    throw new AllocationError(409, `${target.label} is currently taught by ${others.map((t) => t.name || "another faculty member").join(", ")}. Confirm that you want to replace them.`, { code: "REPLACES_EXISTING", currentTeacher: others[0] })
   }
   if (cand.eligibility.warnings.length && !body.acknowledgeWarnings) {
     throw new AllocationError(409, "Review and acknowledge the warnings before confirming", { code: "WARNINGS_NOT_ACKNOWLEDGED", warnings: cand.eligibility.warnings })
@@ -425,105 +502,177 @@ async function confirmAllocation(req, body) {
 
   const faculty = ctx.faculty.find((f) => f.id === cand.facultyId)
   const now = new Date()
+  const claim = !(course.department || "").trim()
+  const deptFilter = claim ? { $in: [null, ""] } : course.department
 
-  // 1 ─ history row first: the partial unique index is the final guard against duplicates / races
-  let allocation
-  try {
-    allocation = await CourseAllocation.create({
-      department: dept,
-      courseRef: course._id, courseId: course.courseId || "", courseCode: course.courseCode || course.courseId || "", courseName: course.courseName, courseSem: course.sem || "",
-      scope: target.scope, batchId: target.batchId, batchName: target.batchName, targetKey: target.targetKey,
-      term: value.term, startDate: value.startDate, endDate: value.endDate,
-      facultyId: faculty.id, facultyName: faculty.name,
-      status: "active",
-      rank: cand.rank, candidatesConsidered: result.candidates.length,
-      scoreSnapshot: { total: cand.score, completeness: cand.completeness, components: cand.components },
-      eligibilitySnapshot: { status: cand.eligibility.status, checks: cand.eligibility.checks },
-      settingsSnapshot: shapeSettings(ctx.settings),
-      warnings: cand.eligibility.warnings, acknowledgedWarnings: !!body.acknowledgeWarnings,
-      replacedExisting: !!(prev.id && prev.id !== faculty.id), previousTeacher: { id: prev.id, name: prev.name },
-      note, assignedById: String(req.user._id), assignedByName: req.user.name || "",
+  // 0 ─ the course itself: created if the HOD typed a new one; credits / name / schedule are the HOD's values
+  let courseId
+  if (existing) {
+    courseId = existing._id
+  } else {
+    const created = await Course.create({
+      courseId: input.courseCode, courseCode: input.courseCode, courseName: input.courseName,
+      label: `${input.courseCode} — ${input.courseName}`, credits: input.credits, status: "active", department: dept,
+      schedule: input.whole ? { ...input.parts[0].schedule, room: "" } : { days: "", time: "", room: "" },
     })
+    courseId = created._id
+  }
+  if (!input.whole) {                                    // make sure Batch 1..total exist
+    const have = existing ? (existing.batches || []).length : 0
+    if (have < input.total) {
+      const add = []
+      for (let i = have + 1; i <= input.total; i++) add.push({ batchName: `Batch ${i}`, teacher: {}, schedule: { days: "", time: "", room: "" } })
+      await Course.updateOne({ _id: courseId }, { $push: { batches: { $each: add } } })
+    }
+  }
+  const fresh = await Course.findById(courseId).lean()
+  const deptNow = claim ? { $in: [null, "", dept] } : deptFilter
+  await Course.updateOne({ _id: courseId }, { $set: { courseName: input.courseName, credits: input.credits, label: `${input.courseCode} — ${input.courseName}` } })
+
+  // 1 ─ history rows (one per batch, same groupId). The partial unique index is the final guard against duplicates / races.
+  const groupId = `${courseId}-${now.getTime()}-${faculty.id.slice(-4)}`
+  const rows = []
+  const parts = target.parts.map((p) => {
+    const b = p.index ? (fresh.batches || [])[p.index - 1] : null
+    return { ...p, batchId: b ? String(b._id) : "", name: b ? b.batchName : "", targetKey: b ? String(b._id) : "main", batchDoc: b }
+  })
+  try {
+    for (const p of parts) {
+      rows.push(await CourseAllocation.create({
+        department: dept, groupId, batchIndex: p.index,
+        courseRef: courseId, courseId: input.courseCode, courseCode: input.courseCode, courseName: input.courseName, courseSem: course.sem || "",
+        scope: target.scope, batchId: p.batchId, batchName: p.name, targetKey: p.targetKey,
+        term: value.term, startDate: value.startDate, endDate: value.endDate,
+        facultyId: faculty.id, facultyName: faculty.name,
+        status: "active",
+        rank: cand.rank, candidatesConsidered: result.candidates.length,
+        scoreSnapshot: { total: cand.score, completeness: cand.completeness, components: cand.components },
+        eligibilitySnapshot: { status: cand.eligibility.status, checks: cand.eligibility.checks },
+        settingsSnapshot: shapeSettings(ctx.settings),
+        warnings: cand.eligibility.warnings, acknowledgedWarnings: !!body.acknowledgeWarnings,
+        replacedExisting: !!(p.teacher.id && p.teacher.id !== faculty.id), previousTeacher: { id: p.teacher.id, name: p.teacher.name },
+        note, assignedById: String(req.user._id), assignedByName: req.user.name || "",
+      }))
+    }
   } catch (e) {
+    for (const r of rows) await CourseAllocation.deleteOne({ _id: r._id })
     if (e && e.code === 11000) throw new AllocationError(409, `${target.label} was just allocated for "${value.term}" by someone else. Refresh and review.`, { code: "DUPLICATE" })
     throw e
   }
 
-  // 2 ─ update the course only if nobody changed its teacher since we read it
-  const info = { term: value.term, startDate: value.startDate, endDate: value.endDate, allocationId: allocation._id, assignedAt: now }
-  const claim = !(course.department || "").trim()
-  const deptFilter = claim ? { $in: [null, ""] } : course.department
-  const prevMatch = prev.id ? prev.id : null
-  let res
-  if (target.scope === "course") {
-    res = await Course.updateOne(
-      { _id: course._id, "teacher.id": prevMatch, department: deptFilter },
-      { $set: { "teacher.id": faculty.id, "teacher.name": faculty.name, allocation: info, ...(claim ? { department: dept } : {}) } },
-    )
-  } else {
-    res = await Course.updateOne(
-      { _id: course._id, department: deptFilter, batches: { $elemMatch: { _id: target.batchId, "teacher.id": prevMatch } } },
-      { $set: { "batches.$.teacher": { id: faculty.id, name: faculty.name }, "batches.$.allocation": info, ...(claim ? { department: dept } : {}) } },
-    )
+  // 2 ─ update the course only where nobody changed the teacher since we read it
+  const applied = []
+  const rollback = async () => {
+    for (const a of applied) {
+      const prevId = a.part.teacher.id
+      if (a.part.index) {
+        await Course.updateOne({ _id: courseId, batches: { $elemMatch: { _id: a.part.batchId, "teacher.id": faculty.id } } },
+          prevId ? { $set: { "batches.$.teacher": { id: prevId, name: a.part.teacher.name } } }
+                 : { $set: { "batches.$.teacher.name": "" }, $unset: { "batches.$.teacher.id": "" } })
+      } else {
+        await Course.updateOne({ _id: courseId, "teacher.id": faculty.id },
+          prevId ? { $set: { "teacher.id": prevId, "teacher.name": a.part.teacher.name } }
+                 : { $set: { "teacher.name": "" }, $unset: { "teacher.id": "" } })
+      }
+    }
+    for (const r of rows) await CourseAllocation.deleteOne({ _id: r._id })
   }
-  if (!res.matchedCount) {
-    await CourseAllocation.deleteOne({ _id: allocation._id })
-    throw new AllocationError(409, "This course was changed by someone else while you were reviewing. Refresh the recommendations and try again.", { code: "STALE" })
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i]
+    const info = { term: value.term, startDate: value.startDate, endDate: value.endDate, allocationId: rows[i]._id, assignedAt: now }
+    const prevMatch = p.teacher.id ? p.teacher.id : null
+    const room = p.batchDoc && p.batchDoc.schedule ? p.batchDoc.schedule.room || "" : (fresh.schedule && fresh.schedule.room) || ""
+    let res
+    if (!p.index) {
+      res = await Course.updateOne(
+        { _id: courseId, "teacher.id": prevMatch, department: deptNow },
+        { $set: { "teacher.id": faculty.id, "teacher.name": faculty.name, schedule: { ...p.schedule, room }, allocation: info, ...(claim ? { department: dept } : {}) } },
+      )
+    } else {
+      res = await Course.updateOne(
+        { _id: courseId, department: deptNow, batches: { $elemMatch: { _id: p.batchId, "teacher.id": prevMatch } } },
+        { $set: { "batches.$.teacher": { id: faculty.id, name: faculty.name }, "batches.$.schedule": { ...p.schedule, room }, "batches.$.allocation": info, ...(claim ? { department: dept } : {}) } },
+      )
+    }
+    if (!res.matchedCount) {
+      await rollback()
+      throw new AllocationError(409, "This course was changed by someone else while you were reviewing. Refresh the recommendations and try again.", { code: "STALE" })
+    }
+    applied.push({ part: p })
   }
 
-  // 3 ─ older allocations of the same course/batch are history now
+  // 3 ─ older allocations of the same course/batches are history now
   await CourseAllocation.updateMany(
-    { courseRef: course._id, targetKey: target.targetKey, status: "active", _id: { $ne: allocation._id } },
+    { courseRef: courseId, targetKey: { $in: parts.map((p) => p.targetKey) }, status: "active", groupId: { $ne: groupId } },
     { $set: { status: "superseded" } },
   )
 
   // 4 ─ tell the people concerned
+  const where = `${input.courseCode} — ${input.courseName}${batchWord(parts)}`
   await notify(faculty.id, "Course Assigned",
-    `${req.user.name || "Your HOD"} assigned you ${course.courseCode || course.courseId} — ${course.courseName}${target.batchName ? ` (${target.batchName})` : ""} for ${value.term} (${fmtDate(value.startDate)} – ${fmtDate(value.endDate)}).`,
-    { allocationId: String(allocation._id), courseId: String(course._id) })
-  if (prev.id && prev.id !== faculty.id) {
-    await notify(prev.id, "Course Reassigned",
-      `${course.courseCode || course.courseId} — ${course.courseName}${target.batchName ? ` (${target.batchName})` : ""} is now assigned to ${faculty.name} for ${value.term}.`,
-      { allocationId: String(allocation._id), courseId: String(course._id) })
+    `${req.user.name || "Your HOD"} assigned you ${where} for ${value.term} (${fmtDate(value.startDate)} – ${fmtDate(value.endDate)}).`,
+    { groupId, courseId: String(courseId) })
+  for (const t of others) {
+    await notify(t.id, "Course Reassigned", `${where} is now assigned to ${faculty.name} for ${value.term}.`, { groupId, courseId: String(courseId) })
   }
 
-  return allocationShape(allocation.toObject())
+  return { ...allocationShape(rows[0].toObject ? rows[0].toObject() : rows[0]), batchNames: parts.filter((p) => p.index).map((p) => p.name), count: rows.length }
 }
 
 async function cancelAllocation(req, id, reason) {
   if (!isId(id)) throw new AllocationError(400, "Invalid allocation id")
-  const a = await CourseAllocation.findById(id)
-  if (!a || a.department !== req.dept) throw new AllocationError(404, "Allocation not found")
-  if (a.status !== "active") throw new AllocationError(409, "Only an active allocation can be cancelled")
+  const first = await CourseAllocation.findById(id)
+  if (!first || first.department !== req.dept) throw new AllocationError(404, "Allocation not found")
+  if (first.status !== "active") throw new AllocationError(409, "Only an active allocation can be cancelled")
 
-  a.status = "cancelled"
-  a.cancelledAt = new Date()
-  a.cancelledById = String(req.user._id)
-  a.cancelReason = String(reason || "").trim().slice(0, 300)
-  await a.save()
+  // a multi-batch assignment is cancelled as a whole
+  const group = first.groupId
+    ? await CourseAllocation.find({ department: req.dept, groupId: first.groupId, status: "active" }).lean()
+    : [first.toObject ? first.toObject() : first]
+  const why = String(reason || "").trim().slice(0, 300)
 
-  // Remove the teacher only if they are still the one this allocation put there
-  if (a.scope === "course") {
-    await Course.updateOne({ _id: a.courseRef, "teacher.id": a.facultyId }, { $set: { "teacher.name": "" }, $unset: { "teacher.id": "", allocation: "" } })
-  } else {
-    await Course.updateOne(
-      { _id: a.courseRef, batches: { $elemMatch: { _id: a.batchId, "teacher.id": a.facultyId } } },
-      { $set: { "batches.$.teacher.name": "" }, $unset: { "batches.$.teacher.id": "", "batches.$.allocation": "" } },
-    )
+  for (const a of group) {
+    const doc = await CourseAllocation.findById(a._id)
+    doc.status = "cancelled"; doc.cancelledAt = new Date(); doc.cancelledById = String(req.user._id); doc.cancelReason = why
+    await doc.save()
+    // Remove the teacher only if they are still the one this allocation put there
+    if (a.scope === "course") {
+      await Course.updateOne({ _id: a.courseRef, "teacher.id": a.facultyId }, { $set: { "teacher.name": "" }, $unset: { "teacher.id": "", allocation: "" } })
+    } else {
+      await Course.updateOne(
+        { _id: a.courseRef, batches: { $elemMatch: { _id: a.batchId, "teacher.id": a.facultyId } } },
+        { $set: { "batches.$.teacher.name": "" }, $unset: { "batches.$.teacher.id": "", "batches.$.allocation": "" } },
+      )
+    }
   }
-  await notify(a.facultyId, "Course Allocation Cancelled",
-    `Your allocation to ${a.courseCode} — ${a.courseName}${a.batchName ? ` (${a.batchName})` : ""} for ${a.term} was cancelled by ${req.user.name || "your HOD"}.`,
-    { allocationId: String(a._id), courseId: String(a.courseRef) })
-  return allocationShape(a.toObject())
+  const names = group.filter((a) => a.batchName).map((a) => a.batchName)
+  await notify(first.facultyId, "Course Allocation Cancelled",
+    `Your allocation to ${first.courseCode} — ${first.courseName}${names.length ? ` (${names.join(", ")})` : ""} for ${first.term} was cancelled by ${req.user.name || "your HOD"}.`,
+    { groupId: first.groupId || "", courseId: String(first.courseRef) })
+  return { ...allocationShape(first.toObject ? first.toObject() : first), status: "cancelled" }
 }
 
+/** One entry per assignment (a multi-batch assignment is a single entry listing its batches). */
 async function listHistory(dept, q = {}) {
   const filter = { department: dept }
   if (isId(q.courseId)) filter.courseRef = q.courseId
   if (isId(q.facultyId)) filter.facultyId = q.facultyId
   if (["active", "cancelled", "superseded"].includes(q.status)) filter.status = q.status
-  const rows = await CourseAllocation.find(filter).sort({ createdAt: -1 }).limit(Math.min(Number(q.limit) || 100, 300)).lean()
-  return rows.map(allocationShape)
+  const rows = await CourseAllocation.find(filter).sort({ createdAt: -1 }).limit(Math.min(Number(q.limit) || 300, 600)).lean()
+  const out = []
+  const byGroup = new Map()
+  for (const r of rows) {
+    const key = r.groupId ? `${r.groupId}|${r.status}` : String(r._id)
+    if (byGroup.has(key)) {
+      const g = byGroup.get(key)
+      if (r.batchName) g.batchNames.push(r.batchName)
+      continue
+    }
+    const g = { ...allocationShape(r), batchNames: r.batchName ? [r.batchName] : [] }
+    byGroup.set(key, g); out.push(g)
+  }
+  out.forEach((g) => g.batchNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true })))
+  return out
 }
 
 /* ═══════════════════════════ settings / profiles / requirements ═══════════════════════════ */
@@ -610,7 +759,7 @@ async function saveRequirement(req, courseId, body) {
 
 module.exports = {
   AllocationError,
-  loadContext, courseDeptState, resolveTarget, evaluateTarget, buildEvaluationMatrix, buildCandidateInput,
+  loadContext, courseDeptState, buildTarget, evaluateTarget, buildEvaluationMatrix, buildCandidateInput,
   recommend, listCourses, confirmAllocation, cancelAllocation, listHistory,
   getSettings, saveSettings, listFacultyProfiles, remindIncomplete, getRequirement, saveRequirement,
 }

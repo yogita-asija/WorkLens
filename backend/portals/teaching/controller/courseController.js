@@ -61,7 +61,8 @@ exports.getCourses = async (req, res) => {
         students:    c.students?.length || 0,
         capacity:    c.capacity || 60,
         schedule:    c.schedule || { days: "Not set", time: "", room: "" },
-        batches:     (c.batches || []).map(b => ({
+        // a faculty member who only teaches some batches sees just those batches (other teachers' batches stay private)
+        batches:     (c.batches || []).filter(b => !isFaculty(req) || String(c.teacher?.id || "") === myId(req) || String(b.teacher?.id || "") === myId(req)).map(b => ({
           _id:      b._id,
           batchName: b.batchName,
           teacher:   b.teacher || {},

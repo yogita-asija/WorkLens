@@ -24,6 +24,7 @@ export default function CandidateCard({ c, comparing, compareFull, onToggleCompa
             <div className="min-w-0">
               <p className="text-sm font-semibold text-white truncate">{c.name}</p>
               {c.email && <p className="text-[11px] text-neutral-500 truncate">{c.email}</p>}
+              {c.alsoTeaches?.length > 0 && <p className="text-[11px] text-sky-300 mt-0.5">Already teaches {c.alsoTeaches.join(", ")} of this course — hours and clashes below include it</p>}
             </div>
             <div className="flex items-center gap-2">
               <Pill color="#9ca3af" title="Share of the score weights for which real data exists">Data {c.completeness}%</Pill>

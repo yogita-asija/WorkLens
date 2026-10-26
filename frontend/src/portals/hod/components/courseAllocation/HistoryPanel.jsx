@@ -13,7 +13,7 @@ function Row({ a, onCancel }) {
     <div className="py-4 first:pt-0 last:pb-0">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-white">{a.courseCode} — {a.courseName}{a.batchName ? ` · ${a.batchName}` : ""}</p>
+          <p className="text-sm font-semibold text-white">{a.courseCode} — {a.courseName}{a.batchNames?.length ? ` · ${a.batchNames.length === 1 ? a.batchNames[0] : `${a.batchNames[0]} – ${a.batchNames[a.batchNames.length - 1]}`}` : ""}</p>
           <p className="text-xs text-neutral-400 mt-0.5">
             <b className="text-neutral-200">{a.facultyName}</b> · {a.term} ({fmtKey(a.startDate)} – {fmtKey(a.endDate)})
           </p>
@@ -92,7 +92,7 @@ export default function HistoryPanel({ refreshKey, onChanged }) {
       {cancel && (
         <HodModal open onClose={busy ? undefined : () => setCancel(null)} width={460} title="Cancel this allocation?">
           <p className="text-sm text-neutral-300 leading-relaxed">
-            {cancel.facultyName} will be removed from <b>{cancel.courseCode} — {cancel.courseName}</b>{cancel.batchName ? ` (${cancel.batchName})` : ""} and notified. The course disappears from their Courses page. The record stays in this history.
+            {cancel.facultyName} will be removed from <b>{cancel.courseCode} — {cancel.courseName}</b>{cancel.batchNames?.length ? ` (${cancel.batchNames.join(", ")})` : ""} and notified. The course disappears from their Courses page. The record stays in this history.
           </p>
           <input className={`${inputCls} mt-4`} placeholder="Reason (optional)" maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} />
           <div className="flex justify-end gap-2 mt-5">

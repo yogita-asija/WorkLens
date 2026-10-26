@@ -18,6 +18,8 @@ const QUALIFICATION_LEVELS = ["Diploma", "Bachelors", "Masters", "PhD", "Other"]
 /* ── history ─────────────────────────────────────────────────────────────── */
 const allocationSchema = new Schema({
   department:  { type: String, required: true, index: true },
+  groupId:     { type: String, default: "", index: true },    // rows created by one confirmation (several batches) share it
+  batchIndex:  { type: Number, default: 0 },                  // 1-based batch number, 0 = whole course
 
   // What was allocated
   courseRef:   { type: Schema.Types.ObjectId, ref: "Course", required: true },

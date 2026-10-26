@@ -87,3 +87,52 @@ export function ComponentBar({ c, compact }) {
   )
 }
 
+
+/* ───────── schedule helpers + input (HOD types the schedule; no free-text format to get wrong) ───────── */
+export const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
+export const to12 = (hhmm) => {
+  const m = String(hhmm || "").match(/^(\d{1,2}):(\d{2})$/)
+  if (!m) return ""
+  const h = parseInt(m[1], 10)
+  return `${((h + 11) % 12) + 1}:${m[2]} ${h >= 12 ? "PM" : "AM"}`
+}
+export const to24 = (t) => {
+  const m = String(t || "").match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i)
+  if (!m) return ""
+  let h = parseInt(m[1], 10); const p = (m[3] || "").toUpperCase()
+  if (p === "PM" && h !== 12) h += 12
+  if (p === "AM" && h === 12) h = 0
+  return `${String(h).padStart(2, "0")}:${m[2]}`
+}
+/** "Mon, Wed" + "10:00 AM - 11:00 AM"  →  { days:["Mon","Wed"], start:"10:00", end:"11:00" } (what can be read, else blank) */
+export function scheduleFromText(s = {}) {
+  const days = DAYS.filter((d) => new RegExp(`\\b${d}`, "i").test(s.days || ""))
+  const parts = String(s.time || "").match(/\d{1,2}:\d{2}\s*(?:AM|PM)?/gi) || []
+  return { days, start: to24(parts[0]), end: to24(parts[1]) }
+}
+export const scheduleToText = (v) => ({ days: DAYS.filter((d) => v.days.includes(d)).join(", "), time: v.start && v.end ? `${to12(v.start)} - ${to12(v.end)}` : "" })
+export const scheduleReady = (v) => !!v && v.days.length > 0 && !!v.start && !!v.end && v.end > v.start
+export const blankSchedule = () => ({ days: [], start: "", end: "" })
+
+export function ScheduleInput({ label, value, onChange }) {
+  const toggle = (d) => onChange({ ...value, days: value.days.includes(d) ? value.days.filter((x) => x !== d) : [...value.days, d] })
+  const field = "bg-[#141414] border border-[#333] focus:border-green-500 outline-none rounded-lg px-3 py-2 text-sm text-white"
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+      {label && <span className="text-xs font-medium text-neutral-300 w-20">{label}</span>}
+      <div className="flex gap-1.5">
+        {DAYS.map((d) => (
+          <button type="button" key={d} onClick={() => toggle(d)}
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition ${value.days.includes(d) ? "bg-green-500 text-black border-green-500" : "border-[#333] text-neutral-400 hover:text-white hover:bg-[#252525]"}`}>{d}</button>
+        ))}
+      </div>
+      <div className="flex items-center gap-2">
+        <input type="time" className={field} value={value.start} onChange={(e) => onChange({ ...value, start: e.target.value })} />
+        <span className="text-neutral-500 text-xs">to</span>
+        <input type="time" className={field} value={value.end} onChange={(e) => onChange({ ...value, end: e.target.value })} />
+      </div>
+      {value.start && value.end && value.end <= value.start && <span className="text-[11px] text-red-400">End must be after start</span>}
+    </div>
+  )
+}

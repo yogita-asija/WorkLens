@@ -11,14 +11,15 @@ export default function ReviewModal({ candidate: c, result, form, onClose, onCon
   const [replace, setReplace] = useState(false)
   const [note, setNote] = useState("")
 
-  const current = result.target.currentTeacher
-  const replaces = !!current && current.id !== c.facultyId
+  const others = result.target.currentTeachers.filter((t) => t.id !== c.facultyId)
+  const replaces = others.length > 0
+  const otherNames = others.map((t) => t.name || "another faculty member").join(", ")
   const needsAck = c.eligibility.warnings.length > 0
   const ready = ack && (!replaces || replace)
 
   return (
     <HodModal open onClose={saving ? undefined : onClose} width={760} title="Review & confirm assignment"
-      subtitle={`${result.course.courseCode} — ${result.course.courseName}${result.target.batchName ? ` · ${result.target.batchName}` : ""}`}>
+      subtitle={`${result.target.label} — ${result.course.courseName}`}>
       <div className="grid sm:grid-cols-3 gap-3 mb-5">
         <div className="rounded-xl bg-[#141414] border border-[#2a2a2a] p-3">
           <p className="text-[10px] uppercase tracking-wider text-neutral-500">Faculty</p>
@@ -54,7 +55,7 @@ export default function ReviewModal({ candidate: c, result, form, onClose, onCon
       {replaces && (
         <div className="mb-4">
           <Notice tone="warn">
-            <b>{result.target.label}</b> is currently taught by <b>{current.name || "another faculty member"}</b>. Confirming <b>replaces</b> them, and they will be notified.
+            <b>{result.target.label}</b> is currently taught by <b>{otherNames}</b>. Confirming <b>replaces</b> them, and they will be notified.
           </Notice>
         </div>
       )}
@@ -76,7 +77,7 @@ export default function ReviewModal({ candidate: c, result, form, onClose, onCon
         {replaces && (
           <label className="flex items-start gap-2 text-xs text-neutral-300 cursor-pointer">
             <input type="checkbox" className="mt-0.5 accent-green-500" checked={replace} onChange={(e) => setReplace(e.target.checked)} />
-            <span>Replace {current.name || "the current teacher"} for this course.</span>
+            <span>Replace {otherNames} for this course.</span>
           </label>
         )}
       </div>
