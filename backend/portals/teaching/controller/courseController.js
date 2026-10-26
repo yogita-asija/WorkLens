@@ -3,6 +3,16 @@ const Assignment  = require("../../../shared/models/Assignment")
 const Attendance  = require("../../../shared/models/Attendance")
 const Notification = require("../../../shared/models/Notification")
 
+/* ───────── privacy: a teaching-staff member only ever sees / touches the courses assigned to them ─────────
+   "Assigned" = they are the course's teacher, or the teacher of one of its batches. Assignments are made by
+   the HOD through Course Allocation. HOD / admin / non-teaching roles keep their existing access. */
+const isFaculty  = (req) => !!req.user && req.user.role === "teaching"
+const myId       = (req) => String(req.user._id)
+const ownsCourse = (req, c) =>
+  String(c.teacher?.id || "") === myId(req) || (c.batches || []).some(b => String(b.teacher?.id || "") === myId(req))
+// false → the caller answers 404, exactly as if the course did not exist
+const canUse = (req, course) => !isFaculty(req) || ownsCourse(req, course)
+
 // GET /api/courses
 exports.getCourses = async (req, res) => {
   try {
@@ -21,8 +31,13 @@ exports.getCourses = async (req, res) => {
       ]
     }
 
-    const courses = await Course.find(filter).lean()
-    const assignments = await Assignment.find({}, "courseId submissions total completed").lean()
+    // Faculty: whatever ?teacherId= says, they only get their own courses (search/status filters still apply)
+    const query = isFaculty(req)
+      ? { $and: [filter, { $or: [{ "teacher.id": myId(req) }, { "batches.teacher.id": myId(req) }] }] }
+      : filter
+
+    const courses = await Course.find(query).lean()
+    const assignments = await Assignment.find({ courseId: { $in: courses.map(c => c._id) } }, "courseId submissions total completed").lean()
 
     const result = courses.map(c => {
       const cas = assignments.filter(a => a.courseId?.toString() === c._id?.toString())
@@ -42,13 +57,16 @@ exports.getCourses = async (req, res) => {
         credits:     c.credits || 3,
         status:      c.status || "active",
         teacher:     c.teacher || {},
+        allocation:  c.allocation?.term ? { term: c.allocation.term, startDate: c.allocation.startDate, endDate: c.allocation.endDate } : null,
         students:    c.students?.length || 0,
         capacity:    c.capacity || 60,
         schedule:    c.schedule || { days: "Not set", time: "", room: "" },
-        batches:     (c.batches || []).map(b => ({
+        // a faculty member who only teaches some batches sees just those batches (other teachers' batches stay private)
+        batches:     (c.batches || []).filter(b => !isFaculty(req) || String(c.teacher?.id || "") === myId(req) || String(b.teacher?.id || "") === myId(req)).map(b => ({
           _id:      b._id,
           batchName: b.batchName,
           teacher:   b.teacher || {},
+          allocation: b.allocation?.term ? { term: b.allocation.term, startDate: b.allocation.startDate, endDate: b.allocation.endDate } : null,
           schedule:  b.schedule || { days: "", time: "", room: "" },
           capacity:  b.capacity || 60,
           students:  b.students?.length || 0,
@@ -73,7 +91,7 @@ exports.getCourseById = async (req, res) => {
         { courseCode: req.params.id },
       ]
     }).lean()
-    if (!course) return res.status(404).json({ message: "Course not found" })
+    if (!course || !canUse(req, course)) return res.status(404).json({ message: "Course not found" })
     res.json(course)
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -86,7 +104,7 @@ exports.getCourseStudents = async (req, res) => {
     const course = await Course.findOne({
       $or: [{ courseId: req.params.courseId }, { courseCode: req.params.courseId }]
     })
-    if (!course) return res.status(404).json({ message: "Course not found" })
+    if (!course || !canUse(req, course)) return res.status(404).json({ message: "Course not found" })
     const students = (course.students || []).map(s => ({
       id: s.id, name: s.name, status: "present", notes: "", enrolledAt: s.enrolledAt,
     }))
@@ -113,7 +131,7 @@ exports.createCourse = async (req, res) => {
       label: `${id} — ${courseName}`,
       sem: sem || "N/A", credits: credits || 3,
       status: status || "active",
-      teacher: teacher || {},
+      teacher: isFaculty(req) ? { id: req.user._id, name: req.user.name } : (teacher || {}),
       schedule: schedule || { days: "", time: "", room: "" },
       capacity: capacity || 60,
       students: students || [],
@@ -127,7 +145,15 @@ exports.createCourse = async (req, res) => {
 // PUT /api/courses/:id
 exports.updateCourse = async (req, res) => {
   try {
-    const course = await Course.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
+    const update = { ...req.body }
+    if (isFaculty(req)) {
+      // Faculty can edit their own course details, but cannot hand courses to themselves or others —
+      // teacher assignment is the HOD's job (Course Allocation).
+      const existing = await Course.findById(req.params.id).lean()
+      if (!existing || !canUse(req, existing)) return res.status(404).json({ message: "Course not found" })
+      for (const k of ["teacher", "department", "allocation", "batches"]) delete update[k]
+    }
+    const course = await Course.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true })
     if (!course) return res.status(404).json({ message: "Course not found" })
     res.json(course)
   } catch (err) {
@@ -138,6 +164,10 @@ exports.updateCourse = async (req, res) => {
 // DELETE /api/courses/:id
 exports.deleteCourse = async (req, res) => {
   try {
+    if (isFaculty(req)) {
+      const existing = await Course.findById(req.params.id).lean()
+      if (!existing || !canUse(req, existing)) return res.status(404).json({ message: "Course not found" })
+    }
     const course = await Course.findByIdAndDelete(req.params.id)
     if (!course) return res.status(404).json({ message: "Course not found" })
     res.json({ message: "Course deleted" })
@@ -153,7 +183,7 @@ exports.enrollStudents = async (req, res) => {
     if (!Array.isArray(students)) return res.status(400).json({ message: "students must be an array" })
 
     const course = await Course.findById(req.params.id)
-    if (!course) return res.status(404).json({ message: "Course not found" })
+    if (!course || !canUse(req, course)) return res.status(404).json({ message: "Course not found" })
 
     let added = 0
     for (const s of students) {
@@ -173,7 +203,7 @@ exports.enrollStudents = async (req, res) => {
 exports.unenrollStudent = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id)
-    if (!course) return res.status(404).json({ message: "Course not found" })
+    if (!course || !canUse(req, course)) return res.status(404).json({ message: "Course not found" })
     course.students = course.students.filter(s => s.id !== req.params.studentId)
     await course.save()
     res.json({ message: "Student unenrolled", total: course.students.length })
@@ -186,7 +216,7 @@ exports.unenrollStudent = async (req, res) => {
 exports.getEnrolledStudents = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id).lean()
-    if (!course) return res.status(404).json({ message: "Course not found" })
+    if (!course || !canUse(req, course)) return res.status(404).json({ message: "Course not found" })
 
     const courseIdStr = course.courseId || course.courseCode
 
@@ -237,7 +267,7 @@ exports.getEnrolledStudents = async (req, res) => {
 exports.getCourseAnalytics = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id).lean()
-    if (!course) return res.status(404).json({ message: "Course not found" })
+    if (!course || !canUse(req, course)) return res.status(404).json({ message: "Course not found" })
 
     const assignments = await Assignment.find({ courseId: req.params.id }).lean()
     const totalAssignments = assignments.length

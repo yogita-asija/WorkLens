@@ -8,6 +8,7 @@ import Topbar         from "../../../shared/components/Topbar"
 import ProfileSidebar from "../../../shared/components/ProfileSidebar"
 import NotifPanel     from "../../../shared/components/NotifPanel"
 import GlobalToast    from "../../../shared/components/GlobalToast"
+import ProfileGate    from "../../../shared/components/ProfileGate"
 
 // ── Existing faculty pages ─────────────────────────────────────────────────
 import Dashboard         from "../pages/Dashboard"
@@ -141,6 +142,7 @@ export default function FacultyLayout() {
       {notifOpen && <div className="fixed inset-0 bg-black/40 z-30" onClick={closeNotif} />}
 
       <GlobalToast />
+      <ProfileGate user={user} onLogout={logout} />   {/* mandatory academic profile (used for course allocation) */}
     </div>
   )
 }

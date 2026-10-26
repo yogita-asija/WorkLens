@@ -17,6 +17,7 @@ app.use("/api/auth",           require("./shared/routes/authRoutes"))
 const { authenticate } = require("./shared/middleware/auth")
 app.use("/api", authenticate)   // everything below this line now requires a valid login token
 app.use("/api/settings",       require("./shared/routes/settingsRoutes"))
+app.use("/api/faculty-profile", require("./shared/routes/facultyProfileRoutes"))   // faculty's own academic profile (mandatory)
 // app.use("/api/analytics",      require("./routes/analyticsRoutes"))
 app.use("/api/dashboard",      require("./portals/teaching/routes/dashboardRoutes"))
 app.use("/api/workflow",       require("./portals/teaching/routes/workflowRoutes"))

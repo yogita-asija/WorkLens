@@ -6,6 +6,7 @@ import {
 } from '../components/UI'
 import { Sun, Moon, Monitor } from 'lucide-react'
 import { useTheme } from '../../app/providers/ThemeContext'
+import AcademicProfileForm from '../components/AcademicProfileForm'
 
 const API = `${import.meta.env.VITE_API_URL}/api`
 
@@ -790,6 +791,14 @@ export default function SettingsPage({ user }) {
               </div>
             </div>
           </div>
+
+          {/* Academic Profile — mandatory for teaching staff; used by WorkLens to rate faculty for course allocation */}
+          {user?.role === 'teaching' && (
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, transition: 'background 0.25s, border-color 0.25s' }}>
+              <SectionHeader icon={<ExtraIcons.User />} title="Academic Profile" subtitle="Required — your qualifications and experience are used to match you with courses" />
+              <AcademicProfileForm />
+            </div>
+          )}
 
           {/* System Settings */}
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, transition: 'background 0.25s, border-color 0.25s' }}>
