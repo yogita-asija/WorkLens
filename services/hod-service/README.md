@@ -6,13 +6,14 @@ Head-of-Department tooling: dashboard, workload, allocation, reports, and workfl
 This is the heaviest service because it aggregates data from every other domain.
 
 ## Public routes
-`/api/hod/*` except `/api/hod/leaves/*` (that goes to leave-service)
+`/api/hod/*` except `/api/hod/leaves/*` (that goes to leave-service), and `/api/faculty-profile` (its model
+lives in the course-allocation model file, so it belongs here, not in auth-service)
 (dashboard, availability, substitutions, conflicts, faculty and workload, tasks, papers, escalations,
 deadlines, duty-allocation, course-allocation, reports, workflow-insights)
 
 ## Moves here from the monolith
 - Models: `CourseAllocation`, `DutyAllocation`, `HodModels`, `ReportSnapshot`, `WorkflowAction`
-- Controllers: `hodController`, `courseAllocationController`, `dutyAllocationController`,
+- Controllers: `hodController`, `facultyProfileController`, `courseAllocationController`, `dutyAllocationController`,
   `hodWorkloadController`, `hodReportController`, `workflowInsightsController`
 - Services/utils: `courseAllocationService`, `courseAllocationEngine`, `hodHelpers`
 - Middleware: `requireHod`
@@ -21,7 +22,7 @@ deadlines, duty-allocation, course-allocation, reports, workflow-insights)
 ## Depends on (all through internal HTTP, never direct DB access)
 | Service | Data it needs |
 |---|---|
-| auth-service | faculty users, faculty profiles |
+| auth-service | faculty users |
 | academic-service | courses, attendance summary, assignments, online classes, syllabus progress |
 | leave-service | leaves by department / date |
 | notification-service | notify faculty on tasks, reminders, allocation |

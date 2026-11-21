@@ -1,12 +1,12 @@
 # api-gateway
 
-**Phase 1 (implemented)** · Port `8000` · No database
+**Phase 1 + 2 (implemented)** · Port `8000` · No database
 
 The single public entry point. The React app only knows this URL (`VITE_API_URL`, unchanged).
 
 ```
-browser ──► gateway :8000 ──► monolith :9000        (Phase 1: everything goes here)
-                         └──► auth / academic / ...  (later phases, one env var each)
+browser ──► gateway :8000 ──► auth-service :8001, notification-service :8006, ai-service :8007   (Phase 2)
+                         └──► monolith :9000   (everything else, until it is split up)
 ```
 
 ## What it does
@@ -15,6 +15,7 @@ browser ──► gateway :8000 ──► monolith :9000        (Phase 1: everyt
 | Routing | `routes.js` maps URL prefixes to services. Every service URL defaults to `MONOLITH_URL`, so Phase 1 forwards everything to the existing backend |
 | CORS | Handled here (`CORS_ORIGIN`). The backend's own CORS headers are removed from responses so the browser never sees them twice |
 | Token check | Verifies the JWT once; missing, invalid, forged or expired tokens get `401` before reaching any service. Only `POST /api/auth/login` is public |
+| Client IP | Adds `X-Forwarded-For` so services see the real client address (the login lockout counts per client) |
 | Identity headers | Forwards `x-user-id` and `x-user-role` (and `x-user-dept` once the token carries it). Copies sent by the client are always stripped first, so they cannot be forged |
 | WebSocket | `/socket.io` is proxied (websocket and long-polling) for HOD to faculty chat |
 | Internal endpoints | `/internal/*` always returns 404 from outside |
@@ -39,9 +40,9 @@ Check: `http://localhost:8000/health` shows the gateway, `http://localhost:8000/
 ## Route table (`routes.js`)
 | Prefixes | Service | Env var that switches it |
 |---|---|---|
-| `/api/auth`, `/api/settings`, `/api/faculty-profile` | auth | `AUTH_URL` |
+| `/api/auth`, `/api/settings` | auth | `AUTH_URL` |
 | `/api/leaves`, `/api/hod/leaves` | leave | `LEAVE_URL` |
-| `/api/hod` | hod | `HOD_URL` |
+| `/api/hod`, `/api/faculty-profile` | hod | `HOD_URL` |
 | `/api/dept-messages`, `/api/messages`, `/socket.io` | messaging | `MESSAGING_URL` |
 | `/api/notifications` | notification | `NOTIFICATION_URL` |
 | `/api/ai` | ai | `AI_URL` |
@@ -50,11 +51,16 @@ Check: `http://localhost:8000/health` shows the gateway, `http://localhost:8000/
 
 To move a service out of the monolith in a later phase, set its env var in `gateway/.env`. No code change.
 
+## Phase 2: switching services on
+Set `AUTH_URL`, `NOTIFICATION_URL` and `AI_URL` in `gateway/.env` (see `.env.example`). Delete a line to send that
+service's routes back to the monolith, which is the quick way to roll back.
+
 ## Env (`gateway/.env`)
 See `.env.example`.
 
-## Known limits in Phase 1
-- The backend still does its own database lookup of the user on every request. The gateway's check is on top of it.
-  Removing that lookup happens in Phase 2, when `department` is added to the token.
-- `JWT_SECRET` must match the backend's. If the backend runs without one, it generates a random secret on each start
-  and the gateway will reject every token. Always set it in both places.
+## Known limits
+- The backend still does its own database lookup of the user on every request, and so does auth-service. The gateway's
+  token check is on top of that. The token now carries `dept` (set by auth-service), so a service that only needs the
+  department can use the `x-user-dept` header instead; the backend lookup goes away as its modules are extracted.
+- `JWT_SECRET` must be the same in `gateway/.env`, `backend/.env` and every service's `.env`. If one is missing or
+  different, requests get 401 (or, for the backend, it generates a random secret on each start). Always set it everywhere.

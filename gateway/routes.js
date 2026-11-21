@@ -14,9 +14,9 @@ const MONOLITH = env.MONOLITH_URL || "http://localhost:9000"
 const urlFor = (name) => env[name] || MONOLITH
 
 const routes = [
-  { name: "auth",         target: urlFor("AUTH_URL"),         prefixes: ["/api/auth", "/api/settings", "/api/faculty-profile"] },
+  { name: "auth",         target: urlFor("AUTH_URL"),         prefixes: ["/api/auth", "/api/settings"] },
   { name: "leave",        target: urlFor("LEAVE_URL"),        prefixes: ["/api/leaves", "/api/hod/leaves"] },
-  { name: "hod",          target: urlFor("HOD_URL"),          prefixes: ["/api/hod"] },
+  { name: "hod",          target: urlFor("HOD_URL"),          prefixes: ["/api/hod", "/api/faculty-profile"] }, // FacultyProfile model lives with HOD course allocation, so it moves with HOD
   { name: "messaging",    target: urlFor("MESSAGING_URL"),    prefixes: ["/api/dept-messages", "/api/messages"] },
   { name: "notification", target: urlFor("NOTIFICATION_URL"), prefixes: ["/api/notifications"] },
   { name: "ai",           target: urlFor("AI_URL"),           prefixes: ["/api/ai"] },

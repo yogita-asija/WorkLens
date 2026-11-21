@@ -69,13 +69,13 @@ The service-to-service calls (`/internal/*`) are listed in the table below inste
 | Service | Port | Database | Owns (current monolith location) |
 |---|---|---|---|
 | **api-gateway** | 8000 | none | Routing, CORS, JWT verification, WebSocket proxy |
-| **auth-service** | 8001 | `worklens_auth` | `User`; `shared/controller/authController`, `settingsController`, `facultyProfileController`; `shared/utils/facultyProfile`; `signToken` |
+| **auth-service** | 8001 | `worklens_auth` | `User` (shared with the backend until the last phase); `authController`, `settingsController`; `signToken`, now with `dept` in the token. **Phase 2 done.** |
 | **academic-service** | 8002 | `worklens_academic` | `Course`, `Attendance`, `Assignment`, `Syllabus`, `OnlineClass`, `LessonPlan`, `StudyMaterial`, `ActivityLog`, `ExtraDuty`; teaching controllers for courses, attendance, assignments, syllabus, timetable, lesson plans, study materials, online classes, extra duties, dashboard, activity logs |
 | **leave-service** | 8003 | `worklens_leave` | `Leave`, `LeaveBalance`, `Holiday`; `teaching/controller/leaveController`, `hod/controller/hodLeaveController` |
-| **hod-service** | 8004 | `worklens_hod` | `CourseAllocation` models, `DutyAllocation`, `ReportSnapshot`, `WorkflowAction`, `HodModels` (tasks, papers, escalations, deadlines, availability, substitutions); `hodController`, `courseAllocationController`, `dutyAllocationController`, `hodWorkloadController`, `hodReportController`, `workflowInsightsController` |
+| **hod-service** | 8004 | `worklens_hod` | `CourseAllocation` models (including `FacultyProfile`), `DutyAllocation`, `ReportSnapshot`, `WorkflowAction`, `HodModels` (tasks, papers, escalations, deadlines, availability, substitutions); `hodController`, `facultyProfileController`, `courseAllocationController`, `dutyAllocationController`, `hodWorkloadController`, `hodReportController`, `workflowInsightsController` |
 | **messaging-service** | 8005 | `worklens_messaging` | `DeptConversation`, `DeptMessage`, `DeptAnnouncement`, `Message`; `deptMessageController`, `messageController`; `shared/utils/socket`, `deptChat` |
-| **notification-service** | 8006 | `worklens_notification` | `Notification`; `notificationController` |
-| **ai-service** | 8007 | none | `aiController` (Google Gemini lesson-plan generation) |
+| **notification-service** | 8006 | `worklens_notification` | `Notification`; `notificationController`. **Phase 2 done.** |
+| **ai-service** | 8007 | none | `aiController` (Google Gemini lesson-plan generation). **Phase 2 done.** |
 
 ## 4. Gateway route map
 
@@ -83,10 +83,10 @@ Order matters: more specific paths are matched first.
 
 | Path prefix | Target |
 |---|---|
-| `/api/auth`, `/api/settings`, `/api/faculty-profile` | auth-service |
+| `/api/auth`, `/api/settings` | auth-service |
 | `/api/courses`, `/api/attendance`, `/api/assignments`, `/api/syllabus`, `/api/timetable`, `/api/lesson-plans`, `/api/study-materials`, `/api/online-classes`, `/api/dashboard`, `/api/activity-logs`, `/api/workflow`, `/api/duties` | academic-service |
 | `/api/leaves`, **`/api/hod/leaves`** | leave-service |
-| `/api/hod` | hod-service |
+| `/api/hod`, `/api/faculty-profile` | hod-service |
 | `/api/dept-messages`, `/api/messages`, `/socket.io` (WebSocket) | messaging-service |
 | `/api/notifications` | notification-service |
 | `/api/ai` | ai-service |
@@ -99,29 +99,38 @@ endpoints in with the rest of the HOD routes.
 | # | Problem in the monolith | Resolution |
 |---|---|---|
 | 1 | `Course` is `require`d in 16 files, `User` in 14, `Notification` in 10, `Leave` in 10 | Owner exposes `/internal/*`; callers use HTTP |
-| 2 | `authenticate` loads the `User` from the DB on every request | Gateway verifies the JWT once and forwards identity headers; add `department` to the token |
-| 3 | Notifications are created inline in about 10 controllers | Replace with `POST /internal/notifications` (fire-and-forget) |
+| 2 | `authenticate` loads the `User` from the DB on every request | Gateway verifies the JWT once and forwards identity headers; `dept` is now in the token (Phase 2). The backend lookup goes away as modules are extracted |
+| 3 | Notifications are created inline in 14 places in 11 controllers | **Done (Phase 2):** `backend/shared/models/Notification.js` is now an HTTP client with the same `create` / `insertMany` calls, so no controller changed |
 | 4 | `hodController.js` (1343 lines) reads Course, Attendance, Assignment, OnlineClass, Leave directly | hod-service calls academic and leave `/internal` endpoints and combines the results |
 | 5 | `Course.allocationId` and `CourseAllocation.courseRef` reference each other | Keep the plain ID on both sides, no `populate` |
 | 6 | `Syllabus.populate("courseId")` | Syllabus and Course stay together in academic-service |
 | 7 | Socket.IO handshake reads `User` and `deptChat` rules | Moves to messaging-service; gateway proxies WebSocket; department comes from the token |
-| 8 | `shared/utils/facultyProfile.js` is used by auth and by HOD course allocation | Copy into both, or place in `libs/common` |
+| 8 | `FacultyProfile` is defined in the HOD course-allocation model file and used by `facultyProfileController` | Stays with HOD: `/api/faculty-profile` moves to hod-service, not auth-service |
 | 9 | `WORKFLOW_ANON_SECRET` is used by the dashboard controller (academic) and workflow insights (HOD) | Same value in both services' `.env` |
 | 10 | `portals/teaching/models/Faculty.js` is never imported | Dead code, drop it during migration |
 
-## 6. Migration phases
+## 6. Decisions taken along the way
+
+| Decision | Why |
+|---|---|
+| Per-service copies of the small token helper instead of `libs/common` | Docker builds each service from its own folder, and a shared package outside it complicates that. The helper is about 30 lines |
+| Internal key derived from `JWT_SECRET` | `/internal/*` needs protection even if a service port is reachable, and this adds no new setting to manage |
+| `users` collection shared by backend and auth-service until the last phase | 14 backend files read `User` directly (HOD, leave, chat). They move to `/internal/users` as their modules are extracted |
+| ai-service gets the course through the courses API with the caller's token | No database for it, and the same access rules as everywhere else |
+
+## 7. Migration phases
 
 | Phase | Result you can demo |
 |---|---|
 | **0** | This document, folder structure, `docker-compose.yml` (monolith + MongoDB) |
 | **1** | Gateway on :8000 in front of the monolith (moved to :9000) |
-| **2** | auth, notification and ai as independent services |
+| **2** | auth, notification and ai as independent services (done) |
 | **3** | messaging-service with real-time chat |
 | **4** | leave-service and academic-service |
 | **5** | hod-service, monolith deleted |
 | **6** | Dockerfile per service, `docker compose up` runs everything |
 
-## 7. Repository layout
+## 8. Repository layout
 
 ```
 WorkLens/
@@ -136,7 +145,6 @@ WorkLens/
 │   ├── leave-service/        Phase 4
 │   ├── academic-service/     Phase 4
 │   └── hod-service/          Phase 5
-├── libs/common/          small shared helpers (internal HTTP client, identity middleware)
 ├── docs/ARCHITECTURE.md
 ├── docker-compose.yml
 └── .env.example

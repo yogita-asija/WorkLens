@@ -1,0 +1,22 @@
+{
+  "name": "worklens-auth-service",
+  "version": "1.0.0",
+  "description": "WorkLens auth service: login, current user, settings, internal user lookups",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.3.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

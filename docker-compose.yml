@@ -1,9 +1,10 @@
 # WorkLens: docker-compose
 #
-# PHASE 1: MongoDB + the existing monolith (backend/) + the API gateway in front of it.
+# PHASE 2: MongoDB + the existing monolith (backend/) + the API gateway + auth, notification and AI services.
 #   cp .env.example .env
 #   docker compose up --build
-#   -> API on http://localhost:8000 (the GATEWAY). The monolith is no longer published on the host.
+#   -> API on http://localhost:8000 (the GATEWAY). The monolith and the services are not published on the host.
+#   To use your Atlas database instead of the local MongoDB container, put MONGO_URI=... in .env (see .env.example).
 #      Frontend: run `npm run dev` in ./frontend as usual, VITE_API_URL stays http://localhost:8000
 #
 # Later phases add one block per service (see the commented sections below) and the
@@ -32,17 +33,19 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+      notification-service:
+        condition: service_started
     expose:
       - "8000"               # reachable only inside the compose network (the gateway calls http://backend:8000)
     # ports:
     #   - "9000:8000"        # uncomment to call the monolith directly while debugging
     environment:
       PORT: 8000
-      MONGO_URI: mongodb://mongo:27017/worklens
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017/worklens}
+      NOTIFICATION_URL: http://notification-service:8006
       JWT_SECRET: ${JWT_SECRET:-change-me-in-dev}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
       CLIENT_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       WORKFLOW_ANON_SECRET: ${WORKFLOW_ANON_SECRET:-}
 
   # ── PHASE 1: API gateway (the only public port) ───────────────────────────
@@ -52,6 +55,9 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+      - auth-service
+      - notification-service
+      - ai-service
     ports:
       - "8000:8000"
     environment:
@@ -59,18 +65,54 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-me-in-dev}   # must equal the backend's JWT_SECRET
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
       MONOLITH_URL: http://backend:8000
-      # Later phases: AUTH_URL: http://auth-service:8001  (and so on, one per extracted service)
+      AUTH_URL: http://auth-service:8001
+      NOTIFICATION_URL: http://notification-service:8006
+      AI_URL: http://ai-service:8007
+      # Later phases add ACADEMIC_URL, LEAVE_URL, HOD_URL, MESSAGING_URL
 
-  # ── PHASE 2 ───────────────────────────────────────────────────────────────
-  # auth-service:
-  #   build: ./services/auth-service
-  #   environment: { PORT: 8001, MONGO_URI: "mongodb://mongo:27017/worklens_auth", JWT_SECRET: "${JWT_SECRET}" }
-  # notification-service:
-  #   build: ./services/notification-service
-  #   environment: { PORT: 8006, MONGO_URI: "mongodb://mongo:27017/worklens_notification" }
-  # ai-service:
-  #   build: ./services/ai-service
-  #   environment: { PORT: 8007, GEMINI_API_KEY: "${GEMINI_API_KEY}" }
+  # ── PHASE 2: extracted services (not published on the host, only the gateway can reach them) ──
+  auth-service:
+    build: ./services/auth-service
+    container_name: worklens-auth
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    expose:
+      - "8001"
+    environment:
+      PORT: 8001
+      # Same database as the backend for now: the backend still reads the `users` collection directly.
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017/worklens}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-dev}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+
+  notification-service:
+    build: ./services/notification-service
+    container_name: worklens-notification
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    expose:
+      - "8006"
+    environment:
+      PORT: 8006
+      # Its own database
+      MONGO_URI: ${NOTIFICATION_MONGO_URI:-mongodb://mongo:27017/worklens_notification}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-dev}
+
+  ai-service:
+    build: ./services/ai-service
+    container_name: worklens-ai
+    restart: unless-stopped
+    expose:
+      - "8007"
+    environment:
+      PORT: 8007
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-dev}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      COURSES_URL: http://backend:8000
 
   # ── PHASE 3 ───────────────────────────────────────────────────────────────
   # messaging-service:

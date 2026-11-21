@@ -100,6 +100,7 @@ const makeProxy = ({ name, target }, extra = {}) =>
   createProxyMiddleware({
     target,
     changeOrigin: true,
+    xfwd: true, // adds X-Forwarded-For so services see the real client IP (login lockout is per client)
     proxyTimeout: PROXY_TIMEOUT_MS,
     timeout: PROXY_TIMEOUT_MS,
     on: { proxyRes: stripUpstreamCors, error: onError(name) },
