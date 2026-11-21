@@ -125,7 +125,7 @@ endpoints in with the rest of the HOD routes.
 | **0** | This document, folder structure, `docker-compose.yml` (monolith + MongoDB) |
 | **1** | Gateway on :8000 in front of the monolith (moved to :9000) |
 | **2** | auth, notification and ai as independent services (done) |
-| **3** | messaging-service with real-time chat |
+| **3** | messaging-service with real-time chat (done) |
 | **4** | leave-service and academic-service |
 | **5** | hod-service, monolith deleted |
 | **6** | Dockerfile per service, `docker compose up` runs everything |

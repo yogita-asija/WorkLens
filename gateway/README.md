@@ -1,11 +1,12 @@
 # api-gateway
 
-**Phase 1 + 2 (implemented)** · Port `8000` · No database
+**Phase 1 + 2 + 3 (implemented)** · Port `8000` · No database
 
 The single public entry point. The React app only knows this URL (`VITE_API_URL`, unchanged).
 
 ```
 browser ──► gateway :8000 ──► auth-service :8001, notification-service :8006, ai-service :8007   (Phase 2)
+                         ├──► messaging-service :8005 (REST + WebSocket)                           (Phase 3)
                          └──► monolith :9000   (everything else, until it is split up)
 ```
 
@@ -51,8 +52,8 @@ Check: `http://localhost:8000/health` shows the gateway, `http://localhost:8000/
 
 To move a service out of the monolith in a later phase, set its env var in `gateway/.env`. No code change.
 
-## Phase 2: switching services on
-Set `AUTH_URL`, `NOTIFICATION_URL` and `AI_URL` in `gateway/.env` (see `.env.example`). Delete a line to send that
+## Switching services on
+Set `AUTH_URL`, `NOTIFICATION_URL`, `AI_URL` and `MESSAGING_URL` in `gateway/.env` (see `.env.example`). Delete a line to send that
 service's routes back to the monolith, which is the quick way to roll back.
 
 ## Env (`gateway/.env`)

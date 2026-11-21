@@ -1,32 +1,39 @@
-# messaging-service
+# messaging-service (Phase 3)
 
-**Phase 3** · Port `8005` · DB `worklens_messaging`
+HOD ↔ faculty chat, announcements, faculty "student messages" and the real-time Socket.IO layer. Port **8005**, own database **`worklens_messaging`**.
 
-HOD to faculty chat, announcements, course messages and the real-time Socket.IO layer.
+REST and sockets live in the same process on purpose: the REST controllers push live events (`dm:new`, `dm:read`, …) through the in-memory Socket.IO rooms, so they have to move together.
 
-## Public routes
-- `/api/dept-messages/*`
-- `/api/messages/*` (faculty to course audience messages)
-- WebSocket `/socket.io` (events: `dm:new`, `dm:read`, `dm:updated`, `dm:deleted`, `dm:unread`, `typing`, `presence`)
+| Path | What |
+|---|---|
+| `/api/dept-messages/*` | contacts, threads, send/edit/delete, read state, stats, announcements |
+| `/api/messages/*` | student messages |
+| `/socket.io` | WebSocket + polling (token in the handshake `auth.token`) |
+| `/health` | liveness |
 
-## Moves here from the monolith
-- Models: `DeptConversation`, `DeptMessage`, `DeptAnnouncement`, `teaching/models/Message`
-- Controllers: `deptMessageController`, `messageController`
-- Utils: `shared/utils/socket.js`, `shared/utils/deptChat.js`
-- Script: `testDeptMessages.js`
+## Where its dependencies come from
+- **Users** → auth-service `/internal/users` (cached 30 s, `USER_CACHE_TTL_MS`). If auth-service is down, uncached users get **503** (users already cached keep working).
+- **Notifications** → notification-service `/internal/notifications`, fire-and-forget. If it is down the chat still works and a warning is logged.
+- **Login token** → same `JWT_SECRET` as the backend and gateway.
 
-## Depends on
-- auth-service `GET /internal/users/:id`, only if `dept` is not in the JWT. Once `dept` is in the token,
-  the socket handshake needs no lookup.
-
-## Gateway requirement
-The gateway must proxy WebSocket upgrades (`ws: true`) for `/socket.io`.
-
-## Env
-```env
-PORT=8005
-MONGO_URI=mongodb://127.0.0.1:27017/worklens_messaging
-JWT_SECRET=
-CLIENT_ORIGIN=http://localhost:5173
-AUTH_URL=http://localhost:8001
+## Run
 ```
+cd services/messaging-service
+copy .env.example .env      # set MONGO_URI (…/worklens_messaging) and JWT_SECRET
+npm install
+npm run dev
+```
+
+## Moving the existing chat data (do this BEFORE switching the gateway)
+```
+set OLD_MONGO_URI=<the backend's MONGO_URI>
+npm run migrate
+```
+Copies `deptconversations`, `deptmessages`, `deptannouncements`, `messages`. The old database is only read. Safe to re-run (copies only what is missing). It refuses to run if the new database was already used by the service, because new conversations would clash with the old ones.
+
+Then in `gateway/.env` set `MESSAGING_URL=http://localhost:8005` and restart the gateway. **Rollback:** remove that line and restart the gateway; the monolith still has all its chat code and data.
+
+## Known limits
+- Rate limiter is in memory (per process). Run one instance, or move it to Redis.
+- Socket.IO rooms are in memory too: more than one instance needs the Redis adapter.
+- Presence/typing exist only while the process runs.
