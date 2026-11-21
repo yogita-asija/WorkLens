@@ -11,6 +11,13 @@
  * Config (backend/.env):  NOTIFICATION_URL=http://localhost:8006   (default)
  *                         JWT_SECRET must be the same value the notification-service has.
  */
+// Not hosted with a notification-service (e.g. the Render deploy of the monolith)? Leave NOTIFICATION_URL unset and the
+// original in-database model is used, exactly as before the microservices split.
+if (!process.env.NOTIFICATION_URL) {
+  module.exports = require("./NotificationLocal")
+  return
+}
+
 const crypto = require("crypto")
 
 const BASE = () => (process.env.NOTIFICATION_URL || "http://localhost:8006").replace(/\/$/, "")
