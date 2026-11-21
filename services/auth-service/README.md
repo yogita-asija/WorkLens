@@ -15,7 +15,7 @@ Login, "who am I", and each user's own settings.
 | Route | Purpose |
 |---|---|
 | `GET /internal/users/:id` | One user, without the password |
-| `GET /internal/users?dept=&role=&ids=a,b` | Users by department, role or ids (at least one filter required) |
+| `GET /internal/users?dept=&role=&ids=a,b` | Users by department (case- and space-insensitive), role (one, or comma-separated list) or ids. At least one filter required; max 1000 rows |
 
 Nothing calls these yet. They are ready for the leave, messaging and HOD services, which currently read `users` directly.
 

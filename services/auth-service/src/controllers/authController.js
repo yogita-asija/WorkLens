@@ -75,17 +75,26 @@ exports.internalGetUser = async (req, res) => {
   res.json(user)
 }
 
-// GET /internal/users?dept=&role=&ids=a,b,c
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+const MAX_LIST = 1000
+
+// GET /internal/users?dept=&role=&ids=a,b,c      (filters combine; at least one is required)
+//   dept  matches case-insensitively and ignores surrounding spaces ("cse", " CSE " and "CSE" are the same department),
+//         the same rule the HOD <-> faculty chat has always used
+//   role  one role, or several separated by commas: role=teaching,hod
 exports.internalListUsers = async (req, res) => {
   const { dept, role, ids } = req.query
   const filter = {}
-  if (typeof dept === "string" && dept) filter.department = dept
-  if (typeof role === "string" && role) filter.role = role
+  if (typeof dept === "string" && dept.trim()) filter.department = new RegExp(`^\\s*${escapeRe(dept.trim())}\\s*$`, "i")
+  if (typeof role === "string" && role) {
+    const roles = role.split(",").map((s) => s.trim()).filter(Boolean)
+    if (roles.length) filter.role = roles.length === 1 ? roles[0] : { $in: roles }
+  }
   if (typeof ids === "string" && ids) {
     const list = ids.split(",").map((s) => s.trim()).filter((s) => OBJECT_ID.test(s))
     if (!list.length) return res.json([])
     filter._id = { $in: list }
   }
   if (!Object.keys(filter).length) return res.status(400).json({ message: "Give at least one of dept, role, ids" })
-  res.json(await User.find(filter).select("-password").lean())
+  res.json(await User.find(filter).select("-password").limit(MAX_LIST).lean())
 }

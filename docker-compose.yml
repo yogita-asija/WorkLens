@@ -1,6 +1,6 @@
 # WorkLens: docker-compose
 #
-# PHASE 2: MongoDB + the existing monolith (backend/) + the API gateway + auth, notification and AI services.
+# PHASE 3: MongoDB + the existing monolith (backend/) + the API gateway + auth, notification, AI and messaging services.
 #   cp .env.example .env
 #   docker compose up --build
 #   -> API on http://localhost:8000 (the GATEWAY). The monolith and the services are not published on the host.
@@ -58,6 +58,7 @@ services:
       - auth-service
       - notification-service
       - ai-service
+      - messaging-service
     ports:
       - "8000:8000"
     environment:
@@ -68,7 +69,8 @@ services:
       AUTH_URL: http://auth-service:8001
       NOTIFICATION_URL: http://notification-service:8006
       AI_URL: http://ai-service:8007
-      # Later phases add ACADEMIC_URL, LEAVE_URL, HOD_URL, MESSAGING_URL
+      MESSAGING_URL: http://messaging-service:8005
+      # Later phases add ACADEMIC_URL, LEAVE_URL, HOD_URL
 
   # ── PHASE 2: extracted services (not published on the host, only the gateway can reach them) ──
   auth-service:
@@ -114,10 +116,26 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       COURSES_URL: http://backend:8000
 
-  # ── PHASE 3 ───────────────────────────────────────────────────────────────
-  # messaging-service:
-  #   build: ./services/messaging-service
-  #   environment: { PORT: 8005, MONGO_URI: "mongodb://mongo:27017/worklens_messaging", JWT_SECRET: "${JWT_SECRET}" }
+  # ── PHASE 3: chat (REST + Socket.IO) ───────────────────────────────────────
+  messaging-service:
+    build: ./services/messaging-service
+    container_name: worklens-messaging
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    expose:
+      - "8005"
+    environment:
+      PORT: 8005
+      # Its own database
+      MONGO_URI: ${MESSAGING_MONGO_URI:-mongodb://mongo:27017/worklens_messaging}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-dev}
+      AUTH_URL: http://auth-service:8001
+      NOTIFICATION_URL: http://notification-service:8006
+      CLIENT_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
 
   # ── PHASE 4 ───────────────────────────────────────────────────────────────
   # leave-service:
