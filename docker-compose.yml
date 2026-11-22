@@ -1,6 +1,6 @@
 # WorkLens: docker-compose
 #
-# PHASE 3: MongoDB + the existing monolith (backend/) + the API gateway + auth, notification, AI and messaging services.
+# PHASE 4: MongoDB + the existing monolith (backend/) + the API gateway + auth, notification, AI, messaging, leave and academic services.
 #   cp .env.example .env
 #   docker compose up --build
 #   -> API on http://localhost:8000 (the GATEWAY). The monolith and the services are not published on the host.
@@ -59,6 +59,8 @@ services:
       - notification-service
       - ai-service
       - messaging-service
+      - academic-service
+      - leave-service
     ports:
       - "8000:8000"
     environment:
@@ -70,7 +72,9 @@ services:
       NOTIFICATION_URL: http://notification-service:8006
       AI_URL: http://ai-service:8007
       MESSAGING_URL: http://messaging-service:8005
-      # Later phases add ACADEMIC_URL, LEAVE_URL, HOD_URL
+      ACADEMIC_URL: http://academic-service:8002
+      LEAVE_URL: http://leave-service:8003
+      # Phase 5 adds HOD_URL
 
   # ── PHASE 2: extracted services (not published on the host, only the gateway can reach them) ──
   auth-service:
@@ -137,13 +141,43 @@ services:
       NOTIFICATION_URL: http://notification-service:8006
       CLIENT_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
 
-  # ── PHASE 4 ───────────────────────────────────────────────────────────────
-  # leave-service:
-  #   build: ./services/leave-service
-  #   environment: { PORT: 8003, MONGO_URI: "mongodb://mongo:27017/worklens_leave" }
-  # academic-service:
-  #   build: ./services/academic-service
-  #   environment: { PORT: 8002, MONGO_URI: "mongodb://mongo:27017/worklens_academic", WORKFLOW_ANON_SECRET: "${WORKFLOW_ANON_SECRET}" }
+  # ── PHASE 4: leave and academic. Same database as the backend (the HOD module still reads these collections directly). ──
+  leave-service:
+    build: ./services/leave-service
+    container_name: worklens-leave
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    expose:
+      - "8003"
+    environment:
+      PORT: 8003
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017/worklens}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-dev}
+      AUTH_URL: http://auth-service:8001
+      NOTIFICATION_URL: http://notification-service:8006
+
+  academic-service:
+    build: ./services/academic-service
+    container_name: worklens-academic
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    expose:
+      - "8002"
+    environment:
+      PORT: 8002
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017/worklens}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-dev}
+      AUTH_URL: http://auth-service:8001
+      NOTIFICATION_URL: http://notification-service:8006
+      WORKFLOW_ANON_SECRET: ${WORKFLOW_ANON_SECRET:-}
 
   # ── PHASE 5 ───────────────────────────────────────────────────────────────
   # hod-service:

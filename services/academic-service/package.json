@@ -1,0 +1,21 @@
+{
+  "name": "worklens-academic-service",
+  "version": "1.0.0",
+  "description": "WorkLens academic service: courses, attendance, assignments, syllabus, timetable, lesson plans, study materials, online classes, duties, dashboard, activity logs",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.3.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

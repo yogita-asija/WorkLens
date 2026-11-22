@@ -6,7 +6,7 @@
  * and its prefixes automatically start going there. No code change needed.
  *
  * Order matters: more specific prefixes must come before general ones
- * (/api/hod/leaves must be listed before /api/hod).
+ * (Phase 4: /api/hod/leaves is NOT split from /api/hod; it moves with the HOD module in Phase 5.)
  */
 const env = process.env
 
@@ -15,7 +15,7 @@ const urlFor = (name) => env[name] || MONOLITH
 
 const routes = [
   { name: "auth",         target: urlFor("AUTH_URL"),         prefixes: ["/api/auth", "/api/settings"] },
-  { name: "leave",        target: urlFor("LEAVE_URL"),        prefixes: ["/api/leaves", "/api/hod/leaves"] },
+  { name: "leave",        target: urlFor("LEAVE_URL"),        prefixes: ["/api/leaves"] }, // /api/hod/leaves/* needs HOD data (substitutions, duty allocations), so it stays with the HOD module until Phase 5
   { name: "hod",          target: urlFor("HOD_URL"),          prefixes: ["/api/hod", "/api/faculty-profile"] }, // FacultyProfile model lives with HOD course allocation, so it moves with HOD
   { name: "messaging",    target: urlFor("MESSAGING_URL"),    prefixes: ["/api/dept-messages", "/api/messages"] },
   { name: "notification", target: urlFor("NOTIFICATION_URL"), prefixes: ["/api/notifications"] },

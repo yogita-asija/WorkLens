@@ -1,46 +1,32 @@
-# academic-service
+# academic-service (Phase 4)
 
-**Phase 4** · Port `8002` · DB `worklens_academic`
+Courses, attendance, assignments, syllabus, timetable, lesson plans, study materials, online classes, extra duties, the faculty
+dashboard, activity logs and the workflow-feedback endpoint. Port **8002**.
 
-Everything a faculty member does with courses: teaching, attendance, assessment and materials.
-
-## Public routes
-`/api/courses`, `/api/attendance`, `/api/assignments`, `/api/syllabus`, `/api/timetable`,
-`/api/lesson-plans`, `/api/study-materials`, `/api/online-classes`, `/api/dashboard`,
-`/api/activity-logs`, `/api/duties` (faculty extra duties), `/api/workflow` (feedback submit, handled inside `dashboardController`)
-
-## Moves here from the monolith
-- Models: `Course`, `Attendance`, `Assignment`, `Syllabus`, `OnlineClass`, `ActivityLog`,
-  `teaching/models/LessonPlan`, `teaching/models/StudyMaterial`, `teaching/models/ExtraDuty`
-- Controllers: course, attendance, assignment, syllabus, timetable, lessonPlan, studyMaterial,
-  onlineClass, extraDuty, dashboard, activityLog
-- Utils: `teaching/utils/logActivity.js`
-- Script: `teaching/scripts/seed.js`
-
-Syllabus is kept here with Course because `syllabusController` uses `populate("courseId")`, which only works inside one database.
-
-## Internal endpoints it exposes
-| Endpoint | Used by |
+| Prefix | |
 |---|---|
-| `GET /internal/courses?dept=&teacherId=` | hod-service, leave-service, ai-service |
-| `GET /internal/courses/:id` | hod-service, ai-service |
-| `PATCH /internal/courses/:id/allocation` | hod-service (course allocation writes `allocationId` / teacher) |
-| `GET /internal/attendance/summary?dept=` | hod-service (reports, dashboard) |
-| `GET /internal/assignments?courseIds=` | hod-service, leave-service |
-| `GET /internal/online-classes?courseIds=&date=` | hod-service, leave-service |
-| `GET /internal/syllabus/progress?dept=` | hod-service (reports) |
+| `/api/courses`, `/api/attendance`, `/api/assignments`, `/api/syllabus`, `/api/timetable` | |
+| `/api/lesson-plans`, `/api/study-materials`, `/api/online-classes`, `/api/duties` | |
+| `/api/dashboard`, `/api/workflow`, `/api/activity-logs` | |
 
-## Calls
-- notification-service (assignments, online classes, course enrolment)
-- leave-service (pending-approvals count on the dashboard)
-- auth-service (user lookups)
+(`/api/ai` stays in ai-service, which fetches the course through the courses API.)
 
-## Env
-```env
-PORT=8002
-MONGO_URI=mongodb://127.0.0.1:27017/worklens_academic
-WORKFLOW_ANON_SECRET=
-NOTIFICATION_URL=http://localhost:8006
-LEAVE_URL=http://localhost:8003
-AUTH_URL=http://localhost:8001
+## Database
+Uses the **same database as the backend** (same `MONGO_URI`). Nothing is copied or migrated; the HOD module in the backend still
+reads Course, Attendance, Assignment and OnlineClass directly, so both must see the same records. Own `worklens_academic`
+database in Phase 5. The dashboard also reads the `leaves` collection (read-only copy of the `Leave` model), which becomes a call to
+leave-service in Phase 5.
+
+## Dependencies
+- Users: auth-service `/internal/users` (30 s cache; 503 if auth-service is down and the user is not cached).
+- Notifications: notification-service, fire-and-forget.
+- `WORKFLOW_ANON_SECRET`: same value as `backend/.env`.
+
+## Run
 ```
+cd services/academic-service
+copy .env.example .env      # same MONGO_URI, JWT_SECRET and WORKFLOW_ANON_SECRET as backend/.env
+npm install
+npm run dev
+```
+Then `ACADEMIC_URL=http://localhost:8002` in `gateway/.env` and restart the gateway. **Rollback:** delete that line and restart the gateway.
