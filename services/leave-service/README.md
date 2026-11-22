@@ -1,35 +1,31 @@
-# leave-service
+# leave-service (Phase 4)
 
-**Phase 4** · Port `8003` · DB `worklens_leave`
+Leave applications, balances, monthly stats, holidays and HOD approval. Port **8003**.
 
-Leave applications, balances, holidays, and the HOD approval workflow.
-
-## Public routes
-- `/api/leaves/*` (faculty side)
-- `/api/hod/leaves/*` (HOD side: pending, overview, history, export, calendar, balances, insights,
-  `:id/impact`, `:id/approve-with-cover`). The gateway must route these **before** `/api/hod`.
-
-## Moves here from the monolith
-- Models: `shared/models/Leave.js` (`Leave`, `LeaveBalance`, `Holiday`)
-- Controllers: `teaching/controller/leaveController`, `hod/controller/hodLeaveController`
-- Script: `seedLeaves.js`
-
-## Internal endpoints it exposes
-| Endpoint | Used by |
+| Path | What |
 |---|---|
-| `GET /internal/leaves?dept=&status=&from=&to=` | hod-service (dashboard, workload, reports, availability), academic (dashboard pending count) |
-| `GET /internal/leaves/on-date?date=` | hod-service (availability, substitutions) |
+| `GET/POST /api/leaves`, `DELETE /api/leaves/:id` | faculty apply, list, cancel |
+| `PATCH /api/leaves/:id/status` | HOD approves or rejects (own department's teaching staff only) |
+| `GET /api/leaves/balance`, `/monthly`, `/holidays` | stats and holiday calendar |
+| `/health` | liveness |
 
-## Calls
-- academic-service: courses, assignments and online classes affected by a leave (`:id/impact`)
-- notification-service: leave submitted / approved / rejected
-- auth-service: faculty names and departments
+`/api/hod/leaves/*` (overview, history, calendar, insights, approve-with-cover...) is **not** here: it needs HOD data and moves with
+the HOD module in Phase 5.
 
-## Env
-```env
-PORT=8003
-MONGO_URI=mongodb://127.0.0.1:27017/worklens_leave
-ACADEMIC_URL=http://localhost:8002
-NOTIFICATION_URL=http://localhost:8006
-AUTH_URL=http://localhost:8001
+## Database
+Uses the **same database as the backend** (same `MONGO_URI`). Nothing is copied or migrated, so the live backend and this service
+always see the same leaves. It gets its own `worklens_leave` database in Phase 5.
+
+## Dependencies
+- Users: auth-service `/internal/users` (30 s cache; 503 if auth-service is down and the user is not cached).
+- Notifications: notification-service, fire-and-forget (a leave decision still saves if it is down).
+- Login token: same `JWT_SECRET` as the backend and gateway.
+
+## Run
 ```
+cd services/leave-service
+copy .env.example .env      # same MONGO_URI and JWT_SECRET as backend/.env
+npm install
+npm run dev
+```
+Then `LEAVE_URL=http://localhost:8003` in `gateway/.env` and restart the gateway. **Rollback:** delete that line and restart the gateway.

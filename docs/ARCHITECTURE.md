@@ -85,14 +85,15 @@ Order matters: more specific paths are matched first.
 |---|---|
 | `/api/auth`, `/api/settings` | auth-service |
 | `/api/courses`, `/api/attendance`, `/api/assignments`, `/api/syllabus`, `/api/timetable`, `/api/lesson-plans`, `/api/study-materials`, `/api/online-classes`, `/api/dashboard`, `/api/activity-logs`, `/api/workflow`, `/api/duties` | academic-service |
-| `/api/leaves`, **`/api/hod/leaves`** | leave-service |
+| `/api/leaves` | leave-service |
 | `/api/hod`, `/api/faculty-profile` | hod-service |
 | `/api/dept-messages`, `/api/messages`, `/socket.io` (WebSocket) | messaging-service |
 | `/api/notifications` | notification-service |
 | `/api/ai` | ai-service |
 
-`/api/hod/leaves/*` must be registered **before** `/api/hod`, because the HOD router currently mixes leave
-endpoints in with the rest of the HOD routes.
+**Phase 4 correction:** `/api/hod/leaves/*` could not be split off yet. `hodLeaveController` and `reviewLeave` read HOD data
+(substitutions, duty allocations, faculty status), so they stay with `/api/hod` and move to hod-service in Phase 5. Until then
+the HOD module reads the `leaves` collection directly, which is why leave and academic share the backend's database (section 6).
 
 ## 5. Known coupling to remove (from the code review)
 
@@ -117,6 +118,8 @@ endpoints in with the rest of the HOD routes.
 | Internal key derived from `JWT_SECRET` | `/internal/*` needs protection even if a service port is reachable, and this adds no new setting to manage |
 | `users` collection shared by backend and auth-service until the last phase | 14 backend files read `User` directly (HOD, leave, chat). They move to `/internal/users` as their modules are extracted |
 | ai-service gets the course through the courses API with the caller's token | No database for it, and the same access rules as everywhere else |
+| Phase 4: leave and academic use the backend's database, not `worklens_leave` / `worklens_academic` | `hodController`, `hodLeaveController` and the dashboard read Course, Leave, Attendance and Assignment directly. Copying the data would leave the live backend and the new services looking at different records. Own databases come in Phase 5, when HOD stops reading them |
+| Phase 4: services copy only the models they need (`Leave` also in academic, read-only by the dashboard) | Removed in Phase 5 when the dashboard asks leave-service over `/internal` |
 
 ## 7. Migration phases
 
@@ -126,7 +129,7 @@ endpoints in with the rest of the HOD routes.
 | **1** | Gateway on :8000 in front of the monolith (moved to :9000) |
 | **2** | auth, notification and ai as independent services (done) |
 | **3** | messaging-service with real-time chat (done) |
-| **4** | leave-service and academic-service |
+| **4** | leave-service and academic-service (done) |
 | **5** | hod-service, monolith deleted |
 | **6** | Dockerfile per service, `docker compose up` runs everything |
 

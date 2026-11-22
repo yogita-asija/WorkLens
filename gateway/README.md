@@ -42,7 +42,7 @@ Check: `http://localhost:8000/health` shows the gateway, `http://localhost:8000/
 | Prefixes | Service | Env var that switches it |
 |---|---|---|
 | `/api/auth`, `/api/settings` | auth | `AUTH_URL` |
-| `/api/leaves`, `/api/hod/leaves` | leave | `LEAVE_URL` |
+| `/api/leaves` | leave | `LEAVE_URL` (`/api/hod/leaves` stays with the HOD module until Phase 5) |
 | `/api/hod`, `/api/faculty-profile` | hod | `HOD_URL` |
 | `/api/dept-messages`, `/api/messages`, `/socket.io` | messaging | `MESSAGING_URL` |
 | `/api/notifications` | notification | `NOTIFICATION_URL` |
@@ -53,7 +53,7 @@ Check: `http://localhost:8000/health` shows the gateway, `http://localhost:8000/
 To move a service out of the monolith in a later phase, set its env var in `gateway/.env`. No code change.
 
 ## Switching services on
-Set `AUTH_URL`, `NOTIFICATION_URL`, `AI_URL` and `MESSAGING_URL` in `gateway/.env` (see `.env.example`). Delete a line to send that
+Set `AUTH_URL`, `NOTIFICATION_URL`, `AI_URL`, `MESSAGING_URL`, `ACADEMIC_URL` and `LEAVE_URL` in `gateway/.env` (see `.env.example`). Delete a line to send that
 service's routes back to the monolith, which is the quick way to roll back.
 
 ## Env (`gateway/.env`)
